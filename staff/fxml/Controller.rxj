@@ -1,0 +1,50 @@
+use arg slotDir         -- fetch the slotDir argument (BSF4ooRexx adds this as the last argument at the Java side)
+scriptContext = slotDir~scriptContext -- get the ScriptContext from the slotDir (last) argument
+
+
+parse source s
+
+
+
+::routine fillTable public
+    use arg slotDir
+
+    scriptContext = slotDir~scriptContext
+    .my.app~staff.fxml~maskerPaneContainer~setVisible( .true )
+    TableView = scriptContext~getAttribute("TableView")
+    staff = .my.app~staff
+    staff~staffList~clear           -- remove all items from staffList
+
+    selectedCrumb = scriptContext~getAttribute("event")~getSelectedCrumb~getValue
+    if selectedCrumb = "Institute of Management Information Systems" then do
+        staff~createAndAddPerson("Adrian", "Baginski", "Management Information Systems", .true)
+        staff~createAndAddPerson("Rony", "Flatscher" , "Management Information Systems", .true)
+        staff~createAndAddPerson("Hans", "Hansen"    , "Management Information Systems")
+        staff~createAndAddPerson("John", "Doe"       , "Management Information Systems")
+    end
+    else if selectedCrumb = "All employees" then do
+        staff~createAndAddPerson("Adrian", "Baginski", "Management Information Systems", .true)
+        staff~createAndAddPerson("Rony", "Flatscher" , "Management Information Systems", .true)
+        staff~createAndAddPerson("Evelyn", "Thompson", "IT"                            , .true)
+        staff~createAndAddPerson("Hans", "Hansen"    , "Management Information Systems")
+        staff~createAndAddPerson("John", "Doe"       , "Management Information Systems")
+        staff~createAndAddPerson("Guillermo", "Hernandez", "IT")
+        staff~createAndAddPerson("Thomas", "Berger", "Accounting")
+        staff~createAndAddPerson("Viola", "Cornelius", "Accounting")
+    end
+    else do
+        staff~createAndAddPerson("Adrian", "Baginski", "Management Information Systems", .true)
+        staff~createAndAddPerson("Rony", "Flatscher" , "Management Information Systems", .true)
+        staff~createAndAddPerson("Evelyn", "Thompson", "IT"                            , .true)
+    end
+
+    TableView~setItems(staff~staffList)
+    call SysSleep .5    -- enjoy the masker pane
+
+    notification = bsf.loadClass("org.controlsfx.control.Notifications")~create
+    notification~title("Crumb activated")
+    notification~text("The table now displays all items from" pp(selectedCrumb))
+    if .environment~notificationDarkStyle then
+        notification~darkStyle
+    notification~showInformation
+    .my.app~staff.fxml~maskerPaneContainer~setVisible( .false )

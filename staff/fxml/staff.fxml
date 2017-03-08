@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.TableColumn?>
+<?import javafx.scene.control.TableView?>
+<?import javafx.scene.layout.AnchorPane?>
+<?import javafx.scene.layout.VBox?>
+<?import org.controlsfx.control.BreadCrumbBar?>
+<?import org.controlsfx.control.MaskerPane?>
+<?import org.controlsfx.control.ToggleSwitch?>
+<?language rexx?>
+
+<AnchorPane fx:id="outerAnchorPane" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="400.0" prefWidth="600.0" xmlns="http://javafx.com/javafx/8.0.111" xmlns:fx="http://javafx.com/fxml/1">
+   <fx:script source="Controller.rxj" />
+   <children>
+      <AnchorPane fx:id="AnchorPane" layoutX="23.0" layoutY="14.0" prefHeight="200.0" prefWidth="200.0" AnchorPane.bottomAnchor="20.0" AnchorPane.leftAnchor="20.0" AnchorPane.rightAnchor="20.0" AnchorPane.topAnchor="20.0">
+         <children>
+            <BreadCrumbBar fx:id="BreadCrumbBar" onCrumbAction="
+                call fillTable arg( arg() );
+            " AnchorPane.leftAnchor="0.0" AnchorPane.topAnchor="0.0" />
+            <ToggleSwitch fx:id="ToggleSwitch" layoutX="494.0" layoutY="14.0" text="turn on CSS" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0" />
+            <TableView fx:id="TableView" layoutY="80.0" prefHeight="200.0" prefWidth="200.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="35.0">
+              <columns>
+                <TableColumn fx:id="firstname" prefWidth="75.0" text="First Name" />
+                  <TableColumn fx:id="lastname" prefWidth="75.0" text="Last Name" />
+                  <TableColumn fx:id="institute" prefWidth="75.0" text="Institute" />
+                  <TableColumn fx:id="available" prefWidth="75.0" text="Available" />
+              </columns>
+            </TableView>
+         </children>
+      </AnchorPane>
+      <VBox fx:id="MaskerPaneContainer" alignment="CENTER" prefHeight="400.0" prefWidth="600.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
+         <children>
+            <MaskerPane fx:id="MaskerPane" VBox.vgrow="ALWAYS" />
+         </children>
+      </VBox>
+   </children>
+    <fx:script source="put_FXID_objects_into.my.app.rex" />
+</AnchorPane>

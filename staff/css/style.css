@@ -1,0 +1,22 @@
+#outerAnchorPane {
+    -fx-background-color: #54565b;
+}
+
+#BreadCrumbBar, #TableView, #ToggleSwitch {
+    -fx-base: #222;
+}
+
+#TableView {
+    -fx-size:30;
+    -fx-base: #417ee0;
+    -fx-control-inner-background: #666a72;
+    -fx-background-color: #222;
+    -fx-table-cell-border-color: transparent;
+    -fx-table-header-border-color: transparent;
+    -fx-padding: 5;
+}
+
+#ToggleSwitch {
+    -fx-text-fill: white;
+    -fx-font-family: "Segoe UI Semibold";
+}

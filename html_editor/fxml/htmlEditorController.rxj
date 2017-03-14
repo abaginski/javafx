@@ -1,0 +1,148 @@
+use arg slotDir         -- fetch the slotDir argument (BSF4ooRexx adds this as the last argument at the Java side)
+scriptContext = slotDir~scriptContext -- get the ScriptContext from the slotDir (last) argument
+
+
+parse source s
+call bsf.import "javafx.scene.control.Alert",                  "fx.Alert"
+call bsf.import "javafx.scene.control.Alert$AlertType",        "fx.Alert.Type"
+ /*
+  * note "AlertType" is public "inner" enum class, i.e. it is defined within the class "Alert", hence
+  * the JavaDocs refer to "AlertType" as "Alert.AlertType": however the Java compiler produces the
+  * class file as "Alert$AlertType"
+  */
+
+/* *************************************************************************************************** */
+/* --------------------------------------------------------------------------------------------------- */
+/* This routine will be called from the Rexx code defined with the "onAction" event attribute; cf.
+ */
+
+
+::routine saveFile public
+    use arg slotDir
+
+    if .my.app~alreadySavedFile <> .nil then
+        skipDialog = .true                                  /* if a file was previously selected to open or save, use it
+                                                               to save it the new content into that file, therefore skipping the
+                                                               file selection dialog */
+    else
+        skipDialog = .false                                 -- default behaviour: do not skip the dialog
+
+    call saveFileAs slotDir, skipDialog
+
+/* --------------------------------------------------------------------------------------------------- */
+
+::routine saveFileAs public
+    use arg slotDir, skipDialog = .false    -- fetch the slotDir argument (BSF4ooRexx adds this as the last argument at the Java side)
+                                            -- warning: only set skipDialog to 1 if .my.app~alreadySavedFile is set
+    scriptContext = slotDir~scriptContext   -- get the slotDir (the last) argument, get the entry "SCRIPTCONTEXT"
+
+    if scriptContext~getAttribute("showSourceCodeMenuItem")~getText == "Show HTML Editor" then do
+        call toggleSourceCode slotDir
+    end
+    htmlEditor = scriptContext~getAttribute("htmlEditor")                 -- get a reference of the htmlEditor component
+    htmlEditorText = htmlEditor~getHtmlText                               -- extract the html input
+
+    FileChooser = .bsf~new("javafx.stage.FileChooser")                  -- instantiate the javafx FileChooser class
+    FileChooser~setTitle("Save file as")                                -- set the title for the FileChooser Dialog
+    extensions = bsf.createJavaArrayOf("java.lang.String", "*.html", "*.htm", "*.php")
+    filter = .bsf~new("javafx.stage.FileChooser$ExtensionFilter", "html files", extensions)
+    FileChooser~getExtensionFilters~add(filter)                         /* only allow files to be uploaded which have
+                                                                          the extensions defined in the ExtensionFilter */
+
+    if .my.app~alreadySavedFile <> .nil then do
+     FileChooser~setInitialDirectory(.my.app~alreadySavedFile~getParentFile)    -- predefine the directory
+     FileChooser~setInitialFileName(.my.app~alreadySavedFile~toString)          -- predefine the filename
+    end
+
+    if skipDialog = .false then
+        file = FileChooser~showSaveDialog(.my.app~primaryStage)             -- show the save dialog
+    else
+        file = .bsf~new("java.io.File", .my.app~alreadySavedFile~toString)
+
+    if file \= .nil then do
+
+        filename = file~toString
+        rexxStream = .stream~new(filename)                                -- create an instance of rexx' stream class
+        rexxStream~open("both replace")                                   /* replace the first line with the content
+                                                                             instead of adding another */
+
+        rexxStream~lineOut(htmlEditorText)                                -- write the html content into that file
+        rexxStream~close                                                  -- release the lock on this file
+        alert = .fx.alert~new(.fx.Alert.Type~information)   -- create an error alert
+        alert~setTitle("success")
+        alert~setHeaderText(.nil)
+        alert~setContentText("File successfully saved!")
+        alert~showAndWait
+
+      .my.app~alreadySavedFile = file                                     -- save the file to eventually skip the dialog
+    end
+
+/* --------------------------------------------------------------------------------------------------- */
+
+::routine loadFile public
+    use arg slotDir
+    scriptContext = slotDir~scriptContext
+
+    if scriptContext~getAttribute("showSourceCodeMenuItem")~getText == "Show HTML Editor" then do
+        call toggleSourceCode slotDir
+    end
+    /*@get (htmlEditor)*/
+    FileChooser = .bsf~new("javafx.stage.FileChooser")                  -- instantiate the javafx FileChooser class
+    FileChooser~setTitle("Load file")                                -- set the title for the FileChooser Dialog
+    extensions = bsf.createJavaArrayOf("java.lang.String", "*.html", "*.htm", "*.php")
+    filter = .bsf~new("javafx.stage.FileChooser$ExtensionFilter", "html files", extensions)
+    FileChooser~getExtensionFilters~add(filter)                         /* only allow files to be uploaded which have
+                                                                                  the extensions defined in the ExtensionFilter */
+    if .my.app~alreadySavedFile <> .nil then do
+       FileChooser~setInitialDirectory(.my.app~alreadySavedFile~getParentFile)
+    end
+    file = FileChooser~showOpenDialog(.my.app~primaryStage)             -- show the dialog to load a file
+
+    if file <> .nil then do
+        rexxStream = .stream~new(file~toString)
+		htmlEditor~setHtmlText("")                                      -- delete all the content of the html editor
+		do i = 1 to rexxStream~lines
+			htmlEditor~setHtmlText(htmlEditor~getHtmlText || rexxStream~lineIn) /* append the content of the file to our
+                                                                                   html editor */
+																		   
+		end
+        rexxStream~close
+        .my.app~alreadySavedFile = file
+        say "File successfully opened!"
+    end
+
+/* --------------------------------------------------------------------------------------------------- */
+
+::routine closeProgram public
+   .my.app~rexxHandler~stop
+
+/* --------------------------------------------------------------------------------------------------- */
+
+::routine changeTheme public
+    use arg themeName
+    if themeName = 'Modena' then
+        theme = .my.app~rxApp~STYLESHEET_MODENA              -- "Modena" is the default theme shipped with JavaFX 8
+    else if themeName = 'Caspian' then
+        theme = .my.app~rxApp~STYLESHEET_CASPIAN             /* although it is possible to switch to the old JavaFX 2
+                                                                stylesheet named "Caspian" */
+    .my.app~rxApp~setUserAgentStylesheet(theme)
+
+
+/* --------------------------------------------------------------------------------------------------- */
+
+::routine toggleSourceCode public
+    use arg slotDir
+    scriptContext = slotDir~scriptContext
+
+    say "im here"
+    /*@get (htmlEditor textArea showSourceCodeMenuItem)*/
+    if showSourceCodeMenuItem~getText = "Show source code" then do   -- default value
+        textArea~setText(htmlEditor~getHtmlText)                     -- set the text in the text area
+        textArea~setVisible(.true)                                   -- display the textarea overlapping the html editor
+        showSourceCodeMenuItem~setText("Show HTML Editor")           -- change the text of the menu item
+    end
+    else do
+        htmlEditor~setHtmlText(textArea~getText)                     -- adopt the changes
+        textArea~setVisible(.false)                                  -- hide the textarea element
+        showSourceCodeMenuItem~setText("Show source code")
+    end

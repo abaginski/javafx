@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.Menu?>
+<?import javafx.scene.control.MenuBar?>
+<?import javafx.scene.control.MenuItem?>
+<?import javafx.scene.control.TextArea?>
+<?import javafx.scene.layout.AnchorPane?>
+<?import javafx.scene.web.HTMLEditor?>
+<?language rexx?>
+
+
+<AnchorPane fx:id="anchorPane" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="400.0" prefWidth="600.0" xmlns="http://javafx.com/javafx/8.0.111" xmlns:fx="http://javafx.com/fxml/1">
+   <fx:script source="htmlEditorController.rxj" />
+   <children>
+      <HTMLEditor fx:id="htmlEditor"
+      htmlText="&lt;!-- use https://www.web2generators.com/html-based-tools/online-html-entities-encoder-and-decoder to decode it --&gt;&lt;html&gt; &lt;head&gt; &lt;script&gt; setTimeout(function() { var startNode = document.body; var endNode = document.getElementById('desiredCaretPosition'); var range = new Range(); endOffset = 0; range.setStart(startNode,startNode.childNodes.length-1); range.setEnd(endNode,&quot;0&quot;); var sel = window.getSelection(); sel.removeAllRanges(); sel.addRange(range); document.body.focus(); }); &lt;/script&gt; &lt;/head&gt; &lt;body id=&quot;body&quot; style=&quot;font-family:Helvetica&quot; contenteditable=&quot;true&quot;&gt;&lt;span style=&quot;font-size:18px; color:lightblue;&quot;&gt;some&lt;/span&gt; &lt;b&gt;html&lt;/b&gt; text (aren't &lt;em&gt;ooRexx&lt;/em&gt; and &lt;em&gt;BSFooRexx&lt;/em&gt; &lt;span style=&quot;color:green;&quot;&gt;great?&lt;/span&gt; ;) &lt;div id=&quot;desiredCaretPosition&quot;&gt;&lt;/div&gt;&lt;/body&gt; &lt;/html&gt;" layoutY="107.0" prefHeight="400.0" prefWidth="600.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="25.0" />
+
+       <TextArea fx:id="textArea" wrapText="true" visible="false" prefHeight="0.0" prefWidth="0.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="25.0" />
+      <MenuBar fx:id="menubar" layoutX="7.0" layoutY="2.0" minHeight="25.0" prefHeight="25.0" prefWidth="600.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
+        <menus>
+          <Menu fx:id="file" mnemonicParsing="false" text="File">
+            <items>
+                  <MenuItem fx:id="save" mnemonicParsing="false" text="Save file" onAction="
+                  slotDir = arg(arg());
+                  call saveFile slotDir;
+                  " />
+                  <MenuItem fx:id="saveAs" mnemonicParsing="false" text="Save file as" onAction="
+                  slotDir = arg(arg());
+                  call saveFileAs slotDir;
+                  " />
+                  <MenuItem fx:id="load" mnemonicParsing="false" text="Load file" onAction="
+                  slotDir = arg(arg());
+                  call loadFile slotDir;
+                  " />
+              <MenuItem fx:id="close" mnemonicParsing="false" text="Close" onAction="
+                  slotDir = arg(arg());
+                  call closeProgram slotDir;
+                  "/>
+            </items>
+          </Menu>
+          <Menu fx:id="edit" mnemonicParsing="false" text="Edit">
+            <items>
+              <MenuItem fx:id="showSourceCodeMenuItem" mnemonicParsing="false" text="Show source code" onAction="
+                  slotDir = arg(arg());
+                  call toggleSourceCode slotDir;
+                  " />
+            </items>
+          </Menu>
+
+            <Menu mnemonicParsing="false" text="Theme">
+            <items>
+              <MenuItem text="Modena" onAction="call changeTheme 'Modena';" />
+              <MenuItem text="Caspian" onAction="call changeTheme 'Caspian';" />
+            </items>
+          </Menu>
+        </menus>
+      </MenuBar>
+
+
+   </children>
+   <fx:script source="put_FXID_objects_into.my.app.rex" />
+</AnchorPane>

@@ -1,0 +1,132 @@
+/*
+   author:     Adrian Baginski
+
+   date:       2017-02-28
+
+   purpose:    - shows how to switch between predefined themes
+               - demonstrates how to prevent the window from closing
+
+   needs:      need to change into the directory where this file resides and start the application
+               from there (otherwise JavaFX/Java-related operations may go astray as they address
+               resources relative to the directory at startup of the program)
+
+   additional information: it seems that JavaFX 8 (as of 2017-02-28) does not allow to set the focus
+               via Java in a way, that events get directed to it; rather the FXML-file contains
+               a Javascript code that moves the focus into the HTMLEditor field; in order to activate
+               the HTMLEditor menu one needs to set the focus to the HTMLEditor object twice: once
+               right after showing the stage with the scene, and then focussing once more to it using
+               Platform.runLater()); this may be a bug in JavaFX focus and/or event handling
+
+   usage:      rexx htmlEditor.rxj or rexxj.sh|rexxj.cmd htmlEditor.rxj
+
+   license:    - Apache License 2.0 (AL 2.0)
+*/
+
+
+/* Create a directory in the global Rexx .environment named MY.APP, such that we can store/retrieve
+   objects that we need globally (over all Rexx programs):
+
+   - entries in .local and .environment should contain a dot, hence MY.APP
+   - entries in .local and .environment can be retrieved using the environment
+     symbol naming the entry (its index), hence .MY.APP will allow us to retrieve
+     that directory from any Rexx program
+*/
+.environment~setEntry("my.app", .directory~new)
+
+   -- determine our location and create an URLClassLoader to find resources relative to it
+parse source . . s
+
+appDirectory = filespec("Location", s)   -- determine path to this Rexx program
+   -- use a java.io.File to to get an URL for the file
+jfile = .bsf~new("java.io.File",appDirectory)
+urlAppDir = jfile~toUri~toUrl
+   -- create the URLClassLoader using the appDirectory for resolving resources via it
+.my.app~appClzLdr = .bsf~new("java.net.URLClassLoader", bsf.createJavaArrayOf("java.net.URL", urlAppDir))
+
+   -- load the FXMLLoader class, save it for multiple usages
+.my.app~fxmlLoader = bsf.loadClass("javafx.fxml.FXMLLoader")
+
+   -- create Rexx object that will control the FXML set up
+.my.app~rexxHandler = .rxDocHandler~new
+
+   -- instantiate the abstract JavaFX class, the abstract "start" method will be served by rexxHandler
+rxApp = BsfCreateRexxProxy(.my.app~rexxHandler,,"javafx.application.Application")
+
+.my.app~rxApp = rxApp
+call bsf.import "javafx.scene.control.Alert",                  "fx.Alert"
+call bsf.import "javafx.scene.control.Alert$AlertType",        "fx.Alert.Type"
+
+   -- launch the application, invoke "start" and then stay up until the application closes
+rxApp~launch(rxApp~getClass, .nil)     -- need to use this version of launch in order to work
+
+::requires "BSF.CLS"    -- get Java support
+
+/* implements the abstract method "start" for the Java class javafx.application.Application
+   (BSF4ooRexx also supplies another (trailing) slotDir (a Rexx Directory) argument, as "start" is
+   invoked from Java)
+*/
+::class RxDocHandler
+::method init
+
+   /* loads the fxml document defining the GUI elements, sets up a scene for it and shows it */
+::method start    -- will be invoked by the "launch" method
+  use arg primaryStage  -- we get the primary stage to use for our UI
+
+  .my.app~primaryStage = primaryStage -- save the primary stage in our directory
+
+   -- use application's URLClassloader to find the resource (returns a URL)
+  mainSceneFXMLUrl = .my.app~appClzLdr~findResource("fxml/htmlEditor.fxml")
+  mainSceneFXML    = .my.app~fxmlLoader~load( mainSceneFXMLUrl )   -- load the fxml document
+
+   -- create a scene from the FXML DOM and assign it to the primaryStage
+  .my.app~mainScene = .bsf~new("javafx.scene.Scene", mainSceneFXML) -- create a scene for our document
+  primaryStage~setScene(.my.app~mainScene)   -- set the stage to our scene
+  primaryStage~setTitle("A simple HTML Editor")
+   -- create an image for the application icon from the InputStream
+  inpStrIcon = .my.app~appClzLdr~getResourceAsStream("images/bsf4oorexx_032.png")
+  imgIcon = .bsf~new("javafx.scene.image.Image",inpStrIcon)
+  primaryStage~getIcons~add(imgIcon)         -- set application icon
+  primaryStage~show                          -- show the stage (and thereby our scene)
+  WindowEvent = bsfCreateRexxProxy(.CloseWindowHandler~new, , "javafx.event.EventHandler")
+  primaryStage~setOnCloseRequest(WindowEvent)
+
+   -- now focussing should work as everything is displayed from the scene on the stage
+  htmlEditor = .my.app~htmlEditor.fxml~htmlEditor  -- get access to the htmlEditor JavaFX object
+   -- as of JavaFX 8 this must be done here as well as once more in Platform~runLater(), if edit menu should ungrey
+  .my.app~htmlEditor.fxml~htmlEditor~requestFocus
+   -- re-refocus later (when the JavaFX application thread runs again as the focus gets lost somewhere)
+  jRexxObj= bsfCreateRexxProxy(.RexxSetFocus~new, , "java.lang.Runnable")
+  bsf.loadClass("javafx.application.Platform")~runLater(jRexxObj)
+
+
+::method stop
+    alert = .fx.alert~new(.fx.Alert.Type~confirmation)   -- create a confirmation alert
+    alert~setTitle("Close Program")
+    alert~setHeaderText(.nil)
+    lf = "0a"x                                           -- define linefeed character
+    alert~setContentText("Do you really want to close this Program?" lf || "Any unsaved changes will be lost.")
+    pressedButton = alert~showAndWait                    -- show the confirmation dialog
+    availableButtons = bsf.import("javafx.scene.control.ButtonType")
+
+    if pressedButton~get~toString = availableButtons~OK~toString then -- close the app only if "OK" was clicked
+        .my.app~primaryStage~close                       -- leave the stage, therefore closing the application
+
+::class CloseWindowHandler
+::method handle
+    use arg eventObject
+
+    eventObject~consume                                 -- consume the event, to prevent the window from closing
+    .my.app~rexxHandler~stop
+
+
+/* Rexx class to set the focus into the HTML edtior widget and creating an event that should ungrey the edit options.
+*  <http://stackoverflow.com/questions/10685395/webview-with-contenteditable-cannot-be-focused-programmatically> as of 2017-02-27:
+*  does not work as of 2017-02-28 with JavaFX8
+*/
+::class RexxSetFocus -- implements java.lang.Runnable
+
+::method run         -- Platform.runLater() will run this in the JavaFX application thread
+   -- re-request the focus for this control
+  .my.app~htmlEditor.fxml~htmlEditor~requestFocus
+
+

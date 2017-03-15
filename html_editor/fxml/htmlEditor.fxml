@@ -6,7 +6,9 @@
 <?import javafx.scene.control.TextArea?>
 <?import javafx.scene.layout.AnchorPane?>
 <?import javafx.scene.web.HTMLEditor?>
+<?import javafx.scene.input.KeyCodeCombination?>
 <?language rexx?>
+
 
 
 <AnchorPane fx:id="anchorPane" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="400.0" prefWidth="600.0" xmlns="http://javafx.com/javafx/8.0.111" xmlns:fx="http://javafx.com/fxml/1">
@@ -18,32 +20,51 @@
        <TextArea fx:id="textArea" wrapText="true" visible="false" prefHeight="0.0" prefWidth="0.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="25.0" />
       <MenuBar fx:id="menubar" layoutX="7.0" layoutY="2.0" minHeight="25.0" prefHeight="25.0" prefWidth="600.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
         <menus>
-          <Menu fx:id="file" mnemonicParsing="false" text="File">
+          <Menu fx:id="file" mnemonicParsing="false" text="F_ile">
             <items>
-                  <MenuItem fx:id="save" mnemonicParsing="false" text="Save file" onAction="
+                  <MenuItem fx:id="save" mnemonicParsing="false" text="_Save file" onAction="
                   slotDir = arg(arg());
                   call saveFile slotDir;
-                  " />
+                  ">
+                      <accelerator>
+                          <KeyCodeCombination alt="DOWN" code="S" control="UP" meta="UP" shift="UP" shortcut="UP" />
+                          <KeyCodeCombination alt="UP" code="S" control="DOWN" meta="UP" shift="UP" shortcut="UP" />
+                      </accelerator>
+                  </MenuItem>
                   <MenuItem fx:id="saveAs" mnemonicParsing="false" text="Save file as" onAction="
                   slotDir = arg(arg());
                   call saveFileAs slotDir;
                   " />
-                  <MenuItem fx:id="load" mnemonicParsing="false" text="Load file" onAction="
+
+                <MenuItem fx:id="load" mnemonicParsing="false" text="_Load file" onAction="
                   slotDir = arg(arg());
                   call loadFile slotDir;
-                  " />
-              <MenuItem fx:id="close" mnemonicParsing="false" text="Close" onAction="
+
+                ">
+                    <accelerator>
+                        <KeyCodeCombination alt="DOWN" code="L" control="UP" meta="UP" shift="UP" shortcut="UP" />
+                    </accelerator>
+                </MenuItem>
+                <MenuItem fx:id="close" mnemonicParsing="false" text="Close" onAction="
                   slotDir = arg(arg());
                   call closeProgram slotDir;
-                  "/>
+                ">
+                <accelerator>
+                    <KeyCodeCombination alt="DOWN" code="Q" control="UP" meta="UP" shift="UP" shortcut="UP" />
+                </accelerator>
+                </MenuItem>
             </items>
           </Menu>
-          <Menu fx:id="edit" mnemonicParsing="false" text="Edit">
+          <Menu fx:id="edit" mnemonicParsing="false" text="_Edit">
             <items>
               <MenuItem fx:id="showSourceCodeMenuItem" mnemonicParsing="false" text="Show source code" onAction="
                   slotDir = arg(arg());
                   call toggleSourceCode slotDir;
-                  " />
+                  ">
+                  <accelerator>
+                      <KeyCodeCombination alt="DOWN" code="E" control="UP" meta="UP" shift="UP" shortcut="UP" />
+                  </accelerator>
+              </MenuItem>
             </items>
           </Menu>
 

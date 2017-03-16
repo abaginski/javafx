@@ -20,23 +20,29 @@
        <TextArea fx:id="textArea" wrapText="true" visible="false" prefHeight="0.0" prefWidth="0.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="25.0" />
       <MenuBar fx:id="menubar" layoutX="7.0" layoutY="2.0" minHeight="25.0" prefHeight="25.0" prefWidth="600.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
         <menus>
-          <Menu fx:id="file" mnemonicParsing="false" text="F_ile">
-            <items>
-                  <MenuItem fx:id="save" mnemonicParsing="false" text="_Save file" onAction="
+          <Menu fx:id="file" mnemonicParsing="false" text="_File">
+            <accelerator>
+                          <KeyCodeCombination alt="DOWN" code="F" control="UP" meta="UP" shift="UP" shortcut="UP" />
+            </accelerator>
+			<items>
+                  <MenuItem fx:id="save" mnemonicParsing="false" text="Save file" onAction="
                   slotDir = arg(arg());
                   call saveFile slotDir;
                   ">
                       <accelerator>
                           <KeyCodeCombination alt="DOWN" code="S" control="UP" meta="UP" shift="UP" shortcut="UP" />
-                          <KeyCodeCombination alt="UP" code="S" control="DOWN" meta="UP" shift="UP" shortcut="UP" />
                       </accelerator>
                   </MenuItem>
                   <MenuItem fx:id="saveAs" mnemonicParsing="false" text="Save file as" onAction="
                   slotDir = arg(arg());
                   call saveFileAs slotDir;
-                  " />
+                  ">
+				  <accelerator>
+                          <KeyCodeCombination alt="DOWN" code="S" control="UP" meta="UP" shift="DOWN" shortcut="UP" />
+                      </accelerator>
+				  </MenuItem>
 
-                <MenuItem fx:id="load" mnemonicParsing="false" text="_Load file" onAction="
+                <MenuItem fx:id="load" mnemonicParsing="false" text="Load file" onAction="
                   slotDir = arg(arg());
                   call loadFile slotDir;
 
@@ -55,7 +61,10 @@
                 </MenuItem>
             </items>
           </Menu>
-          <Menu fx:id="edit" mnemonicParsing="false" text="_Edit">
+          <Menu fx:id="edit" mnemonicParsing="false" text="E_dit">
+		  <accelerator>
+			  <KeyCodeCombination alt="DOWN" code="D" control="UP" meta="UP" shift="UP" shortcut="UP" />
+		  </accelerator>
             <items>
               <MenuItem fx:id="showSourceCodeMenuItem" mnemonicParsing="false" text="Show source code" onAction="
                   slotDir = arg(arg());
@@ -68,7 +77,10 @@
             </items>
           </Menu>
 
-            <Menu mnemonicParsing="false" text="Theme">
+            <Menu mnemonicParsing="false" text="_Theme">
+			<accelerator>
+                          <KeyCodeCombination alt="DOWN" code="T" control="UP" meta="UP" shift="UP" shortcut="UP" />
+            </accelerator>
             <items>
               <MenuItem text="Modena" onAction="call changeTheme 'Modena';" />
               <MenuItem text="Caspian" onAction="call changeTheme 'Caspian';" />

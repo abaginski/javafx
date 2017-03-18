@@ -39,7 +39,6 @@ parse source s
     end
 
     TableView~setItems(staff~staffList)
-    call SysSleep .5    -- enjoy the masker pane
 
     notification = bsf.loadClass("org.controlsfx.control.Notifications")~create
     notification~title("Crumb activated")

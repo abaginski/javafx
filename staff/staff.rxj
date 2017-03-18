@@ -25,7 +25,7 @@
      that directory from any Rexx program
 */
 
--- signal on syntax
+signal on syntax
 
 .environment~setEntry("my.app", .directory~new)
 call bsf.import "javafx.collections.FXCollections", "fx.FXCollections"
@@ -59,7 +59,7 @@ rxApp = BsfCreateRexxProxy(.my.app~rexxHandler,,"javafx.application.Application"
 rxApp~launch(rxApp~getClass, .nil)     -- need to use this version of launch in order to work
 exit
 
-/*
+
 syntax:     -- display Rexx condition followed by the Java stack trace of each Java exception that has occurred
   co=condition("object")
   say ppCondition2(co)
@@ -72,9 +72,6 @@ syntax:     -- display Rexx condition followed by the Java stack trace of each J
      jexc=jexc~getCause -- get next cause in chain
   end
   exit -1
-
-::requires "rgf_util2.rex"
-*/
 
 ::requires "BSF.CLS"    -- get Java support
 

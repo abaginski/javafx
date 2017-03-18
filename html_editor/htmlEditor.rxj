@@ -87,8 +87,6 @@ rxApp~launch(rxApp~getClass, .nil)     -- need to use this version of launch in 
   imgIcon = .bsf~new("javafx.scene.image.Image",inpStrIcon)
   primaryStage~getIcons~add(imgIcon)         -- set application icon
   primaryStage~show                          -- show the stage (and thereby our scene)
-  WindowEvent = bsfCreateRexxProxy(.CloseWindowHandler~new, , "javafx.event.EventHandler")
-  primaryStage~setOnCloseRequest(WindowEvent)
 
    -- now focussing should work as everything is displayed from the scene on the stage
   htmlEditor = .my.app~htmlEditor.fxml~htmlEditor  -- get access to the htmlEditor JavaFX object
@@ -110,13 +108,6 @@ rxApp~launch(rxApp~getClass, .nil)     -- need to use this version of launch in 
 
     if pressedButton~get~toString = availableButtons~OK~toString then -- close the app only if "OK" was clicked
         .my.app~primaryStage~close                       -- leave the stage, therefore closing the application
-
-::class CloseWindowHandler
-::method handle
-    use arg eventObject
-
-    eventObject~consume                                 -- consume the event, to prevent the window from closing
-    .my.app~rexxHandler~stop
 
 
 /* Rexx class to set the focus into the HTML edtior widget and creating an event that should ungrey the edit options.

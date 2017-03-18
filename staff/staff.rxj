@@ -1,0 +1,446 @@
+/*
+   author:     Adrian Baginski
+
+   date:       2017-03-01
+
+   purpose:    - demonstrates usage of custom libraries
+               - shows table view handling
+
+   needs:      need to change into the directory where this file resides and start the application
+               from there (otherwise JavaFX/Java-related operations may go astray as they address
+               resources relative to the directory at startup of the program)
+
+   usage:      run [start.cmd] on Windows OS or [start.sh] on linux/macOS
+
+   license:    - Apache License 2.0 (AL 2.0)
+*/
+
+
+/* Create a directory in the global Rexx .environment named MY.APP, such that we can store/retrieve
+   objects that we need globally (over all Rexx programs):
+
+   - entries in .local and .environment should contain a dot, hence MY.APP
+   - entries in .local and .environment can be retrieved using the environment
+     symbol naming the entry (its index), hence .MY.APP will allow us to retrieve
+     that directory from any Rexx program
+*/
+
+signal on syntax
+
+.environment~setEntry("my.app", .directory~new)
+call bsf.import "javafx.collections.FXCollections", "fx.FXCollections"
+call bsf.import "org.controlsfx.control.Notifications", "fx.Notification"
+.environment~notificationDarkStyle = .false
+
+   -- determine our location and create an URLClassLoader to find resources relative to it
+parse source . . s
+.local~appDirectory = filespec("Location", s)   -- determine path to this Rexx program
+
+
+   -- use a java.io.File to to get an URL for the file
+jfile = .bsf~new("java.io.File",.local~appDirectory)
+urlAppDir = jfile~toUri~toUrl
+
+   -- create the URLClassLoader using the appDirectory for resolving resources via it
+.my.app~appClzLdr = .bsf~new("java.net.URLClassLoader", bsf.createJavaArrayOf("java.net.URL", urlAppDir))
+
+   -- load the FXMLLoader class, save it for multiple usages
+.my.app~fxmlLoader = bsf.loadClass("javafx.fxml.FXMLLoader")
+
+   -- create Rexx object that will control the FXML set up
+.my.app~rexxHandler = .rxDocHandler~new
+
+   -- instantiate the abstract JavaFX class, the abstract "start" method will be served by rexxHandler
+rxApp = BsfCreateRexxProxy(.my.app~rexxHandler,,"javafx.application.Application")
+
+.my.app~rxApp = rxApp
+
+   -- launch the application, invoke "start" and then stay up until the application closes
+rxApp~launch(rxApp~getClass, .nil)     -- need to use this version of launch in order to work
+exit
+
+syntax:     -- display Rexx condition followed by the Java stack trace of each Java exception that has occurred
+  co=condition("object")
+  say ppCondition2(co)
+  say "---"
+  jexc=co~additional[2]~getCause
+  do until jexc=.nil
+     say "   ---> getCause(): jexc="pp(jexc) "jexc~toString="pp(jexc~toString)
+     jexc~printStackTrace
+     say "   <---"
+     jexc=jexc~getCause -- get next cause in chain
+  end
+  exit -1
+
+::requires "rgf_util2.rex"
+
+
+::requires "BSF.CLS"    -- get Java support
+
+/* implements the abstract method "start" for the Java class javafx.application.Application
+   (BSF4ooRexx also supplies another (trailing) slotDir (a Rexx Directory) argument, as "start" is
+   invoked from Java)
+*/
+::class RxDocHandler
+::attribute mainScene
+::attribute maskerPane
+::attribute maskerPaneContainer
+
+  /***************************************************************************************/
+
+::method start    -- will be invoked by the "launch" method
+  use arg primaryStage  -- we get the primary stage to use for our UI
+
+     /* loads the fxml document defining the GUI elements, sets up a scene for it and shows it */
+    .my.app~primaryStage = primaryStage -- save the primary stagee in our directory
+
+    mainSceneFXMLUrl = .my.app~appClzLdr~findResource("fxml/staff.fxml")
+    mainSceneFXML    = .my.app~fxmlLoader~load( mainSceneFXMLUrl )   -- load the fxml document
+
+    -- create a scene from the FXML DOM and assign it to the primaryStage
+    mainScene = .bsf~new("javafx.scene.Scene", mainSceneFXML) -- create a scene for our document
+    self~mainScene = mainScene                                -- save the scene in this class
+    self~maskerPane = .my.app~staff.fxml~maskerPane
+    self~maskerPaneContainer = .my.app~staff.fxml~maskerPaneContainer
+    self~maskerPaneContainer~setVisible(.false)                -- hide our masker pane
+    primaryStage~setScene(mainScene)   -- set the stage to our scene
+    primaryStage~setTitle("Staff List")
+    -- create an image for the application icon from the InputStream
+    inpStrIcon = .my.app~appClzLdr~getResourceAsStream("images/bsf4oorexx_032.png")
+    imgIcon = .bsf~new("javafx.scene.image.Image",inpStrIcon)
+    primaryStage~getIcons~add(imgIcon)         -- set application icon
+
+    /* add items (crumbs) to our BreadCrumbBar: */
+    all_employees = .bsf~new("javafx.scene.control.TreeItem", "All employees")          -- create new tree items
+    only_mis = .bsf~new("javafx.scene.control.TreeItem", "Institute of Management Information Systems")
+    available_employees = .bsf~new("javafx.scene.control.TreeItem", "Available")
+    only_mis~getChildren~add(available_employees)         -- create a tree hierarchy
+    all_employees~getChildren~add(only_mis)
+
+    .my.app~staff.fxml~BreadCrumbBar~selectedCrumbProperty~set(available_employees)       -- add tree items to tree
+
+
+    /* create Staff and Person objects */
+    staff = .Staff~new
+    .my.app~staff = staff           -- save it in .my.app to have further access to this staff object
+
+    staff~addPerson( .Person~new("Adrian", "Baginski", "Management Information Systems", .true) )
+    staff~addPerson( .Person~new("Rony", "Flatscher", "Management Information Systems", .true) )
+    staff~addPerson( .Person~new("Evelyn", "Thompson", "IT Services", .true) )
+    -- todo: add more people
+
+    /* add items to the table view: */
+    TableView = .my.app~staff.fxml~TableView                -- get a short reference of the TableView
+
+    .my.app~staff.fxml~firstname~setCellValueFactory(bsfCreateRexxProxy(.PropertyValueFactory~new("firstNameProperty"), , "javafx.util.Callback" ))
+    .my.app~staff.fxml~lastname~setCellValueFactory( bsfCreateRexxProxy(.PropertyValueFactory~new("lastNameProperty") , , "javafx.util.Callback" ))
+    .my.app~staff.fxml~institute~setCellValueFactory(bsfCreateRexxProxy(.PropertyValueFactory~new("instituteProperty"), , "javafx.util.Callback" ))
+    .my.app~staff.fxml~institute~prefWidth = 200    -- set the width of this column to 200px
+    .my.app~staff.fxml~available~setCellValueFactory(bsfCreateRexxProxy(.PropertyValueFactory~new("availableProperty"), , "javafx.util.Callback" ))
+
+
+signal on syntax
+
+   -- create different .RexxTableCell instances for the different column cells in .RexxCallBack
+   .my.app~staff.fxml~firstname~setCellFactory( bsfCreateRexxProxy(.RexxCallback~new, , "javafx.util.Callback") )
+   .my.app~staff.fxml~lastname ~setCellFactory( bsfCreateRexxProxy(.RexxCallback~new, , "javafx.util.Callback") )
+   .my.app~staff.fxml~institute~setCellFactory( bsfCreateRexxProxy(.RexxCallback~new, , "javafx.util.Callback") )
+   .my.app~staff.fxml~available~setCellFactory( bsfCreateRexxProxy(.RexxCallback~new, , "javafx.util.Callback") )
+
+    TableView~setItems(staff~staffList)         -- fill the table
+
+    /* add a table row expander column to the table */
+    TableRowExpanderColumn = .bsf~new("org.controlsfx.control.table.TableRowExpanderColumn", bsfCreateRexxProxy(.expander~new, , "javafx.util.Callback"))
+    TableRowExpanderColumn~setText("Rating")            -- set a title for this column
+    TableView~getColumns~add(TableRowExpanderColumn)    -- attach the tablerowexpandercolum to the table
+
+    /* add a toggle switch event listener */
+    changeListener = bsfCreateRexxProxy(self, , "javafx.beans.value.ChangeListener")    -- fire the event in this class
+    .my.app~staff.fxml~ToggleSwitch~selectedProperty~addListener(changeListener)        -- invokes "changed" method
+
+    primaryStage~show                          -- show the stage
+    return
+
+syntax:
+   co=condition("o")
+   say "exception occurred in SHOW:"
+   say ppCondition2(co)
+   say "---"
+jexc=co~additional[2]
+do while jexc<>.nil
+   say "/// jexc:" jexc~toString
+   jexc~printStackTrace
+   say "\\\"
+   jexc=jexc~getCause
+end
+
+   raise propagate
+
+
+  /***************************************************************************************/
+
+::method changed                    -- used by ChangeListener attached to the ToggleSwitch Object
+    expose mainScene maskerPane maskerPaneContainer         -- attributes from this class
+    use arg o, oldValue, newValue
+    signal on syntax name failure
+
+    maskerPaneContainer~setVisible(.true)           -- display the masker pane
+
+    if newValue = .true then do
+        mainScene~getStylesheets~add("css/style.css")               -- add CSS to stylesheets on
+        .my.app~staff.fxml~ToggleSwitch~setText("turn off CSS")     -- change the label of the toggle switch class
+        notificationText = "You have successfully attached a Stylesheet"
+        .environment~notificationDarkStyle = .true                  -- set this value .true to display all notifications in a predefined dark style
+    end
+    else do
+        mainScene~getStylesheets~clear                              -- remove all stylesheets
+        .my.app~staff.fxml~ToggleSwitch~setText("turn on CSS")
+        notificationText = "You have successfully removed the Stylesheet"
+        .environment~notificationDarkStyle = .false
+    end
+    call SysSleep .5             -- enjoy the masker pane
+    notification = .fx.Notification~create
+    notification~title("Stylesheet")
+    notification~text(notificationText)
+    if .environment~notificationDarkStyle then
+        notification~darkStyle
+    notification~showInformation                -- display the notification
+    maskerPaneContainer~setVisible(.false)      -- hide the masker pane
+    return
+
+    failure:
+    notification~text("Oops, something went wrong!")~~showWarning
+
+
+  /***************************************************************************************/
+
+::class expander
+::method call
+    use arg o
+
+    ratingValueReference = BsfRexxProxy(o~getValue)~send("ratingProperty") -- get a reference of the rating property of each person
+    hbox = .bsf~new("javafx.scene.layout.HBox", 10)         -- create a  new horizontal box with spacing 10
+    hbox~setPadding( .bsf~new("javafx.geometry.Insets", 10) )       -- set padding of 10 from all directions
+    vbox = .bsf~new("javafx.scene.layout.VBox")             -- create a vertical box for vertical alignment of our elements
+    rating = .bsf~new("org.controlsfx.control.Rating")
+    rating~rating = ratingValueReference~getValue
+    rating~max = 10                          -- maximum of 10 stars
+    rating~updateOnHover = .true             -- this property allows to set a rating value simply by hovering over it
+    rating~partialRating = .true
+    introduction = .bsf~new("javafx.scene.control.Label", "Please rate this employee")
+    introduction~underline = .true
+    vbox~getChildren~~add(introduction)~~add(rating)
+    hbox~getChildren~add(vbox)
+    /* add event handler to the Rating object */
+    eventtype = bsf.loadClass("javafx.scene.input.MouseEvent")
+    slotDir = .directory~new
+    slotDir~rating = rating
+    slotDir~ratingValueReference = ratingValueReference
+    slotDir~o = o
+    eventhandler = bsfCreateRexxProxy(self, slotDir, "javafx.event.EventHandler") --invokes method "handle" in this class
+    rating~addEventHandler(eventtype~MOUSE_CLICKED, eventhandler)
+    return hbox
+
+::method handle
+    use arg event, slotDir
+
+    .my.app~staff.fxml~maskerPaneContainer~setVisible(.true)
+    rating = slotDir~userData~rating
+    actualRatingFrom1to10 = rating~rating
+    ratingValueReference = slotDir~userData~ratingValueReference
+    ratingValueReference~setValue( box("D", actualRatingFrom1to10) ) -- cast "string" to "double" and send it to the Person Object
+    rating~updateOnHover = .false
+    notification = .fx.Notification~create
+    notification~title("Rating")
+    notification~text("You rated this person" actualRatingFrom1to10 "out of 10")
+    if .environment~notificationDarkStyle then
+        notification~darkStyle
+    call SysSleep .5                -- enjoy the masker pane
+    .my.app~staff.fxml~maskerPaneContainer~setVisible(.false)
+    notification~showInformation                -- show the notification with
+    -- slotDir~userData~o~expanded = .false     -- toggle expanded: close the rating row
+
+  /***************************************************************************************/
+
+::class Staff
+::attribute staffList
+::method init
+    expose staffList
+    staffList = .fx.FXCollections~observableArrayList               -- define the staffList as an observable array list
+
+/* rgf, already defined as attribute above!
+::method getStaffList
+    expose staffList
+    return staffList
+*/
+
+::method addPerson
+    expose staffList
+    use arg Person
+    if Person~isA(.Person) then
+        staffList~add(Person)                -- add the Person to the staffList array
+    else
+        .error~say(Person "is not a Person") -- ouptut to error stream
+
+::method createAndAddPerson
+    use arg strfirstName, strlastName, strinstitute, stravailable = .false
+    self~addPerson( .Person~new(strfirstName, strlastName, strinstitute, stravailable) )
+
+
+
+  /***************************************************************************************/
+::class Person
+::attribute firstName get
+  expose firstName
+  return firstName~get
+
+::attribute firstName set
+  expose firstName
+  use arg val
+  return firstName~set(val)
+
+::attribute firstNameProperty get
+  expose firstName
+  return firstName
+
+   ----------------------------------------------------------------------------------------
+::attribute lastName get
+  expose lastName
+  return lastName~get
+
+::attribute lastName set
+  expose lastName
+  use arg val
+  return lastName~set(val)
+
+::attribute lastNameProperty get
+  expose lastName
+  return lastName
+
+
+   ----------------------------------------------------------------------------------------
+
+::attribute institute get
+  expose institute
+  return institute~get
+
+::attribute institute set
+  expose institute
+  use arg val
+  return institute~set(val)
+
+::attribute instituteProperty get
+  expose institute
+  return institute
+
+   ----------------------------------------------------------------------------------------
+::attribute available get
+  expose available
+  return available~get
+
+::attribute available set
+  expose available
+  use arg val
+  return available~set(val)
+
+::attribute availableProperty get
+  expose available
+  return available
+
+
+   ----------------------------------------------------------------------------------------
+::attribute rating get
+  expose rating
+  return rating~get
+
+::attribute rating set
+  expose rating
+  use arg val
+  return rating~set(val)
+
+::attribute ratingProperty get
+  expose rating
+  return rating
+
+
+::method init
+    expose firstName lastName institute available rating
+    use arg firstNameInput, lastNameInput, instituteInput, availableInput = .false, ratingInput = 5
+    call bsf.import "javafx.beans.property.SimpleStringProperty",  "fx.SimpleStringProperty"
+    call bsf.import "javafx.beans.property.SimpleIntegerProperty",  "fx.SimpleIntegerProperty"
+    firstName = .fx.SimpleStringProperty~new(firstNameInput)
+    lastName = .fx.SimpleStringProperty~new(lastNameInput)
+    institute = .fx.SimpleStringProperty~new(instituteInput)
+    available = .fx.SimpleStringProperty~new(availableInput)
+    rating = .fx.SimpleIntegerProperty~new(ratingInput)
+
+/* =================================================================================== */
+/* implements javafx.util.Callback<P,R>(P o) for PropertyValueFactory */
+
+/* This class allows instances that remember the message to be sent to person instances to
+   return the property of the attribute that should be shown in the table cell.
+*/
+::class PropertyValueFactory
+::method init
+  expose  propName   -- name of property getter method
+  use strict arg propName
+
+::method call
+  expose propName
+  use arg o          -- an observable value for the ooRexx person object boxed in a Java RexxProxy object
+  return BsfRexxProxy(o~getValue)~send(propName)
+
+
+
+   -- This Rexx class needs to extend the "javafx.scene.control.TableCell" class and override the "updateItem" method
+::class RexxTableCell   -- implements the cell renderer
+
+::method updateItem     -- implements "javafx.scene.control.TableCell.updateItem(Object item, boolean bEmpty)"
+  use arg item, bEmpty, slotDir
+
+  jSelf=slotDir~JavaObject    -- get the Java peer object
+  id=jSelf~id                 -- get the property name this instance is responsible for
+
+  jSelf~updateItem_forwardToSuper(item,bEmpty) -- make sure superclass updates first, before we do anyhting
+
+  if item=.nil | bEmpty=.true then
+  do
+     jSelf~setText("")
+     jSelf~setStyle("")
+  end
+  else
+  do
+     jSelf~setText(item)
+     select
+        when id="institute", item="Management Information Systems" then
+           jSelf~setStyle("-fx-background-color: yellow")
+
+        when id="available", item=.false then
+           jSelf~setStyle("-fx-background-color: red")
+
+        otherwise
+           jSelf~setStyle("-fx-background-color: paleGreen")
+     end
+  end
+
+
+::class rexxCallback    -- Rexx class implementing "javafx.util.Callback"'s "call" method
+
+::attribute clzOoRexxTableCell class get  -- a class attribute
+
+::method init class     -- the Rexx constructor at the class level: create and memorize a proxy class for "javfx.scene.control.TableCell"
+  expose clzOoRexxTableCell
+
+   -- let Rexx implement the "updateItem" method from "javafx.scene.control.Cell" (a superclass of "TableCell"),
+   -- create and return a subclass of "TableCell" allowing a RexxProxy to implement the method "updateItem"
+  clzOoRexxTableCell=bsf.createProxyClass("javafx.scene.control.TableCell", "ooRexxTableCell", "javafx.scene.control.Cell updateItem")
+
+::method call           -- implements "javafx.util.Callback.call(Object o)": in this case an instance of a TableCell (or a subclass of it) must be returned!
+  use arg obj, slotDir
+               -- create the TableCell handler, supply a RexxTableCell object to carry out "updateItem"
+  rexxCellHandler=self~class~clzOoRexxTableCell~new(.rexxTableCell~new)
+  return rexxCellHandler
+
+::requires "rgf_util2.rex"
+
+

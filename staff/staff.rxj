@@ -25,7 +25,7 @@
      that directory from any Rexx program
 */
 
-signal on syntax
+-- signal on syntax
 
 .environment~setEntry("my.app", .directory~new)
 call bsf.import "javafx.collections.FXCollections", "fx.FXCollections"
@@ -59,6 +59,7 @@ rxApp = BsfCreateRexxProxy(.my.app~rexxHandler,,"javafx.application.Application"
 rxApp~launch(rxApp~getClass, .nil)     -- need to use this version of launch in order to work
 exit
 
+/*
 syntax:     -- display Rexx condition followed by the Java stack trace of each Java exception that has occurred
   co=condition("object")
   say ppCondition2(co)
@@ -73,7 +74,7 @@ syntax:     -- display Rexx condition followed by the Java stack trace of each J
   exit -1
 
 ::requires "rgf_util2.rex"
-
+*/
 
 ::requires "BSF.CLS"    -- get Java support
 
@@ -117,7 +118,7 @@ syntax:     -- display Rexx condition followed by the Java stack trace of each J
     only_mis~getChildren~add(available_employees)         -- create a tree hierarchy
     all_employees~getChildren~add(only_mis)
 
-    .my.app~staff.fxml~BreadCrumbBar~selectedCrumbProperty~set(available_employees)       -- add tree items to tree
+    .my.app~staff.fxml~BreadCrumbBar~selectedCrumbProperty~set(available_employees)       -- add tree items to the tree
 
 
     /* create Staff and Person objects */
@@ -127,7 +128,6 @@ syntax:     -- display Rexx condition followed by the Java stack trace of each J
     staff~addPerson( .Person~new("Adrian", "Baginski", "Management Information Systems", .true) )
     staff~addPerson( .Person~new("Rony", "Flatscher", "Management Information Systems", .true) )
     staff~addPerson( .Person~new("Evelyn", "Thompson", "IT Services", .true) )
-    -- todo: add more people
 
     /* add items to the table view: */
     TableView = .my.app~staff.fxml~TableView                -- get a short reference of the TableView
@@ -135,11 +135,10 @@ syntax:     -- display Rexx condition followed by the Java stack trace of each J
     .my.app~staff.fxml~firstname~setCellValueFactory(bsfCreateRexxProxy(.PropertyValueFactory~new("firstNameProperty"), , "javafx.util.Callback" ))
     .my.app~staff.fxml~lastname~setCellValueFactory( bsfCreateRexxProxy(.PropertyValueFactory~new("lastNameProperty") , , "javafx.util.Callback" ))
     .my.app~staff.fxml~institute~setCellValueFactory(bsfCreateRexxProxy(.PropertyValueFactory~new("instituteProperty"), , "javafx.util.Callback" ))
-    .my.app~staff.fxml~institute~prefWidth = 200    -- set the width of this column to 200px
+    .my.app~staff.fxml~institute~prefWidth = 200    -- set the width of this column to 200 Pixel
     .my.app~staff.fxml~available~setCellValueFactory(bsfCreateRexxProxy(.PropertyValueFactory~new("availableProperty"), , "javafx.util.Callback" ))
 
 
-signal on syntax
 
    -- create different .RexxTableCell instances for the different column cells in .RexxCallBack
    .my.app~staff.fxml~firstname~setCellFactory( bsfCreateRexxProxy(.RexxCallback~new, , "javafx.util.Callback") )
@@ -160,21 +159,6 @@ signal on syntax
 
     primaryStage~show                          -- show the stage
     return
-
-syntax:
-   co=condition("o")
-   say "exception occurred in SHOW:"
-   say ppCondition2(co)
-   say "---"
-jexc=co~additional[2]
-do while jexc<>.nil
-   say "/// jexc:" jexc~toString
-   jexc~printStackTrace
-   say "\\\"
-   jexc=jexc~getCause
-end
-
-   raise propagate
 
 
   /***************************************************************************************/
@@ -255,9 +239,9 @@ end
     notification~text("You rated this person" actualRatingFrom1to10 "out of 10")
     if .environment~notificationDarkStyle then
         notification~darkStyle
-    call SysSleep .5                -- enjoy the masker pane
+    call SysSleep .5                            -- enjoy the masker pane
     .my.app~staff.fxml~maskerPaneContainer~setVisible(.false)
-    notification~showInformation                -- show the notification with
+    notification~showInformation                -- show the notification
     -- slotDir~userData~o~expanded = .false     -- toggle expanded: close the rating row
 
   /***************************************************************************************/
@@ -267,12 +251,6 @@ end
 ::method init
     expose staffList
     staffList = .fx.FXCollections~observableArrayList               -- define the staffList as an observable array list
-
-/* rgf, already defined as attribute above!
-::method getStaffList
-    expose staffList
-    return staffList
-*/
 
 ::method addPerson
     expose staffList
@@ -368,10 +346,11 @@ end
     use arg firstNameInput, lastNameInput, instituteInput, availableInput = .false, ratingInput = 5
     call bsf.import "javafx.beans.property.SimpleStringProperty",  "fx.SimpleStringProperty"
     call bsf.import "javafx.beans.property.SimpleIntegerProperty",  "fx.SimpleIntegerProperty"
+    call bsf.import "javafx.beans.property.SimpleBooleanProperty",  "fx.SimpleBooleanProperty"
     firstName = .fx.SimpleStringProperty~new(firstNameInput)
     lastName = .fx.SimpleStringProperty~new(lastNameInput)
     institute = .fx.SimpleStringProperty~new(instituteInput)
-    available = .fx.SimpleStringProperty~new(availableInput)
+    available = .fx.SimpleBooleanProperty~new(availableInput)
     rating = .fx.SimpleIntegerProperty~new(ratingInput)
 
 /* =================================================================================== */
@@ -440,7 +419,3 @@ end
                -- create the TableCell handler, supply a RexxTableCell object to carry out "updateItem"
   rexxCellHandler=self~class~clzOoRexxTableCell~new(.rexxTableCell~new)
   return rexxCellHandler
-
-::requires "rgf_util2.rex"
-
-

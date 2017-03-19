@@ -25,17 +25,17 @@ parse source s
     else if selectedCrumb = "All employees" then do
         staff~createAndAddPerson("Adrian", "Baginski", "Management Information Systems", .true)
         staff~createAndAddPerson("Rony", "Flatscher" , "Management Information Systems", .true)
-        staff~createAndAddPerson("Evelyn", "Thompson", "IT"                            , .true)
+        staff~createAndAddPerson("Evelyn", "Thompson", "IT Services"                   , .true)
         staff~createAndAddPerson("Hans", "Hansen"    , "Management Information Systems")
         staff~createAndAddPerson("John", "Doe"       , "Management Information Systems")
-        staff~createAndAddPerson("Guillermo", "Hernandez", "IT")
+        staff~createAndAddPerson("Guillermo", "Hernandez", "IT Services")
         staff~createAndAddPerson("Thomas", "Berger", "Accounting")
         staff~createAndAddPerson("Viola", "Cornelius", "Accounting")
     end
     else do
         staff~createAndAddPerson("Adrian", "Baginski", "Management Information Systems", .true)
         staff~createAndAddPerson("Rony", "Flatscher" , "Management Information Systems", .true)
-        staff~createAndAddPerson("Evelyn", "Thompson", "IT"                            , .true)
+        staff~createAndAddPerson("Evelyn", "Thompson", "IT Services"                   , .true)
     end
 
     TableView~setItems(staff~staffList)

@@ -62,7 +62,7 @@ exit
 
 syntax:     -- display Rexx condition followed by the Java stack trace of each Java exception that has occurred
   co=condition("object")
-  say ppCondition2(co)
+  say ppCondition2(co)	-- public routine defined in "rgf_util2.rex"
   say "---"
   jexc=co~additional[2]~getCause
   do until jexc=.nil
@@ -74,6 +74,7 @@ syntax:     -- display Rexx condition followed by the Java stack trace of each J
   exit -1
 
 ::requires "BSF.CLS"    -- get Java support
+::requires "rgf_util2.rex" -- distributed with BSF4ooRexx, needed because of "ppCondition2()"
 
 /* implements the abstract method "start" for the Java class javafx.application.Application
    (BSF4ooRexx also supplies another (trailing) slotDir (a Rexx Directory) argument, as "start" is

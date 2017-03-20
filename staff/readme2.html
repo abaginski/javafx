@@ -1,0 +1,74 @@
+<html dir="ltr">
+
+<head>
+    <script>
+        setTimeout(function() {
+            var startNode = document.body;
+            var endNode = document.getElementById('desiredCaretPosition');
+            var range = new Range();
+            endOffset = 0;
+            range.setStart(startNode, startNode.childNodes.length - 1);
+            range.setEnd(endNode, "0");
+            var sel = window.getSelection();
+            sel.removeAllRanges();
+            sel.addRange(range);
+            document.body.focus();
+        });
+    </script>
+</head>
+
+<body id="body" style="font-family:Helvetica">
+    <p><font size="5" face="Ebrima"><b>JavaFX&nbsp;Nutshell example <i>STAFF</i></b></font>
+    </p>
+    <p><font face="Segoe UI">This Nutshell example implements a third party shared library called "ControlsFX", which is an open source project that aims to provide additional high quality GUI controls to JavaFX.&nbsp;</font>
+    </p>
+    <p><font face="Segoe UI">You can get the latest version of ControlsFX here: <a href="http://fxexperience.com/controlsfx/" target="_blank">&lt;http://fxexperience.com/controlsfx/&gt;</a>. <i>STAFF</i> uses ControlsFX in Version 8.40.12 and demonstrates the usage of the following control classes in BSF4ooRexx:</font>
+    </p>
+    <p></p>
+    <ul>
+        <li><span style="font-family: 'Segoe UI';">Notifications</span>
+        </li>
+        <li><span style="font-family: 'Segoe UI';">BreadCrumbBardssd</span>
+        </li>
+        <li><span style="font-family: 'Segoe UI';">TableRowExpanderColumn</span>
+        </li>
+        <li><span style="font-family: 'Segoe UI';">ToggleSwitch</span>
+        </li>
+        <li><span style="font-family: 'Segoe UI';">MaskerPane</span>
+        </li>
+        <li><span style="font-family: 'Segoe UI';">Rating</span>
+        </li>
+    </ul>
+    <p></p>
+    <p><font face="Segoe UI">This Application consists of a TableView with predefined data. You can change the data by clicking on items of the BreadCrumbBar located at the top right corner of the window. By activating the TableRowExpanderColumn marked with a "+" in the table a Rating bar shows up to rate each employee. Every user interaction in the <i>STAFF</i> nutshell example is followed either by the MaskerPane appearing or a Notification.</font>
+    </p>
+    <p><font face="Segoe UI">To start this Application, the JAR File located in the root directory has to be included in the environmental variable "CLASSPATH". Luckily, <i>STAFF</i> provides a way to do this on-the-fly using one of the following shell files:</font>
+    </p>
+    <p></p>
+    <ul>
+        <li><font face="Segoe UI">[run.cmd] for Windows OS</font>
+        </li>
+        <li><font face="Segoe UI">[run.sh] for MacOS and Linux</font>
+        </li>
+    </ul>
+    <p></p>
+    <p><font face="Segoe UI">Please see the license agreement for ControlsFX at <a href="license.txt" target="_blank">license.txt</a>.</font>
+    </p>
+    <p><font face="Segoe UI"><br></font>
+    </p>
+    <p><font face="Segoe UI">Author: Adrian Baginski<br></font>
+    </p>
+    <p><font face="Segoe UI">Date of Creation: 2017-03-20</font>
+    </p>
+    <p></p>
+    <p>
+        <br>
+    </p>
+    <p>
+        <br>
+    </p>
+    <br>
+    <div id="desiredCaretPosition"></div>
+</body>
+
+</html>

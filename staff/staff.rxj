@@ -25,8 +25,6 @@
      that directory from any Rexx program
 */
 
-signal on syntax
-
 .environment~setEntry("my.app", .directory~new)
 call bsf.import "javafx.collections.FXCollections", "fx.FXCollections"
 call bsf.import "org.controlsfx.control.Notifications", "fx.Notification"
@@ -59,22 +57,7 @@ rxApp = BsfCreateRexxProxy(.my.app~rexxHandler,,"javafx.application.Application"
 rxApp~launch(rxApp~getClass, .nil)     -- need to use this version of launch in order to work
 exit
 
-
-syntax:     -- display Rexx condition followed by the Java stack trace of each Java exception that has occurred
-  co=condition("object")
-  say ppCondition2(co)	-- public routine defined in "rgf_util2.rex"
-  say "---"
-  jexc=co~additional[2]~getCause
-  do until jexc=.nil
-     say "   ---> getCause(): jexc="pp(jexc) "jexc~toString="pp(jexc~toString)
-     jexc~printStackTrace
-     say "   <---"
-     jexc=jexc~getCause -- get next cause in chain
-  end
-  exit -1
-
 ::requires "BSF.CLS"    -- get Java support
-::requires "rgf_util2.rex" -- distributed with BSF4ooRexx, needed because of "ppCondition2()"
 
 /* implements the abstract method "start" for the Java class javafx.application.Application
    (BSF4ooRexx also supplies another (trailing) slotDir (a Rexx Directory) argument, as "start" is

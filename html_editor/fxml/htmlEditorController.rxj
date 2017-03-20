@@ -1,8 +1,3 @@
-use arg slotDir         -- fetch the slotDir argument (BSF4ooRexx adds this as the last argument at the Java side)
-scriptContext = slotDir~scriptContext -- get the ScriptContext from the slotDir (last) argument
-
-
-parse source s
 call bsf.import "javafx.scene.control.Alert",                  "fx.Alert"
 call bsf.import "javafx.scene.control.Alert$AlertType",        "fx.Alert.Type"
  /*
@@ -15,8 +10,7 @@ call bsf.import "javafx.scene.control.Alert$AlertType",        "fx.Alert.Type"
 /* --------------------------------------------------------------------------------------------------- */
 /* This routine will be called from the Rexx code defined with the "onAction" event attribute; cf.
  */
-
-
+ 
 ::routine saveFile public
     use arg slotDir
 
@@ -42,6 +36,9 @@ call bsf.import "javafx.scene.control.Alert$AlertType",        "fx.Alert.Type"
     htmlEditor = scriptContext~getAttribute("htmlEditor")                 -- get a reference of the htmlEditor component
     htmlEditorText = htmlEditor~getHtmlText                               -- extract the html input
 
+	parse var htmlEditorText pre 'contenteditable="true"' post			-- filter contenteditable out
+	htmlEditorText = pre post											
+	
     FileChooser = .bsf~new("javafx.stage.FileChooser")                  -- instantiate the javafx FileChooser class
     FileChooser~setTitle("Save file as")                                -- set the title for the FileChooser Dialog
     extensions = bsf.createJavaArrayOf("java.lang.String", "*.html", "*.htm", "*.php")
@@ -79,6 +76,7 @@ call bsf.import "javafx.scene.control.Alert$AlertType",        "fx.Alert.Type"
 
 /* --------------------------------------------------------------------------------------------------- */
 
+
 ::routine loadFile public
     use arg slotDir
     scriptContext = slotDir~scriptContext
@@ -102,7 +100,10 @@ call bsf.import "javafx.scene.control.Alert$AlertType",        "fx.Alert.Type"
         rexxStream = .stream~new(file~toString)
 		htmlEditor~setHtmlText("")                                      -- delete all the content of the html editor
 		do i = 1 to rexxStream~lines
-			htmlEditor~setHtmlText(htmlEditor~getHtmlText || rexxStream~lineIn) /* append the content of the file to our
+			nextLine = rexxStream~lineIn
+			if abbrev(nextLine, "<body") & \abbrev(nextLine, 'contenteditable="true"') then
+				nextLine = STRREPLACE(nextLine, "<body", '<body contenteditable="true"')
+			htmlEditor~setHtmlText(htmlEditor~getHtmlText || nextLine) /* append the content of the file to our
                                                                                    html editor */
 																		   
 		end
@@ -134,7 +135,6 @@ call bsf.import "javafx.scene.control.Alert$AlertType",        "fx.Alert.Type"
     use arg slotDir
     scriptContext = slotDir~scriptContext
 
-    say "im here"
     /*@get (htmlEditor textArea showSourceCodeMenuItem)*/
     if showSourceCodeMenuItem~getText = "Show source code" then do   -- default value
         textArea~setText(htmlEditor~getHtmlText)                     -- set the text in the text area
@@ -146,3 +146,24 @@ call bsf.import "javafx.scene.control.Alert$AlertType",        "fx.Alert.Type"
         textArea~setVisible(.false)                                  -- hide the textarea element
         showSourceCodeMenuItem~setText("Show source code")
     end
+	
+	
+/* http://code.xmlgadgets.com/2010/07/25/rexx-strreplace-replace-part-of-a-string-with-new-string/ 2017-03-20 */
+/* A FUNCTION TO DO A STRING REPLACE */
+::routine STRREPLACE
+  ORIGINAL = ARG(1)
+  OLDTXT = ARG(2)
+  NEWTXT = ARG(3)
+/* YOU CAN CHANGE THE BELOW KEY (TMPTXT), WHICH IS USED AS A TEMPORARY
+POINTER TO IDENTIFY THE TEXT TO BE REPLACED */
+  TMPTXT = '6A53CD2EW1F'
+  NEWSTR = ORIGINAL
+  DO WHILE POS(OLDTXT,NEWSTR) > 0
+    NEWSTR = SUBSTR(NEWSTR, 1 , POS(OLDTXT,NEWSTR)-1) ||,
+    TMPTXT || SUBSTR(NEWSTR, POS(OLDTXT,NEWSTR) + LENGTH(OLDTXT))
+  END
+  DO WHILE POS(TMPTXT,NEWSTR) > 0
+    NEWSTR = SUBSTR(NEWSTR, 1 , POS(TMPTXT,NEWSTR)-1) ||,
+    NEWTXT || SUBSTR(NEWSTR, POS(TMPTXT,NEWSTR) + LENGTH(TMPTXT))
+  END
+  RETURN NEWSTR

@@ -53,8 +53,6 @@ urlAppDir = jfile~toUri~toUrl
 rxApp = BsfCreateRexxProxy(.my.app~rexxHandler,,"javafx.application.Application")
 
 .my.app~rxApp = rxApp
-call bsf.import "javafx.scene.control.Alert",                  "fx.Alert"
-call bsf.import "javafx.scene.control.Alert$AlertType",        "fx.Alert.Type"
 
    -- launch the application, invoke "start" and then stay up until the application closes
 rxApp~launch(rxApp~getClass, .nil)     -- need to use this version of launch in order to work

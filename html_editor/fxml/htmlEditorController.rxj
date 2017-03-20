@@ -1,12 +1,10 @@
-call bsf.import "javafx.scene.control.Alert",                  "fx.Alert"
-call bsf.import "javafx.scene.control.Alert$AlertType",        "fx.Alert.Type"
  /*
   * note "AlertType" is public "inner" enum class, i.e. it is defined within the class "Alert", hence
   * the JavaDocs refer to "AlertType" as "Alert.AlertType": however the Java compiler produces the
   * class file as "Alert$AlertType"
   */
 
-/* *************************************************************************************************** */
+  /* *************************************************************************************************** */
 /* --------------------------------------------------------------------------------------------------- */
 /* This routine will be called from the Rexx code defined with the "onAction" event attribute; cf.
  */
@@ -102,7 +100,7 @@ call bsf.import "javafx.scene.control.Alert$AlertType",        "fx.Alert.Type"
 		do i = 1 to rexxStream~lines
 			nextLine = rexxStream~lineIn
 			if abbrev(nextLine, "<body") & \abbrev(nextLine, 'contenteditable="true"') then
-				nextLine = STRREPLACE(nextLine, "<body", '<body contenteditable="true"')
+				nextLine~changeStr("<body", '<body contenteditable="true"')
 			htmlEditor~setHtmlText(htmlEditor~getHtmlText || nextLine) /* append the content of the file to our
                                                                                    html editor */
 																		   
@@ -146,24 +144,3 @@ call bsf.import "javafx.scene.control.Alert$AlertType",        "fx.Alert.Type"
         textArea~setVisible(.false)                                  -- hide the textarea element
         showSourceCodeMenuItem~setText("Show source code")
     end
-	
-	
-/* http://code.xmlgadgets.com/2010/07/25/rexx-strreplace-replace-part-of-a-string-with-new-string/ 2017-03-20 */
-/* A FUNCTION TO DO A STRING REPLACE */
-::routine STRREPLACE
-  ORIGINAL = ARG(1)
-  OLDTXT = ARG(2)
-  NEWTXT = ARG(3)
-/* YOU CAN CHANGE THE BELOW KEY (TMPTXT), WHICH IS USED AS A TEMPORARY
-POINTER TO IDENTIFY THE TEXT TO BE REPLACED */
-  TMPTXT = '6A53CD2EW1F'
-  NEWSTR = ORIGINAL
-  DO WHILE POS(OLDTXT,NEWSTR) > 0
-    NEWSTR = SUBSTR(NEWSTR, 1 , POS(OLDTXT,NEWSTR)-1) ||,
-    TMPTXT || SUBSTR(NEWSTR, POS(OLDTXT,NEWSTR) + LENGTH(OLDTXT))
-  END
-  DO WHILE POS(TMPTXT,NEWSTR) > 0
-    NEWSTR = SUBSTR(NEWSTR, 1 , POS(TMPTXT,NEWSTR)-1) ||,
-    NEWTXT || SUBSTR(NEWSTR, POS(TMPTXT,NEWSTR) + LENGTH(TMPTXT))
-  END
-  RETURN NEWSTR

@@ -1,60 +1,157 @@
 <html dir="ltr">
-
 <head>
-    <script>
-        setTimeout(function() {
-            var startNode = document.body;
-            var endNode = document.getElementById('desiredCaretPosition');
-            var range = new Range();
-            endOffset = 0;
-            range.setStart(startNode, startNode.childNodes.length - 1);
-            range.setEnd(endNode, "0");
-            var sel = window.getSelection();
-            sel.removeAllRanges();
-            sel.addRange(range);
-            document.body.focus();
-        });
-    </script>
 </head>
-
 <body id="body" style="font-family:Helvetica">
-    <p><font size="5" face="Ebrima"><b>JavaFX&nbsp;Nutshell example <i>STAFF</i></b></font>
+    <p><font size="5" face="Ebrima"><b>JavaFX&nbsp;Nutshell example <i>staff</i></b></font>
     </p>
-    <p><font face="Segoe UI">This Nutshell example implements a third party shared library called "ControlsFX", which is an open source project that aims to provide additional high quality GUI controls to JavaFX.&nbsp;</font>
+    <p><font face="Segoe UI">This Nutshell example exploits a third party shared library called
+       <a href="http://fxexperience.com/controlsfx/">"ControlsFX"</a>, which is an open source
+       project that aims to provide additional high quality <a href="https://controlsfx.bitbucket.io/">GUI controls</a> to JavaFX.&nbsp;</font>
+       <font face="Segoe UI">You can find the ControlsFX license agreement here: <a href="license.txt"
+       target="_blank">license.txt</a>.</font>
+
     </p>
-    <p><font face="Segoe UI">You can get the latest version of ControlsFX here: <a href="http://fxexperience.com/controlsfx/" target="_blank">&lt;http://fxexperience.com/controlsfx/&gt;</a>. <i>STAFF</i> uses ControlsFX in Version 8.40.12 and demonstrates the usage of the following control classes in BSF4ooRexx:</font>
-    </p>
-    <p></p>
-    <ul>
-        <li><span style="font-family: 'Segoe UI';">Notifications</span>
-        </li>
-        <li><span style="font-family: 'Segoe UI';">BreadCrumbBardssd</span>
-        </li>
-        <li><span style="font-family: 'Segoe UI';">TableRowExpanderColumn</span>
-        </li>
-        <li><span style="font-family: 'Segoe UI';">ToggleSwitch</span>
-        </li>
-        <li><span style="font-family: 'Segoe UI';">MaskerPane</span>
-        </li>
-        <li><span style="font-family: 'Segoe UI';">Rating</span>
-        </li>
-    </ul>
-    <p></p>
-    <p><font face="Segoe UI">This Application consists of a TableView with predefined data. You can change the data by clicking on items of the BreadCrumbBar located at the top right corner of the window. By activating the TableRowExpanderColumn marked with a "+" in the table a Rating bar shows up to rate each employee. Every user interaction in the <i>STAFF</i> nutshell example is followed either by the MaskerPane appearing or a Notification.</font>
-    </p>
-    <p><font face="Segoe UI">To start this Application, the JAR File located in the root directory has to be included in the environmental variable "CLASSPATH". Luckily, <i>STAFF</i> provides a way to do this on-the-fly using one of the following shell files:</font>
+    <p><font face="Segoe UI">You can get the latest version of ControlsFX here: <a href="http://fxexperience.com/controlsfx/" target="_blank">http://fxexperience.com/controlsfx/</a>.
+    This example (<i>staff</i>) uses ControlsFX version 8.40.12 (as of 2017-03-21) and demonstrates the usage of the following JavaFX GUI classes:</font>
+
     </p>
     <p></p>
     <ul>
-        <li><font face="Segoe UI">[run.cmd] for Windows OS</font>
+        <li><a href="https://controlsfx.bitbucket.io/org/controlsfx/control/Notifications.html"><span style="font-family: 'Segoe UI';">Notifications</span></a>
+
         </li>
-        <li><font face="Segoe UI">[run.sh] for MacOS and Linux</font>
+        <li><a href="https://controlsfx.bitbucket.io/org/controlsfx/control/BreadCrumbBar.html"><span style="font-family: 'Segoe UI';">BreadCrumbBar</span></a>
+        </li>
+
+        <li><a href="https://controlsfx.bitbucket.io/org/controlsfx/control/table/TableRowExpanderColumn.html"><span style="font-family: 'Segoe UI';">TableRowExpanderColumn</span></a>
+        </li>
+
+        <li><a href="https://controlsfx.bitbucket.io/org/controlsfx/control/ToggleSwitch.html"><span style="font-family: 'Segoe UI';">ToggleSwitch</span></a>
+        </li>
+        <li><a href="https://controlsfx.bitbucket.io/org/controlsfx/control/MaskerPane.html"><span style="font-family: 'Segoe UI';">MaskerPane</span></a>
+        </li>
+        <li><a href="https://controlsfx.bitbucket.io/org/controlsfx/control/Rating.html"><span style="font-family: 'Segoe UI';">Rating</span></a>
         </li>
     </ul>
-    <p></p>
-    <p><font face="Segoe UI">Please see the license agreement for ControlsFX at <a href="license.txt" target="_blank">license.txt</a>.</font>
+
+    <p><font face="Segoe UI">This application consists of a TableView with predefined data. You can change the data by clicking on items of the BreadCrumbBar located at the top right corner of the window. By activating the TableRowExpanderColumn marked with a "+" in the table a Rating bar shows up to rate each employee. Every user interaction in the <i>staff</i> nutshell example is followed either by the MaskerPane appearing or a Notification.</font>
     </p>
+    <p><font face="Segoe UI">To start this Application, the JAR File &quot;controlsfx-8.40.12.jar&quot; located in the
+        application directory has to be included in the Java environmental variable "CLASSPATH". Luckily, the
+        <i>staff</i> application provides a way to do this on-the-fly using one of the following shell files:</font>
+    </p>
+    <p></p>
+    <ul>
+        <li><font face="Segoe UI"><code><a href="run.cmd">run.cmd</a></code> for Windows </font>
+        </li>
+        <li><font face="Segoe UI"><code><a href="run.sh">run.sh</a></code> for Linux and MacOS </font>
+        </li>
+    </ul>
+
+
+    </br>
+    <dl>
+        <dt>Files comprising the <i>staff</i> application: </dt>  </br>
+        <dd>
+          <table>
+              <tr><td>
+                    <pre><a href="controlsfx-8.40.12.jar">controlsfx-8.40.12.jar</a></pre>
+                  </td>
+                  <td>
+                    Java archive containing the ControlsFX JavaFX GUI controls.
+                  </td>
+              </tr>
+
+              <tr><td>
+                    <pre><a href="css/style.css">css/style.css</a></pre>
+                  </td>
+                  <td>
+                    The style sheet for this application
+                  </td>
+              </tr>
+
+              <tr><td>
+                    <pre><a href="fxml/put_FXID_objects_into.my.app.rex">fxml/put_FXID_objects_into.my.app.rex</a></pre>
+                  </td>
+                  <td>
+                    Rexx utility program that saves all JavaFX objects of the FXML-file globally for Rexx.
+                  </td>
+              </tr>
+
+              <tr><td>
+                    <pre><a href="fxml/staff.fxml">fxml/staff.fxml</a></pre>
+                  </td>
+                  <td>
+                    FXML file defining the JavaFX GUI.
+                  </td>
+              </tr>
+
+              <tr><td>
+                    <pre><a href="fxml/staffController.rxj">fxml/staffController.rxj</a></pre>
+                  </td>
+                  <td>
+                    Rexx program serving as the controller.
+                  </td>
+              </tr>
+
+              <tr><td>
+                    <pre><a href="images/bsf4oorexx_032.png">images/bsf4oorexx_032.png</a></pre>
+                  </td>
+                  <td>
+                    The image representing the BSF4ooRexx logo used as the application icon.
+                  </td>
+              </tr>
+
+              <tr><td>
+                    <pre><a href="license.txt">license.txt</a></pre>
+                  </td>
+                  <td>
+                    ControlFX license.
+                  </td>
+              </tr>
+
+              <tr><td>
+                    <pre>readme.html</pre>
+                  </td>
+                  <td>
+                    This file.
+                  </td>
+              </tr>
+
+              <tr><td>
+                    <pre><a href="run.cmd">run.cmd</a></pre>
+                  </td>
+                  <td>
+                    The Windows script to start the application by adding temporarily the JAR file to the CLASSPATH
+                    environment variable, such that Java becomes able to find and load the ControlFX JavaFX GUI Java classes.
+                  </td>
+              </tr>
+
+              <tr><td>
+                    <pre><a href="run.sh">run.sh</a></pre>
+                  </td>
+                  <td>
+                    The Unix script to start the application by adding temporarily the JAR file to the CLASSPATH
+                    environment variable, such that Java becomes able to find and load the ControlFX JavaFX GUI Java classes.
+                  </td>
+              </tr>
+
+              <tr><td>
+                    <pre><a href="staff.rxj">staff.rxj</a></pre>
+                  </td>
+                  <td>
+                    The Rexx <i>staff</i> application program.
+                  </td>
+              </tr>
+          </table>
+        </dd>
+
+    <p></p>
+
     <p><font face="Segoe UI"><br></font>
+	<p><a href="http://gluonhq.com/products/scene-builder/" target="_blank">SceneBuilder</a> is an open-source tool for creating and modifying FXML files. It is also possible to inject third party java archives to import additional components to SceneBuilder. Simply go to "Library" and open the "Library Manager" by clicking on "JAR/FXML Manager" as shown in the Screenshot below. Using this form you can add JavaFX components from jar files and make them available to your JavaFX application.</p>
+	
+	<img src="images/SceneBuilder.png" />
     </p>
     <p><font face="Segoe UI">Author: Adrian Baginski<br></font>
     </p>

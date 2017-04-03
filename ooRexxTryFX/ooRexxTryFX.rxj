@@ -1,0 +1,101 @@
+parse source . . s
+.environment~setEntry("my.app", .directory~new)
+.local~LauncherImpl = bsf.import("com.sun.javafx.application.LauncherImpl")
+.environment~java.lang.Runnable = bsf.importClass("java.lang.Runnable")
+.environment~java.lang.Thread = bsf.importClass("java.lang.Thread")
+.environment~Platform = bsf.importClass("javafx.application.Platform")
+call bsf.import "javafx.stage.StageStyle", "StageStyle"
+
+appDirectory = filespec("Location", s)   -- determine path to this Rexx program
+jfile = .bsf~new("java.io.File",appDirectory)
+urlAppDir = jfile~toUri~toUrl
+.my.app~appClzLdr = .bsf~new("java.net.URLClassLoader", bsf.createJavaArrayOf("java.net.URL", urlAppDir))
+
+   -- load the FXMLLoader class, save it for multiple usages
+.my.app~fxmlLoader = bsf.loadClass("javafx.fxml.FXMLLoader")
+
+.my.app~rexxHandler = .rxDocHandler~new
+rxApp = BsfCreateRexxProxy(.my.app~rexxHandler,,"javafx.application.Application")
+.my.app~rxApp = rxApp
+
+.my.app~preloaderHandler = .preloaderHandler~new
+preloader = BsfCreateRexxProxy(.my.app~preloaderHandler,,"javafx.application.Preloader")
+.my.app~preloader = preloader
+   -- launch the application, invoke "start" and then stay up until the application closes
+.LauncherImpl~launchApplication(rxApp~getClass, preloader~getClass, .nil)     /* this method first starts the Preloader class, then the Application class
+                                                                               * the third arguments provides a list of arguments */
+::requires "BSF.CLS"    -- get Java support
+::requires "assets/_TabManager.cls"
+::requires "assets/_OpenRecentMenuManager.cls"
+
+::class preloaderHandler
+   /* loads the fxml document defining the GUI elements, sets up a scene for it and shows it */
+::method start    -- will be invoked by the "launch" method
+  use arg preloaderStage  -- we get the primary stage to use for our UI
+  .my.app~preloaderStage = preloaderStage
+
+  preloaderStage~initStyle(.StageStyle~UNDECORATED) -- hide the border and its controls like "close" and "maximise"
+  preloaderFXMLUrl = .my.app~appClzLdr~findResource("fxml/preloader.fxml")
+  preloaderFXML    = .my.app~fxmlLoader~load( preloaderFXMLUrl )   -- load the fxml document
+
+  preloaderScene   = .bsf~new("javafx.scene.Scene", preloaderFXML)
+  preloaderStage~setScene(preloaderScene)   -- set the stage to our scene
+  preloaderStage~setAlwaysOnTop(.true)      -- overlay primary stage if needed
+  preloaderStage~show
+
+/* implements the abstract method "start" for the Java class javafx.application.Application
+   (BSF4ooRexx also supplies another (trailing) slotDir (a Rexx Directory) argument, as "start" is
+   invoked from Java)
+*/
+::class RxDocHandler
+   /* loads the fxml document defining the GUI elements, sets up a scene for it and shows it */
+::method start    -- will be invoked by the "launch" method
+  expose primaryStage
+  use arg primaryStage  -- we get the primary stage to use for our UI
+  .my.app~primaryStage = primaryStage -- save the primary stage in our directory
+   -- use application's URLClassloader to find the resource (returns a URL)
+  mainSceneFXMLUrl = .my.app~appClzLdr~findResource("fxml/ooRexxTryFX.fxml")
+  mainSceneFXML    = .my.app~fxmlLoader~load( mainSceneFXMLUrl )   -- load the fxml document
+
+  .environment~TabManager = .TabManager~new         -- create a new TabManager from "assets/_TabManager.rex"
+  .environment~OpenRecentMenuManager = .OpenRecentMenuManager~new     -- call the responsible class to fill the "OpenRecent" Menu with items
+
+  self~loadPreferences()
+  self~fillTreeView()
+
+   -- create a scene from the FXML DOM and assign it to the primaryStage
+  .my.app~mainScene = .bsf~new("javafx.scene.Scene", mainSceneFXML) -- create a scene for our document
+  primaryStage~setScene(.my.app~mainScene)   -- set the stage to our scene
+  primaryStage~setTitle("ooRexxTryFX")
+   -- create an image for the application icon from the InputStream
+  inpStrIcon = .my.app~appClzLdr~getResourceAsStream("images/bsf4oorexx_032.png")
+  imgIcon = .bsf~new("javafx.scene.image.Image",inpStrIcon)
+  primaryStage~getIcons~add(imgIcon)         -- set application icon
+
+  primaryStage~show                          -- show the stage (and thereby our scene
+
+  /* ---------------------------------------------------------------------------------------------------- */
+
+  say
+  say "*-----------------------------------------------------------------------------*"
+  say "| This console is only used for input regarding the Rexx Utility SysGetKey(). |"
+  say '| Please use the area named "Input" on the GUI as your primary input device.  |'
+  say "*-----------------------------------------------------------------------------*"
+  say
+
+  .my.app~preloaderStage~close       -- close the preloader screen
+
+
+/* the following method loads the entries of the file "preferences.conf" into a directive */
+::method loadPreferences
+  .my.app~preferences = .properties~load("assets/preferences.conf")
+
+
+::method fillTreeView
+  /* first check if the user even wants to display the file tree */
+  if \.my.app~preferences~getProperty("displayFileTree") then
+    .my.app~ooRexxTryFX.fxml~FileTreePane~~setPrefWidth(0)~~setVisible(.false)
+  else do
+    /* todo: generate the file tree */
+
+  end

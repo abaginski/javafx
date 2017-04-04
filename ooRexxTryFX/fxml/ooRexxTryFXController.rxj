@@ -1,37 +1,67 @@
 /* redirect output monitor destination */
-.local~rexxEngine = .bsf~new("org.apache.bsf.BSFManager")~loadScriptingEngine("rexx")
-.output~destination(.GUIOutputStream~new("STDOUT"))
+-- .local~fx.rexxEngine = .bsf~new("org.apache.bsf.BSFManager")~loadScriptingEngine("rexx")
+-- .output~destination(.GUIOutputStream~new("STDOUT")) -- we need to change the new Rexx engine's .output !
 
-::class GUIOutputStream subclass stream
-::method say
-    use arg output
-    .my.app~ooRexxTryFX.fxml~Output~setText( output )
+::requires "FXRexxEngine.rxj"    -- get access to the RXRexxEngine class
+
 
 ::routine runApp public
     use arg slotDir
 
+    tgtOutput=.my.app~ooRexxTryFX.fxml~output   -- get "Output" TextArea object
+    tgtOutput~setText("")  -- delete output area
+
+-- rgf: hier k?nnte in Zukunft entschieden werden, welche RexxEngine zur Ausf?hrung benutzt werden soll
+    fxRexxEngine=.FXRexxEngine~latestRexxEngine   -- if a RexxEngine available it can be retrieved
+    if fxRexxEngine=.nil then      -- no RexxEngine created so far, create one
+    do
+         -- usage                  (input,output,error,debugInput,traceOutput)
+         -- TODO: erg?nzen, wenn die anderen JavaFX-Objekte verf?gbar sind!
+       fxRexxEngine=.FXRexxEngine~new(     , tgtOutput)
+       .local~fx.RexxEngine=fxRexxEngine     -- diese soll die Default-RexxEngine sein (.fx.RexxEngine)
+    end
+
   --  signal on syntax
     ScriptContext = slotDir~scriptContext
-    TextArea = .TabManager~getInputArea
-    Code = TextArea~getText
+    CodeArea = .TabManager~getInputArea
+    Code = CodeArea~getText
 
-    runnable = BsfCreateRexxProxy(.ExecuteThread~new(Code), ,.java.lang.Runnable)
+-- rgf: why executing on a separate thread?
+    et=.ExecuteThread~new(fxRexxEngine~rexxEngine, Code)
+    runnable = BsfCreateRexxProxy(et, ,.java.lang.Runnable)
     .java.lang.Thread~new(runnable)~~bsf.dispatch("start")              -- Run code in separate thread
+say "Rexx program started," .dateTime~new", et~busy="pp(et~busy) "et~done="pp(et~done)
+
     /*@get(SplitPane)*/
     /* grow the Output Area: */
     SplitPane~setDividerPosition(0, 0.65)   -- arguments: index, position
 
+say "Rexx program may have ended already," .dateTime~new", et~busy="pp(et~busy) "et~done="pp(et~done)
+say "---"
+
+
 /* --------------------------------------------------------------------------------------------------- */
 
+
+-- rgf: jetzt ein drittes
 ::class ExecuteThread
+::attribute res               -- attribute will receive the return value from the Rexx program; fetch it after "done" got .true
+::attribute busy              -- indicates whether Rexx program is executing on separate thread
+::attribute done              -- indicate that Rexx script ran
 ::method init
-   expose Code
-   use arg Code
+   expose rexxEngine Code args busy done
+   use strict arg rexxEngine, Code, args=.nil
+   res=.nil                   -- set res attribute explicitly to .nil
+   done=.false                -- indicate that Rexx program was not run/is not finished
+   busy=.false                -- indicate Rexx program not running (yet)
 
 ::method run
-   expose Code
-   .rexxEngine~apply("tmp.code",0,0,Code,.nil,.nil) --java.lang.String source, int lineNo, int columnNo, java.lang.Object funcBody, java.util.Vector paramNames, java.util.Vector arguments)
-   say pp(result)
+   expose rexxEngine Code args res busy done
+   busy=.true                 -- indicate Rexx program is running
+   res=.fx.rexxEngine~rexxEngine~apply("tmp.code",0,0,Code,.nil,args) --java.lang.String source, int lineNo, int columnNo, java.lang.Object funcBody, java.util.Vector paramNames, java.util.Vector arguments)
+   busy=.false                -- indicate Rexx program is not running anymore
+   done=.true                 -- indicate that Rexx program has run and is finished, save to fetch result "res"
+   say pp(res)
 
 
 
@@ -164,3 +194,36 @@
     end
 
 /* --------------------------------------------------------------------------------------------------- */
+
+
+/** Class that outputs strings to TextArea.
+*/
+::class fxOutputStream subclass outputStream -- 2017-04-03, rgf
+::method init
+  expose fxTextArea           -- the text area to output to
+  use arg fxTextArea          -- fetch TextArea to output to
+
+::method charOut
+  expose fxTextArea           -- get access to the TextArea we want to write to
+  use strict arg string="", charPosition=(-1)     -- ignore position, we have a transient stream here
+  if string<>"" then fxTextArea~appendText(string)  -- output received characters
+  return 0              -- transient stream, return 0 as position
+
+::method lineOut
+  forward message "SAY" -- let the SAY method carry out the operation
+
+::method say
+  expose fxTextArea           -- get access to the TextArea we want to write to
+  use arg string="", linePosition=(-1)            -- ignore position, we have a transient stream here
+  if string<>"" then fxTextArea~appendText(string || "0a"x)  -- output received characters, append NL character
+
+
+/*
+::class fxInputStream
+  expose fxTextInputControl   -- the text input to get data from
+
+...
+
+*/
+
+

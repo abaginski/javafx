@@ -25,8 +25,8 @@ preloader = BsfCreateRexxProxy(.my.app~preloaderHandler,,"javafx.application.Pre
 .LauncherImpl~launchApplication(rxApp~getClass, preloader~getClass, .nil)     /* this method first starts the Preloader class, then the Application class
                                                                                * the third arguments provides a list of arguments */
 ::requires "BSF.CLS"    -- get Java support
-::requires "assets/_TabManager.cls"
-::requires "assets/_OpenRecentMenuManager.cls"
+::requires "resources/TabManager.rxj"
+::requires "resources/OpenRecentMenuManager.rxj"
 
 ::class preloaderHandler
    /* loads the fxml document defining the GUI elements, sets up a scene for it and shows it */
@@ -57,7 +57,7 @@ preloader = BsfCreateRexxProxy(.my.app~preloaderHandler,,"javafx.application.Pre
   mainSceneFXMLUrl = .my.app~appClzLdr~findResource("fxml/ooRexxTryFX.fxml")
   mainSceneFXML    = .my.app~fxmlLoader~load( mainSceneFXMLUrl )   -- load the fxml document
 
-  .environment~TabManager = .TabManager~new         -- create a new TabManager from "assets/_TabManager.rex"
+  .environment~TabManager = .TabManager~new         -- create a new TabManager from "resources/TabManager.rxj"
   .environment~OpenRecentMenuManager = .OpenRecentMenuManager~new     -- call the responsible class to fill the "OpenRecent" Menu with items
 
   self~loadPreferences()
@@ -88,7 +88,7 @@ preloader = BsfCreateRexxProxy(.my.app~preloaderHandler,,"javafx.application.Pre
 
 /* the following method loads the entries of the file "preferences.conf" into a directive */
 ::method loadPreferences
-  .my.app~preferences = .properties~load("assets/preferences.conf")
+  .my.app~preferences = .properties~load("resources/preferences.conf")
 
 
 ::method fillTreeView

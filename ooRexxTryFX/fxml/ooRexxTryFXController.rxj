@@ -2,7 +2,7 @@
 -- .local~fx.rexxEngine = .bsf~new("org.apache.bsf.BSFManager")~loadScriptingEngine("rexx")
 -- .output~destination(.GUIOutputStream~new("STDOUT")) -- we need to change the new Rexx engine's .output !
 
-::requires "assets/FXRexxEngine.rxj"    -- get access to the RXRexxEngine class
+::requires "resources/FXRexxEngine.rxj"    -- get access to the RXRexxEngine class
 
 
 ::routine runApp public

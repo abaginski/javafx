@@ -1,6 +1,6 @@
 ::class TabManager public
-/* variable initialisation */
 ::method init
+/* variable initialisation */
   expose allTabs TabPane alreadySavedFilepaths
   TabPane = .my.app~ooRexxTryFX.fxml~TabPane
   allTabs = .array~new
@@ -50,4 +50,4 @@
   TabIndex = SelectionModel~getSelectedIndex
   return TabIndex
 
-::requires bsf.cls
+::requires "BSF.CLS"

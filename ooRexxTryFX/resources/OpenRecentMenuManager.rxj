@@ -4,7 +4,7 @@
   expose desiredItems OpenRecentMenu config
   use arg desiredItems=5
   OpenRecentMenu = .my.app~ooRexxTryFX.fxml~openRecentMenu
-  config = .stream~new("assets/recent_files.conf")
+  config = .stream~new("resources/recent_files.conf")
   self~loadMenu
 
 ::method loadMenu

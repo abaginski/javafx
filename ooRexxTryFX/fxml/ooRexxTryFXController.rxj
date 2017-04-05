@@ -2,7 +2,7 @@
 -- .local~fx.rexxEngine = .bsf~new("org.apache.bsf.BSFManager")~loadScriptingEngine("rexx")
 -- .output~destination(.GUIOutputStream~new("STDOUT")) -- we need to change the new Rexx engine's .output !
 
-::requires "FXRexxEngine.rxj"    -- get access to the RXRexxEngine class
+::requires "assets/FXRexxEngine.rxj"    -- get access to the RXRexxEngine class
 
 
 ::routine runApp public
@@ -12,7 +12,7 @@
     tgtOutput~setText("")  -- delete output area
 
 -- rgf: hier k?nnte in Zukunft entschieden werden, welche RexxEngine zur Ausf?hrung benutzt werden soll
-    fxRexxEngine=.FXRexxEngine~latestRexxEngine   -- if a RexxEngine available it can be retrieved
+    fxRexxEngine=.FXRexxEngine~latestFXRexxEngine   -- if a RexxEngine available it can be retrieved
     if fxRexxEngine=.nil then      -- no RexxEngine created so far, create one
     do
          -- usage                  (input,output,error,debugInput,traceOutput)

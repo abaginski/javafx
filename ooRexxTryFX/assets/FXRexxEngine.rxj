@@ -17,15 +17,15 @@
 
 ::class fxRexxEngine public
 
-::attribute latestRexxEngine class  -- for storing the latest created rexxEngine
+::attribute latestFXRexxEngine class  -- for storing the latest created rexxEngine
 /* or:
 ::attribute latestRexxEngine get class          -- for storing the latest created rexxEngine
 ::attribute latestRexxEngine set private class  -- let no one else set this class attribute
 */
 
 ::method init class           -- class constructor, initialize class attribute "latestRexxEngine" to .nil
-  expose latestRexxEngine
-  latestRexxEngine=.nil       -- set current engine to .nil to indicate, none available
+  expose latestFXRexxEngine
+  latestFXRexxEngine=.nil       -- set current engine to .nil to indicate, none available
 
 ::attribute rexxEngine           get   -- do not allow to change this
 
@@ -55,7 +55,7 @@
 
   self~redirect      -- now have the RexxEngine instance redirect the monitors in its own .local environment directory
 
-  self~class~latestRexxEngine=self  -- save this FXRexxEngine instance in class attribute "latestRexxEngine"
+  self~class~latestFXRexxEngine=self  -- save this FXRexxEngine instance in class attribute "latestRexxEngine"
 
 
 ::method redirect

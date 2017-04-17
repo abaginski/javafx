@@ -16,40 +16,80 @@
 <?import javafx.scene.web.WebView?>
 <?import javafx.scene.layout.BorderPane?>
 <?import javafx.scene.control.TreeView?>
+<?import javafx.scene.image.ImageView?>
+<?import javafx.scene.image.Image?>
 <?language rexx?>
 
-<VBox prefHeight="600.0" prefWidth="1000.0" xmlns="http://javafx.com/javafx/8.0.111" xmlns:fx="http://javafx.com/fxml/1">
+<VBox xmlns="http://javafx.com/javafx/8.0.111" xmlns:fx="http://javafx.com/fxml/1">
   <fx:script source="ooRexxTryFXController.rxj" />
   <children>
     <MenuBar VBox.vgrow="NEVER">
       <menus>
-        <Menu mnemonicParsing="false" text="File">
+        <Menu mnemonicParsing="true" text="_File" accelerator="Alt+F">
           <items>
-            <MenuItem mnemonicParsing="false" text="New" />
-            <MenuItem mnemonicParsing="false" text="Open…" onAction="call loadFile arg(arg())" accelerator="Shortcut+O"/>
+            <MenuItem mnemonicParsing="true" text="_New" onAction="
+            .TabManager~newTab;              /* invoke the method 'newTab' from the TabManager */
+            " accelerator="Shortcut+N">
+                  <graphic>
+                      <ImageView>
+                          <Image url="images/icon_newfile.png" />
+                      </ImageView>
+                  </graphic>
+              </MenuItem>
+            <MenuItem mnemonicParsing="true" text="_Open…" onAction="call loadFile arg(arg())" accelerator="Shortcut+O">
+                <graphic>
+                    <ImageView>
+                        <Image url="images/icon_loadfile.png" />
+                    </ImageView>
+                </graphic>
+            </MenuItem>
             <Menu mnemonicParsing="false" text="Open Recent" fx:id="openRecentMenu" />
             <SeparatorMenuItem mnemonicParsing="false" />
-            <MenuItem mnemonicParsing="false" text="Close" />
-            <MenuItem mnemonicParsing="false" text="Save" onAction="call saveFile arg(arg())" accelerator="Shortcut+S" />
-            <MenuItem mnemonicParsing="false" text="Save As…" onAction="call saveFileAs arg(arg())" accelerator="Shortcut+Shift+S"/>
+            <MenuItem mnemonicParsing="false" text="Close" onAction="
+            .TabManager~closeTab;              /* invoke the method 'closeTab' from the TabManager */
+            " accelerator="Shortcut+W"/>
+            <MenuItem mnemonicParsing="false" text="Close All" onAction="
+            call closeAllTabs;
+            " accelerator="Shortcut+Shift+W" />
+            <SeparatorMenuItem mnemonicParsing="false" />
+            <MenuItem mnemonicParsing="true" text="_Save" onAction="call saveFile arg(arg())" accelerator="Shortcut+S">
+                <graphic>
+                    <ImageView>
+                        <Image url="images/icon_savefile.png" />
+                    </ImageView>
+                </graphic>
+            </MenuItem>
+            <MenuItem mnemonicParsing="false" text="Save As…" onAction="call saveFileAs arg(arg())" accelerator="Shortcut+Shift+S">
+                <graphic>
+                    <ImageView>
+                        <Image url="images/icon_saveas.png" />
+                    </ImageView>
+                </graphic>
+            </MenuItem>
+            <MenuItem mnemonicParsing="false" text="Save All" onAction="call saveAll arg(arg())"> <!-- accelerator="Shortcut+Alt+S"-->
+                <graphic>
+                    <ImageView>
+                        <Image url="images/icon_saveall.png" />
+                    </ImageView>
+                </graphic>
+            </MenuItem>
             <SeparatorMenuItem mnemonicParsing="false" />
             <MenuItem mnemonicParsing="false" text="Preferences…" />
             <SeparatorMenuItem mnemonicParsing="false" />
-            <MenuItem mnemonicParsing="false" text="Quit" onAction=".Platform~exit" accelerator="Alt+F4"/>
+            <MenuItem mnemonicParsing="true" text="_Quit" onAction=".Platform~exit" accelerator="Shortcut+Q"/>
           </items>
         </Menu>
         <Menu mnemonicParsing="false" text="Edit">
           <items>
-            <MenuItem mnemonicParsing="false" text="Undo" />
-            <MenuItem mnemonicParsing="false" text="Redo" />
-            <SeparatorMenuItem mnemonicParsing="false" />
-            <MenuItem mnemonicParsing="false" text="Cut" />
-            <MenuItem mnemonicParsing="false" text="Copy" />
-            <MenuItem mnemonicParsing="false" text="Paste" />
-            <MenuItem mnemonicParsing="false" text="Delete" />
-            <SeparatorMenuItem mnemonicParsing="false" />
             <MenuItem mnemonicParsing="false" text="Select All" />
             <MenuItem mnemonicParsing="false" text="Unselect All" />
+          </items>
+        </Menu>
+        <Menu mnemonicParsing="false" text="Edit">
+          <items>
+            <MenuItem mnemonicParsing="false" text="Zoom In" onAction="call zoom in;" accelerator="Shortcut+Plus"/>
+            <MenuItem mnemonicParsing="false" text="Zoom Out" onAction="call zoom out;" accelerator="Shortcut+Minus"/>
+            <SeparatorMenuItem/>
           </items>
         </Menu>
         <Menu mnemonicParsing="false" text="Help">
@@ -78,25 +118,8 @@
         <items>
           <AnchorPane minHeight="29.0">
                <children>
-                  <TabPane fx:id="TabPane" prefHeight="389.0" prefWidth="998.0" tabClosingPolicy="SELECTED_TAB" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
-                    <tabs>
-                      <Tab text="Untitled Document">
-                        <content>
-                          <AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="180.0" prefWidth="200.0">
-                                 <children>
-                                    <TextArea text="say ((12+4)*5+4)/2" prefHeight="348.0" prefWidth="998.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
-                                       <font>
-                                          <Font size="14.0" />
-                                       </font>
-                                    </TextArea>
-                                 </children>
-                                 <padding>
-                                    <Insets top="3.0" />
-                                 </padding>
-                              </AnchorPane>
-                        </content>
-                      </Tab>
-                    </tabs>
+                  <TabPane fx:id="TabPane" prefHeight="389.0" prefWidth="998.0" tabClosingPolicy="ALL_TABS" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
+
                   </TabPane>
                </children>
             </AnchorPane>
@@ -118,16 +141,14 @@
           <right>
               <AnchorPane fx:id="FileTreePane" BorderPane.alignment="CENTER">
                   <children>
-                      <TreeView fx:id="FileTree" layoutX="-14.0" layoutY="124.0" prefHeight="575.0" prefWidth="200.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
-                          <padding>
-                              <Insets top="33.0" />
-                          </padding>
+                      <TreeView fx:id="FileTree" layoutX="0.0" layoutY="120.0" prefHeight="575.0" prefWidth="300.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
                       </TreeView>
                   </children>
               </AnchorPane>
           </right>
       </BorderPane>
   </children>
+    <!-- comment: Rexx program that stores all fx:id objects in .local~rootLayout.fxml directory -->
   <fx:script source="put_FXID_objects_into.my.app.rex" />
 </VBox>
 

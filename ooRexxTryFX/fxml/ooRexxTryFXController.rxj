@@ -129,10 +129,14 @@ say "---"
         */
         .TabManager~saveFilepath(filepath)                                     -- save the file to eventually skip the dialog next time
         filename = filespec("Name", filepath)
-        .TabManager~getCurrentTab~setText(filename)
+        Tab = .TabManager~getCurrentTab
+        Tab~setText(filename)
+        Tab~setGraphic(.nil)                                             -- remove the "save" icon from the tab
         .OpenRecentMenuManager~updateMenu(filepath)
-        say time()": File successfully saved!"      --todo: no output??
+        say time()": File successfully saved!"
         .my.app~ooRexxTryFX.fxml~SplitPane~setDividerPosition(0, 0.75)   -- arguments: index, position
+
+
     end
 
 /* --------------------------------------------------------------------------------------------------- */
@@ -140,9 +144,6 @@ say "---"
 ::routine loadFile public
     use arg slotDir
     scriptContext = slotDir~scriptContext
-    TextArea = .TabManager~getInputArea
-    Code = TextArea~getText
-
     if slotDir~userData <> .nil then do
       userData = slotDir~userData
       if userData~useCurrentFile <> .nil then do                       -- called by "Application" -> "Reload"
@@ -178,18 +179,20 @@ say "---"
       else: open in new tab
       */
     if file \= .nil then do
+       .TabManager~newTab                                                  -- always open the file in a new tab
         filepath = file~toString                                            -- cast the "File" obj to a "String", thereby extracting the filepath
         rexxStream = .stream~new(filepath)
         loadedCode = ""
 		    do line over rexxStream
-			     loadedCode ||= line "0a"x                                  /* append the next line to the string loadedCode */
+			     loadedCode ||= line "0a"x                                       /* append the next line to the string loadedCode */
         end
-        TextArea~setText(loadedCode)
+        .TabManager~getInputArea~replaceText(loadedCode)
         rexxStream~close
-        say time() || ": File successfully opened!"
+        say time()": File successfully opened!"
         --todo: make this a statusbar notification
         .TabManager~saveFilepath(filepath)
-        .TabManager~getCurrentTab~setText( filespec("name", filepath) )
+        tooltip = .bsf~new("javafx.scene.control.Tooltip", filepath)
+        .TabManager~getCurrentTab~~setText( filespec("name", filepath) )~~setTooltip(tooltip)     -- set a tooltip and text to the tab
         .OpenRecentMenuManager~updateMenu(filepath)
     end
 
@@ -227,3 +230,28 @@ say "---"
 */
 
 
+/* --------------------------------------------------------------------------------------------------- */
+::routine closeAllTabs public
+  loop i=1 to .TabManager~allTabs~size
+    .TabManager~closeTab
+  end
+
+::routine saveAll public
+  use arg slotDir
+    .TabManager~saveAll
+  return
+
+::routine zoom public
+  use arg mode
+  select case mode
+    when in then
+      .my.app~codeAreaFontSize += 1
+    when out then
+      .my.app~codeAreaFontSize -= 1
+  end
+  .my.app~preferences~~setProperty("codeAreaFontSize", .my.app~codeAreaFontSize)~~save("resources/preferences.conf")
+  /* this font size will apply for all new opened files but not for the already opened ones, hence we need to update them too */
+  loop Tab over .TabManager~allTabs
+   codeArea = .TabManager~getInputArea(Tab)
+   codeArea~setStyle("-fx-font-size:" .my.app~codeAreaFontSize || "pt")
+  end

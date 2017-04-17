@@ -1,19 +1,28 @@
-parse source . . s
+parse source .environment~os . .environment~s
+parse version v .
+
+.local~setEntry("argumentList", .array~new)                              -- save the argument list in the local variable to make it accessible
+loop i=1 to arg()
+  .argumentList[i]=arg(i)
+end
+
+if v < "REXX-ooRexx_5" then do
+  say "[error] ooRexxTryFX requires ooRexx Version 5"
+  exit
+end
 .environment~setEntry("my.app", .directory~new)
-.local~LauncherImpl = bsf.import("com.sun.javafx.application.LauncherImpl")
 .environment~java.lang.Runnable = bsf.importClass("java.lang.Runnable")
 .environment~java.lang.Thread = bsf.importClass("java.lang.Thread")
 .environment~Platform = bsf.importClass("javafx.application.Platform")
 call bsf.import "javafx.stage.StageStyle", "StageStyle"
-
-appDirectory = filespec("Location", s)   -- determine path to this Rexx program
+.my.app~preferences = .properties~load("resources/preferences.conf") /* load the entries of the file "preferences.conf" into a directive */
+.my.app~codeAreaFontSize = .my.app~preferences["codeAreaFontSize"]    /* save the font size in an environmental variable outside the config file */
+appDirectory = filespec("Location", .s)   -- determine path to this Rexx program
 jfile = .bsf~new("java.io.File",appDirectory)
 urlAppDir = jfile~toUri~toUrl
 .my.app~appClzLdr = .bsf~new("java.net.URLClassLoader", bsf.createJavaArrayOf("java.net.URL", urlAppDir))
-
    -- load the FXMLLoader class, save it for multiple usages
 .my.app~fxmlLoader = bsf.loadClass("javafx.fxml.FXMLLoader")
-
 .my.app~rexxHandler = .rxDocHandler~new
 rxApp = BsfCreateRexxProxy(.my.app~rexxHandler,,"javafx.application.Application")
 .my.app~rxApp = rxApp
@@ -22,11 +31,14 @@ rxApp = BsfCreateRexxProxy(.my.app~rexxHandler,,"javafx.application.Application"
 preloader = BsfCreateRexxProxy(.my.app~preloaderHandler,,"javafx.application.Preloader")
 .my.app~preloader = preloader
    -- launch the application, invoke "start" and then stay up until the application closes
-.LauncherImpl~launchApplication(rxApp~getClass, preloader~getClass, .nil)     /* this method first starts the Preloader class, then the Application class
+LauncherImpl = bsf.import("com.sun.javafx.application.LauncherImpl")
+LauncherImpl~launchApplication(rxApp~getClass, preloader~getClass, .nil)     /* this method first starts the Preloader class, then the Application class
                                                                                * the third arguments provides a list of arguments */
 ::requires "BSF.CLS"    -- get Java support
 ::requires "resources/TabManager.rxj"
 ::requires "resources/OpenRecentMenuManager.rxj"
+::requires "resources/FileTreeManager.rxj"
+::requires "resources/RexxEventHandler.rxj"
 
 ::class preloaderHandler
    /* loads the fxml document defining the GUI elements, sets up a scene for it and shows it */
@@ -57,23 +69,31 @@ preloader = BsfCreateRexxProxy(.my.app~preloaderHandler,,"javafx.application.Pre
   mainSceneFXMLUrl = .my.app~appClzLdr~findResource("fxml/ooRexxTryFX.fxml")
   mainSceneFXML    = .my.app~fxmlLoader~load( mainSceneFXMLUrl )   -- load the fxml document
 
-  .environment~TabManager = .TabManager~new         -- create a new TabManager from "resources/TabManager.rxj"
+  .environment~TabManager            = .TabManager~new                -- create a new TabManager from "resources/TabManager.rxj"
   .environment~OpenRecentMenuManager = .OpenRecentMenuManager~new     -- call the responsible class to fill the "OpenRecent" Menu with items
-
-  self~loadPreferences()
-  self~fillTreeView()
-
+  .environment~FileTreeManager       = .FileTreeManager~new
    -- create a scene from the FXML DOM and assign it to the primaryStage
   .my.app~mainScene = .bsf~new("javafx.scene.Scene", mainSceneFXML) -- create a scene for our document
+  .my.app~mainScene~getStylesheets~add("stylesheets/ooRexxTryFX.css")
   primaryStage~setScene(.my.app~mainScene)   -- set the stage to our scene
   primaryStage~setTitle("ooRexxTryFX")
-   -- create an image for the application icon from the InputStream
-  inpStrIcon = .my.app~appClzLdr~getResourceAsStream("images/bsf4oorexx_032.png")
-  imgIcon = .bsf~new("javafx.scene.image.Image",inpStrIcon)
-  primaryStage~getIcons~add(imgIcon)         -- set application icon
-
+  bsf4oorexxImage = .bsf~new("javafx.scene.image.Image","images/bsf4oorexx_032.png")
+  primaryStage~getIcons~add(bsf4oorexxImage)         -- set application icon
+  /* apply some preferences */
+  primaryStage~setMaximized(.my.app~preferences["maximized"])
+  primaryStage~setHeight(.my.app~preferences["height"])
+  primaryStage~setWidth(.my.app~preferences["width"])
+  /* add event listeners to save user preferences on-the-fly */
+  primaryStage~heightProperty~addListener(bsfCreateRexxProxy(self,,"javafx.beans.value.ChangeListener"))
+  primaryStage~widthProperty~addListener(bsfCreateRexxProxy(self,,"javafx.beans.value.ChangeListener"))
+  primaryStage~maximizedProperty~addListener(bsfCreateRexxProxy(self,,"javafx.beans.value.ChangeListener"))
   primaryStage~show                          -- show the stage (and thereby our scene
 
+  /* loop over the argument list to retrieve filepaths and open them */
+  loop argument over .argumentList
+    if SysIsFile(argument) then
+      .openFile~new(argument)~~handle
+  end
   /* ---------------------------------------------------------------------------------------------------- */
 
   say
@@ -86,16 +106,10 @@ preloader = BsfCreateRexxProxy(.my.app~preloaderHandler,,"javafx.application.Pre
   .my.app~preloaderStage~close       -- close the preloader screen
 
 
-/* the following method loads the entries of the file "preferences.conf" into a directive */
-::method loadPreferences
-  .my.app~preferences = .properties~load("resources/preferences.conf")
-
-
-::method fillTreeView
-  /* first check if the user even wants to display the file tree */
-  if \.my.app~preferences~getProperty("displayFileTree") then
-    .my.app~ooRexxTryFX.fxml~FileTreePane~~setPrefWidth(0)~~setVisible(.false)
-  else do
-    /* todo: generate the file tree */
-
-  end
+/* this method gets invoked when the user changes either the width or the height of the stage
+ * it changes the property and saves it in the config file */
+::method changed
+  expose primaryStage
+  use arg property, oldValue, newValue
+  .my.app~preferences~setProperty(property~getName, newValue)
+  .my.app~preferences~save("resources/preferences.conf")

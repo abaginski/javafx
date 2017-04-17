@@ -1,18 +1,64 @@
 ::class TabManager public
+::attribute allTabs                             -- the controller routine "closeAllTabs" uses this attribute
 ::method init
 /* variable initialisation */
-  expose allTabs TabPane alreadySavedFilepaths
+  expose allTabs TabPane alreadySavedFilepaths tabCounter
+  tabCounter = 0
   TabPane = .my.app~ooRexxTryFX.fxml~TabPane
   allTabs = .array~new
-  allTabs~insert(TabPane~getTabs~get(0))
   alreadySavedFilepaths = .array~new
+  /* load a code area to the tab */
+  self~newTab             -- create the first Tab
+
+::method newTab
+  expose allTabs TabPane tabCounter
+  Tab = .bsf~new("javafx.scene.control.Tab", "Untitled" tabCounter)
+  tabCounter += 1
+  TabPane~getTabs~add(Tab)
+  TabPane~getSelectionModel~select(Tab)
+  allTabs~insert(Tab)
+
+  codeArea = .bsf~new("org.fxmisc.richtext.CodeArea", "SAY ((12+4)*5+4)/2")
+  virtualizedScrollPane = .bsf~new("org.fxmisc.flowless.VirtualizedScrollPane", codeArea)
+  anchorPane = .bsf~new("javafx.scene.layout.AnchorPane")       -- this anchorPane allows the codeArea to stretch
+  anchorPane~~setBottomAnchor(codeArea,0)~~setRightAnchor(codeArea,0)~~setTopAnchor(codeArea,0)~~setLeftAnchor(codeArea,0)
+  Tab~setContent( virtualizedScrollPane  ) -- attach the fxml document to the current pane
+  Tab~setOnCloseRequest( bsfCreateRexxProxy(.RexxEventHandler~new,,"javafx.event.EventHandler") )
+
+  codeArea~setStyle("-fx-font-size:" .my.app~preferences["codeAreaFontSize"] || "pt")
+  /* handle scroll events to change the font size when the user scrolls with the mousewheel and control up */
+  scrollEvent = bsf.import("javafx.scene.input.ScrollEvent")
+  rp = bsfCreateRexxProxy(.RexxEventHandler~new,,"javafx.event.EventHandler")
+  codeArea~addEventFilter(scrollEvent~SCROLL, rp)
+  LineNumberFactory = bsf.import("org.fxmisc.richtext.LineNumberFactory")
+  codeArea~setParagraphGraphicFactory(LineNumberFactory~get(codeArea))    -- add line numbers to each row
+
+  predicate = bsfCreateRexxProxy(.SyntaxHighlighter~new,,"java.util.function.Predicate")
+  consumer = bsfCreateRexxProxy(.SyntaxHighlighter~new,,"java.util.function.Consumer")
+  eventStream = codeArea~richChanges~filter(predicate)            -- keep track of all changes
+  eventStream~subscribe(consumer)
+
+::method closeTab
+  expose allTabs TabPane tabCounter
+  Tabs = TabPane~getTabs                 -- of type ObservableList<Tab>
+  Tab = self~getCurrentTab               -- get a reference to that Tab
+  Tabs~remove(Tab)                       -- remove the tab from the tab pane
+  index = allTabs~index(Tab)
+  allTabs~delete(index)                  -- remove the tab from our directory
+  tabCounter -= 1                        -- decrement tab counter
+  if Tabs~size = 0 then do
+    /* if the last tab was closed, open a new blank one */
+    self~newTab
+  end
 
 
 ::method getInputArea
-    Tab = self~getCurrentTab
-    TabAnchorPane = Tab~content                      -- get a reference to the AnchorPane
-    TextArea = TabAnchorPane~children~get(0)         -- the textarea is always the first element in the anchorpane
-    return TextArea
+  use arg Tab
+  if \Tab~isA(.bsf) then
+     Tab = self~getCurrentTab
+  virtualizedScrollPane = Tab~content
+  codeArea = virtualizedScrollPane~content
+  return codeArea
 
 /**
  ** this method returns a reference of the current tab
@@ -44,10 +90,15 @@
 /**
  ** this method returns the 0-based index of the current tab
  **/
-::method getTabIndex
+::method getTabIndex private
   expose TabPane
   SelectionModel = TabPane~getSelectionModel
   TabIndex = SelectionModel~getSelectedIndex
   return TabIndex
 
-::requires "BSF.CLS"
+
+
+
+::requires "BSF.CLS"    -- get Java Support
+::requires "resources/RexxEventHandler.rxj"
+::requires "resources/SyntaxHighlighter.rxj"

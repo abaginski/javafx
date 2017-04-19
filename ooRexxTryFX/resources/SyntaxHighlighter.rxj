@@ -1,13 +1,18 @@
 ::class SyntaxHighlighter public
 ::method init
+  
 
 ::method accept
   use arg richTextChange, slotDir
   Tab = .TabManager~getCurrentTab
+  codeArea = .TabManager~getInputArea
+  insertedText = richTextChange~inserted~getText
+  
   if Tab~getGraphic = .nil then do
     Tab~setGraphic(.bsf~new("javafx.scene.image.ImageView", "images/icon_savefile_15.png"))
   end
-
+  
+ 
 
   /* say richTextChange~toString results in:
     RichTextChange{
@@ -22,6 +27,10 @@
 ::method test
   use arg ch
   return \ch~getInserted~equals(ch~getRemoved)
-
+  
+  
 ::method unknown
   say "[information] unhandled call {"arg(1)"}"
+  
+  
+  ::requires bsf.cls

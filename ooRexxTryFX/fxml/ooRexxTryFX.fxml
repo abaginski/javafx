@@ -85,7 +85,7 @@
             <MenuItem mnemonicParsing="false" text="Unselect All" />
           </items>
         </Menu>
-        <Menu mnemonicParsing="false" text="Edit">
+        <Menu mnemonicParsing="false" text="View">
           <items>
             <MenuItem mnemonicParsing="false" text="Zoom In" onAction="call zoom in;" accelerator="Shortcut+Plus"/>
             <MenuItem mnemonicParsing="false" text="Zoom Out" onAction="call zoom out;" accelerator="Shortcut+Minus"/>

@@ -37,7 +37,26 @@
   consumer = bsfCreateRexxProxy(.SyntaxHighlighter~new,,"java.util.function.Consumer")
   eventStream = codeArea~richChanges~filter(predicate)            -- keep track of all changes
   eventStream~subscribe(consumer)
-
+  
+  rp = bsfCreateRexxProxy(self,,"javafx.event.EventHandler")
+  codeArea~setOnKeyPressed(rp)
+  
+::method unknown
+	say arg() arg(1)
+	
+::method handle
+  use arg event
+  event~consume
+	
+	 /* as of 2017-04-18 there is a unwanted feature in the javafx control "TextFlow" which hardcodes the width of a tab to 8 spaces, see https://stackoverflow.com/questions/27585668/setting-the-tab-spacing-size-visualization-for-a-javafx-textarea and https://bugs.openjdk.java.net/browse/JDK-8130738
+  so that's why we need to convert every tab to some spaces manually.. */
+  if event~getText == "	" then do
+	codeArea = self~getInputArea
+    TabInSpaces = .my.app~preferences["TabInSpaces"]
+	codeArea~deletePreviousChar				-- remove the tab character
+	codeArea~replaceSelection(" "~copies(TabInSpaces))
+  end
+  
 ::method closeTab
   expose allTabs TabPane tabCounter
   Tabs = TabPane~getTabs                 -- of type ObservableList<Tab>

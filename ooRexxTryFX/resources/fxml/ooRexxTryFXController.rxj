@@ -35,16 +35,12 @@
    -- .java.lang.Thread~new(runnable)~~bsf.dispatch("start")              -- Run code in separate thread
 say "Rexx program started," .dateTime~new", et~busy="pp(et~busy) "et~done="pp(et~done)
 
-    /*@get(SplitPane)*/
-    /* grow the Output Area: */
-    SplitPane~setDividerPosition(0, 0.65)   -- arguments: index, position
 
 say "Rexx program may have ended already," .dateTime~new", et~busy="pp(et~busy) "et~done="pp(et~done)
 say "---"
 
-  CodeArea~replaceText(pp(et~done))
   if et~done then
-    .StatusBarManager~setMessage("Done")
+    .StatusBarManager~setTempMessage("Done")
 
 
 /* --------------------------------------------------------------------------------------------------- */
@@ -189,8 +185,7 @@ say "---"
         end
         .TabManager~getInputArea~replaceText(loadedCode)
         rexxStream~close
-        say time()": File successfully opened!"
-        --todo: make this a statusbar notification
+        .StatusBarManager~setTempMessage(time()": File successfully opened!")
         .TabManager~saveFilepath(filepath)
         tooltip = .bsf~new("javafx.scene.control.Tooltip", filepath)
         .TabManager~getCurrentTab~~setText( filespec("name", filepath) )~~setTooltip(tooltip)     -- set a tooltip and text to the tab

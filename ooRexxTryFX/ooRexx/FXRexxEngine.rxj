@@ -141,6 +141,10 @@
   end
 
 
+  --.vSplitPane~setDividerPosition(0, 0.65)       /* grow the Output Area: */ -- arguments: index, position
+
+
+
 /** Class that inputs strings from a TextField.   */
 ::class fxInputStream subclass inputStream
 ::attribute type  -- name of monitor to represent

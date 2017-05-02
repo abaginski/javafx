@@ -1,3 +1,22 @@
+.root {
+/*-fx-base: rgb(50, 50, 50);*/
+}
+
 .menu-item .accelerator-text {
   -fx-text-fill: #555;
+}
+
+.split-pane:horizontal > .split-pane-divider {
+   /*-fx-background-color: transparent; */
+   -fx-border-color:transparent #AAA transparent #AAA;
+   -fx-background-color: transparent;
+   -fx-effect: null;
+   -fx-padding: 1 1;
+}
+
+.split-pane:vertical > .split-pane-divider {
+   -fx-border-color:#AAA transparent #AAA transparent;
+   -fx-background-color: transparent;
+   -fx-effect: null;
+   -fx-padding: 1 1;
 }

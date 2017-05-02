@@ -5,6 +5,7 @@
   expose allTabs TabPane alreadySavedFilepaths tabCounter
   tabCounter = 0
   TabPane = .my.app~ooRexxTryFX.fxml~TabPane
+  TabPane~getSelectionModel~selectedItemProperty~addListener(bsfCreateRexxProxy(.ChangeListener~new,,"javafx.beans.value.ChangeListener"))
   allTabs = .array~new
   alreadySavedFilepaths = .array~new
   /* load a code area to the tab */
@@ -18,7 +19,7 @@
   TabPane~getSelectionModel~select(Tab)
   allTabs~insert(Tab)
 
-  codeArea = .bsf~new("org.fxmisc.richtext.CodeArea", "trace ?R; pull v; say v") --SAY ((12+4)*5+4)/0 -- "trace i; parse pull tmp; say tmp"
+  codeArea = .bsf~new("org.fxmisc.richtext.CodeArea", "trace i; do i=1 to 55; say 55/i; end;") -- trace ?R; pull v; say v") --SAY ((12+4)*5+4)/0 -- "trace i; parse pull tmp; say tmp"
   virtualizedScrollPane = .bsf~new("org.fxmisc.flowless.VirtualizedScrollPane", codeArea)
   anchorPane = .bsf~new("javafx.scene.layout.AnchorPane")       -- this anchorPane allows the codeArea to stretch
   anchorPane~~setBottomAnchor(codeArea,0)~~setRightAnchor(codeArea,0)~~setTopAnchor(codeArea,0)~~setLeftAnchor(codeArea,0)
@@ -114,6 +115,13 @@
   TabIndex = SelectionModel~getSelectedIndex
   return TabIndex
 
+
+
+::class ChangeListener
+::method changed
+  use arg property, oldValue, newValue
+  if newValue <> .nil then
+    .my.app~primaryStage~setTitle(pp(newValue~getText) "| ooRexxTryFX")
 
 
 

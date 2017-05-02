@@ -92,6 +92,8 @@ LauncherImpl~launchApplication(rxApp~getClass, preloader~getClass, .nil)     /* 
   .environment~OpenRecentMenuManager = .OpenRecentMenuManager~new       -- call the responsible class to fill the "OpenRecent" Menu with items
   .environment~FileTreeManager       = .FileTreeManager~new 
   .environment~StatusBarManager      = .StatusBarManager~new
+  .environment~vSplitPane            = .my.app~ooRexxTryFX.fxml~SplitPane
+  .environment~vDivider              = .environment~vSplitPane~getDividers~get(0)
    -- create a scene from the FXML DOM and assign it to the primaryStage
   .my.app~mainScene = .bsf~new("javafx.scene.Scene", mainSceneFXML)     -- create a scene for our document
   .my.app~mainScene~getStylesheets~add("resources/stylesheets/ooRexxTryFX.css")
@@ -99,8 +101,10 @@ LauncherImpl~launchApplication(rxApp~getClass, preloader~getClass, .nil)     /* 
   .my.app~mainScene~setOnDragDropped(bsfCreateRexxProxy(self,,"javafx.event.EventHandler"))
   .my.app~ooRexxTryFX.fxml~Input~setVisible(.false)                     -- hide the input area, which is used for "pull" operations
   .my.app~ooRexxTryFX.fxml~Output~setEditable(.false)                   -- do not allow to change the output area
+  EventStream = .my.app~ooRexxTryFX.fxml~Output~totalHeightEstimateProperty~changes
+  EventStream~subscribe(bsfCreateRexxProxy(.Subscriber~new,,"java.util.function.Consumer"))
   primaryStage~setScene(.my.app~mainScene)   -- set the stage to our scene
-  primaryStage~setTitle("ooRexxTryFX")
+  primaryStage~setTitle("[Untitled 0] ooRexxTryFX")
   bsf4oorexxImage = .bsf~new("javafx.scene.image.Image","resources/images/bsf4oorexx_032.png")
   primaryStage~getIcons~add(bsf4oorexxImage)         -- set application icon
   /* apply some preferences */
@@ -109,10 +113,13 @@ LauncherImpl~launchApplication(rxApp~getClass, preloader~getClass, .nil)     /* 
   primaryStage~setWidth(.my.app~preferences["width"])
 
   /* add event listeners to save user preferences on-the-fly */ 
-  primaryStage~heightProperty~addListener(bsfCreateRexxProxy(self,,"javafx.beans.value.ChangeListener")) 
-  primaryStage~widthProperty~addListener(bsfCreateRexxProxy(self,,"javafx.beans.value.ChangeListener")) 
-  primaryStage~maximizedProperty~addListener(bsfCreateRexxProxy(self,,"javafx.beans.value.ChangeListener")) 
-  primaryStage~show                          -- show the stage (and thereby our scene 
+  divider = .my.app~ooRexxTryFX.fxml~hSplitPane~getDividers~get(0)
+  divider~setPosition(.my.app~preferences["hSplitPaneDiverPosition"])
+  divider~positionProperty      ~addListener(bsfCreateRexxProxy(.ChangeListener~new,,"javafx.beans.value.ChangeListener"))
+  primaryStage~heightProperty   ~addListener(bsfCreateRexxProxy(.ChangeListener~new,,"javafx.beans.value.ChangeListener"))
+  primaryStage~widthProperty    ~addListener(bsfCreateRexxProxy(.ChangeListener~new,,"javafx.beans.value.ChangeListener"))
+  primaryStage~maximizedProperty~addListener(bsfCreateRexxProxy(.ChangeListener~new,,"javafx.beans.value.ChangeListener"))
+  primaryStage~show                          -- show the stage (and thereby our scene
 
   /* loop over the argument list to retrieve filepaths and open them */ 
   loop argument over .argumentList 
@@ -136,19 +143,7 @@ LauncherImpl~launchApplication(rxApp~getClass, preloader~getClass, .nil)     /* 
 
   /* ---------------------------------------------------------------------------------------------------- */
 
- 
-/* this method gets invoked when the user changes either the width or the height of the stage 
- * it changes the property and saves it in the config file */ 
-::method changed 
-  expose primaryStage 
-  use arg property, oldValue, newValue
-  if property~getName = "maximized" & oldValue = 1 & newValue = 0 then do
-    primaryStage~setHeight(.my.app~preferences["defaultHeight"])
-    primaryStage~setWidth(.my.app~preferences["defaultWidth"])
-    primaryStage~centerOnScreen
-  end
-  .my.app~preferences~setProperty(property~getName, newValue)
-  .my.app~preferences~save(.prefPath)
+
 
 ::method handle
   use arg DragEvent
@@ -177,4 +172,40 @@ LauncherImpl~launchApplication(rxApp~getClass, preloader~getClass, .nil)     /* 
 
 
 
+::class ChangeListener
+/* this method gets invoked when the user changes either the width or the height of the stage, maximized status or the divider Position of the horizontal split pane
+ * it changes the property and saves it in the config file */
+::method init
+  expose primaryStage
+  primaryStage = .my.app~primaryStage
 
+::method changed
+  expose primaryStage
+  use arg property, oldValue, newValue
+
+  if property~getName="maximized" & oldValue=1 & newValue=0 then do
+    primaryStage~setHeight(.my.app~preferences["defaultHeight"])
+    primaryStage~setWidth(.my.app~preferences["defaultWidth"])
+    primaryStage~centerOnScreen
+  end
+  propertyName = (property~getName="position" & newValue>=0 & newValue<=1)~?("hSplitPaneDiverPosition", property~getName)
+  .my.app~preferences~setProperty(propertyName, newValue)
+  .my.app~preferences~save(.prefPath)
+
+
+
+
+/* this class monitors the output area - if its height changes, this class will know and adjust accordingly */
+/* TODO: decide if the user even wants that feature by looking into the preferences */
+::class Subscriber
+::method accept
+  use arg change
+  estimatedOutputHeight = change~getNewValue
+  if estimatedOutputHeight <> .nil then
+    if estimatedOutputHeight > 0 then do
+      vSplitPaneHeight  = .vSplitPane~getHeight
+      desiredDividerPosition = 1 - (estimatedOutputHeight / (vSplitPaneHeight - .my.app~ooRexxTryFX.fxml~Input~getHeight))
+      if desiredDividerPosition < 0.4 then
+         desiredDividerPosition = 0.4               -- hardcode a bare minimum of 40% of the screen for the coding area
+      .vDivider~setPosition(desiredDividerPosition)
+    end

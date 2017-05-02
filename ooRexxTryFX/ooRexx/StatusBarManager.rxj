@@ -1,29 +1,22 @@
 ::class StatusBarManager public
 ::method init
-  expose statusBar
+  expose statusBar label
   statusBar = .my.app~ooRexxTryFX.fxml~StatusBar
-  
+  label = statusBar~getChildren~get(0)
+
 ::method unknown
   say "[information] unhandled call {"arg(1)"}"
 
 
 ::method setMessage
-  expose statusBar
+  expose label
   use arg msg
-  statusBar~getChildren~get(0)~setText(msg)
-  userData = .directory~new
-  userData~target = "Label"
-  userData~msg = msg
-  --.Platform~runLater(bsfCreateRexxProxy(self,userData,.java.lang.Runnable))
+  label~setText(msg)
 
-::method run
-  expose statusBar
-  slotDir = arg(arg())
-  userData = slotDir~userData
-  if userData~target = "Label" then do
-    label = statusBar~getChildren~get(0)
-    label~setText(userData~msg)
-  end
-
+::method setTempMessage
+  use arg msg, time=5
+  self~setMessage(msg)
+  call SysSleep time
+  self~setMessage("Ready")
 
 ::requires bsf.cls

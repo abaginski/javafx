@@ -1,1 +1,0 @@
-START "" "%cd%\ooRexxTryFX.rxj" "%1"

@@ -1,0 +1,122 @@
+::class TabManager public
+::attribute allTabs                             -- the controller routine "closeAllTabs" uses this attribute
+::method init
+/* variable initialisation */
+  expose allTabs TabPane alreadySavedFilepaths tabCounter
+  tabCounter = 0
+  TabPane = .my.app~ooRexxTryFX.fxml~TabPane
+  allTabs = .array~new
+  alreadySavedFilepaths = .array~new
+  /* load a code area to the tab */
+  self~newTab             -- create the first Tab
+
+::method newTab
+  expose allTabs TabPane tabCounter
+  Tab = .bsf~new("javafx.scene.control.Tab", "Untitled" tabCounter)
+  tabCounter += 1
+  TabPane~getTabs~add(Tab)
+  TabPane~getSelectionModel~select(Tab)
+  allTabs~insert(Tab)
+
+  codeArea = .bsf~new("org.fxmisc.richtext.CodeArea", "trace ?R; pull v; say v") --SAY ((12+4)*5+4)/0 -- "trace i; parse pull tmp; say tmp"
+  virtualizedScrollPane = .bsf~new("org.fxmisc.flowless.VirtualizedScrollPane", codeArea)
+  anchorPane = .bsf~new("javafx.scene.layout.AnchorPane")       -- this anchorPane allows the codeArea to stretch
+  anchorPane~~setBottomAnchor(codeArea,0)~~setRightAnchor(codeArea,0)~~setTopAnchor(codeArea,0)~~setLeftAnchor(codeArea,0)
+  Tab~setContent( virtualizedScrollPane  ) -- attach the fxml document to the current pane
+  Tab~setOnCloseRequest( bsfCreateRexxProxy(.RexxEventHandler~new,,"javafx.event.EventHandler") )
+
+  codeArea~setStyle("-fx-font-size:" .my.app~preferences["codeAreaFontSize"] || "pt")
+  codeArea~setWrapText(.my.app~preferences["autoLineBreak"])
+  /* handle scroll events to change the font size when the user scrolls with the mousewheel and control up */
+  scrollEvent = bsf.import("javafx.scene.input.ScrollEvent")
+  rp = bsfCreateRexxProxy(.RexxEventHandler~new,,"javafx.event.EventHandler")
+  codeArea~addEventFilter(scrollEvent~SCROLL, rp)
+  LineNumberFactory = bsf.import("org.fxmisc.richtext.LineNumberFactory")
+  codeArea~setParagraphGraphicFactory(LineNumberFactory~get(codeArea))    -- add line numbers to each row
+  
+  predicate = bsfCreateRexxProxy(.SyntaxHighlighter~new,,"java.util.function.Predicate")
+  consumer = bsfCreateRexxProxy(.SyntaxHighlighter~new,,"java.util.function.Consumer")
+  eventStream = codeArea~richChanges~filter(predicate)            -- keep track of all changes
+  eventStream~subscribe(consumer)
+  
+  rp = bsfCreateRexxProxy(self,,"javafx.event.EventHandler")
+  codeArea~setOnKeyPressed(rp)
+  
+::method unknown
+	say ">unknown method:"arg() arg(1)
+	
+::method handle
+  use arg event
+	 /* as of 2017-04-18 there is a unwanted feature in the javafx control "TextFlow" which hardcodes the width of a tab that of 8 whitespaces, see https://stackoverflow.com/questions/27585668/setting-the-tab-spacing-size-visualization-for-a-javafx-textarea and https://bugs.openjdk.java.net/browse/JDK-8130738
+  so that's why we need to convert every tab to some spaces manually.. */
+  if event~getText == "	" then do
+	codeArea = self~getInputArea
+    TabInSpaces = .my.app~preferences["TabInSpaces"]
+	codeArea~deletePreviousChar				-- remove the tab character
+	codeArea~replaceSelection(" "~copies(TabInSpaces))
+  end
+  
+::method closeTab
+  expose allTabs TabPane tabCounter
+  Tabs = TabPane~getTabs                 -- of type ObservableList<Tab>
+  Tab = self~getCurrentTab               -- get a reference to that Tab
+  Tabs~remove(Tab)                       -- remove the tab from the tab pane
+  index = allTabs~index(Tab)
+  allTabs~delete(index)                  -- remove the tab from our directory
+  tabCounter -= 1                        -- decrement tab counter
+  if Tabs~size = 0 then do
+    /* if the last tab was closed, open a new blank one */
+    self~newTab
+  end
+
+
+::method getInputArea
+  use arg Tab
+  if \Tab~isA(.bsf) then
+     Tab = self~getCurrentTab
+  virtualizedScrollPane = Tab~content
+  codeArea = virtualizedScrollPane~content
+  return codeArea
+
+/**
+ ** this method returns a reference of the current tab
+ **/
+::method getCurrentTab
+  expose allTabs
+  currentTabIndex = self~getTabIndex()
+  Tab = allTabs~at( currentTabIndex + 1 )
+  return Tab
+
+/**
+ ** this method checks if there is a path assigned for this tab to skip open/save file chooser dialogs
+ ** returns the path or a .nil object
+ **/
+::method alreadySavedFile
+  expose allTabs alreadySavedFilepaths
+  currentTabIndex = self~getTabIndex()
+  alreadySavedFilepath = alreadySavedFilepaths~at( currentTabIndex + 1 )
+  return alreadySavedFilepath
+
+
+::method saveFilepath
+  expose allTabs alreadySavedFilepaths
+  use arg filepath
+  currentTabIndex = self~getTabIndex()
+  alreadySavedFilepaths~put(filepath, currentTabIndex+1)
+
+
+/**
+ ** this method returns the 0-based index of the current tab
+ **/
+::method getTabIndex private
+  expose TabPane
+  SelectionModel = TabPane~getSelectionModel
+  TabIndex = SelectionModel~getSelectedIndex
+  return TabIndex
+
+
+
+
+::requires "BSF.CLS"    -- get Java Support
+::requires "ooRexx/RexxEventHandler.rxj"
+::requires "ooRexx/SyntaxHighlighter.rxj"

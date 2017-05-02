@@ -1,17 +1,14 @@
-SAY ((12+4)*5+4)/2
-SAY ((12+4)*5+4)/2
-SAY ((12+4)*5+4)/2
-SAY ((12+4)*5+4)/2
-SAY ((12+4)*5+4)/2
-SAY ((12+4)*5+4)/2
-SAY ((12+4)*5+4)/2
-SAY ((12+4)*5+4)/2
-SAY ((12+4)*5+4)/2
-SAY ((12+4)*5+4)/2
-SAY ((12+4)*5+4)/2
-SAY ((12+4)*5+4)/2
-SAY ((12+4)*5+4)/2
+parse source s
 
+  countDrives = driveMap~words
 
+driveMap = SysDriveMap()
+if driveMap~length > 0 then do
+  drives = driveMap~subWords
+end
 
+call SysFileTree "C:/", "files", "B"
 
+    do i=1 to files.0
+        say files.i
+    end

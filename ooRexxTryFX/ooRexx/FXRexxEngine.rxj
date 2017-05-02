@@ -1,0 +1,202 @@
+/*
+   2017-04-03, rgf: initial creation of the public class "FXRexxEngine"
+
+   Purpose:    - this class allows to create as many RexxEngine instances as one sees fit;
+                 each instance can have different streams to redirect the monitors .input,
+                 .output, .error, .debugInput, .traceOutput;
+               - these streams can be changed after creation: to take effect one needs
+                 to invoke the "redirect" method after all streams got updated
+*/
+
+/* redirect output monitor destination */
+-- .output~destination(.GUIOutputStream~new("STDOUT")) -- we need to change the new Rexx engine's .output !
+
+/* --------------------------------------------------------------------------------------------------- */
+
+::requires "BSF.CLS"    -- get Java support
+
+::class fxRexxEngine public
+
+::attribute latestFXRexxEngine class  -- for storing the latest created rexxEngine
+/* or:
+::attribute latestRexxEngine get class          -- for storing the latest created rexxEngine
+::attribute latestRexxEngine set private class  -- let no one else set this class attribute
+*/
+
+::method init class           -- class constructor, initialize class attribute "latestRexxEngine" to .nil
+  expose latestFXRexxEngine
+  latestFXRexxEngine=.nil       -- set current engine to .nil to indicate, none available
+
+::attribute rexxEngine           get   -- do not allow to change this
+
+::attribute inputStream         -- if changing it later, invoke "redirect" method!
+::attribute outputStream        -- if changing it later, invoke "redirect" method!
+::attribute errorStream         -- if changing it later, invoke "redirect" method!
+::attribute debugInputStream    -- if changing it later, invoke "redirect" method!
+::attribute traceOutputStream   -- if changing it later, invoke "redirect" method!
+::method init
+  expose rexxEngine inputStream outputStream errorStream debugInputStream traceOutputStream
+   -- fetch the TextArea (TA) or TextField (TF) objects, if any
+  use strict arg fxInputTF=.nil, fxOutputTA=.nil, fxErrorTA=.nil, fxDebugInputTF=.nil, fxTraceOutputTA=.nil
+
+      -- create a new Rexx engine
+  rexxEngine=.bsf~new("org.apache.bsf.BSFManager")~loadScriptingEngine("rexx")
+      -- define the monitor objects
+  if fxInputTF<>.nil       then inputStream      =.fxInputStream ~new(fxInputTF,      "INPUT")
+                           else inputStream      =.nil
+  if fxOutputTA<>.nil      then outputStream     =.fxOutputStream~new(fxOutputTA,     "OUTPUT")
+                           else outputStream     =.nil
+  if fxErrorTA<>.nil       then errorStream      =.fxOutputStream~new(fxOutputTA,     "ERROR")
+                           else errorStream      =.nil
+  if fxDebugInputTF<>.nil  then debugInputStream =.fxInputStream ~new(fxDebugInputTF, "DEBUGINPUT")
+                           else debugInputStream =.nil
+  if fxTraceOutputTA<>.nil then traceOutputStream=.fxOutputStream~new(fxOutputTA,     "TRACEOUTPUT")
+                           else traceOutputStream=.nil
+
+  self~redirect      -- now have the RexxEngine instance redirect the monitors in its own .local environment directory
+
+  self~class~latestFXRexxEngine=self  -- save this FXRexxEngine instance in class attribute "latestRexxEngine"
+
+
+::method redirect
+  expose rexxEngine inputStream outputStream errorStream debugInputStream traceOutputStream
+  -- only change to those objects that are not .nil
+
+  eofSTMT = "; " -- end-of-statement, could be also "0d0a"x
+  mb   =.MutableBuffer~new                -- used to create the necessary Rexx code
+  vargs=.bsf~new("java.util.Vector")      -- Vector for arguments to pass on to the Rexx program
+  argNr=1                                 -- argument number to fetch from Rexx
+  if inputStream<>.nil then        -- redirect .input
+  do
+      vargs~addElement(inputStream)
+      mb~~append(".input~destination(arg("argNr"))") ~~append(eofSTMT)
+      argNr+=1
+  end
+
+  if outputStream<>.nil then        -- redirect .output
+  do
+      vargs~addElement(outputStream)
+      mb~~append(".output~destination(arg("argNr"))") ~~append(eofSTMT)
+      argNr+=1
+  end
+
+  if errorStream<>.nil then        -- redirect .error
+  do
+      vargs~addElement(errorStream)
+      mb~~append(".error~destination(arg("argNr"))") ~~append(eofSTMT)
+      argNr+=1
+  end
+
+   -- the following monitors are not available on ooRexx versions<4.2 (BSF4ooRexx 20170403 allows ooRexx 4.1 to be used)
+  if .local~hasEntry("traceoutput") then
+  do
+     if debugInputStream<>.nil then        -- redirect .debugInput
+     do
+         vargs~addElement(debugInputStream)
+         mb~~append(".debugInput~destination(arg("argNr"))") ~~append(eofSTMT)
+         argNr+=1
+     end
+
+     if traceOutputStream<>.nil then        -- redirect .traceOutput
+     do
+         vargs~addElement(traceOutputStream)
+         mb~~append(".traceOutput~destination(arg("argNr"))") ~~append(eofSTMT)
+         argNr+=1
+     end
+  end
+
+  if argNr>1 then    -- do we have to redirect ?
+    rexxEngine~apply("FXRexxEngine.rex_redirect()", 0, 0, mb~string, .nil, vargs)
+
+
+
+
+/* The following classes allow to adjust the behaviour (e.g. colors etc.) for the monitored streams */
+
+/** Class that outputs strings to TextArea.   */
+::class fxOutputStream subclass outputStream -- 2017-04-03, rgf
+::attribute type  -- name of monitor to represent
+
+::method init
+  expose fxTextArea type      -- the text area to output to
+  use strict arg fxTextArea, type   -- fetch TextArea to output to, type of output
+
+::method charOut
+  expose fxTextArea           -- get access to the TextArea we want to write to
+  use strict arg string="", charPosition=(-1)     -- ignore position, we have a transient stream here
+  if string<>"" then fxTextArea~appendText(string)  -- output received characters
+  return 0              -- transient stream, return 0 as position
+
+::method lineOut
+  forward message "SAY" -- let the SAY method carry out the operation
+
+::method say
+  expose fxTextArea type           -- get access to the TextArea we want to write to
+  use arg string="", linePosition=(-1)            -- ignore position, we have a transient stream here
+  if string<>"" then do
+    if type="OUTPUT" & \string~pos("REXXin>") then          -- output REXXout only if string does not start with REXXin
+      string = "REXXout>" || string
+    fxTextArea~appendText(string || "0a"x)  -- output received characters, append NL character
+    fxTextArea~setStyle(fxTextArea~getLength - string~length - 1, fxTextArea~getLength, .styles[type])
+  end
+
+
+/** Class that inputs strings from a TextField.   */
+::class fxInputStream subclass inputStream
+::attribute type  -- name of monitor to represent
+
+::method init
+  expose fxTextInputControl type -- the text input to get data from (e.g. a TextField)
+  use strict arg fxTextInputControl, type
+
+  -- TODO: register an event handler to learn about key presses for charIn(), first solution does merely a getText() on all
+
+::method chars
+  expose fxTextInputControl
+  return fxTextInputControl~getText~length   -- return length of available string
+
+::method lines
+  expose fxTextInputControl
+  return (fxTextInputControl~getText~length >0) -- return "1" if any data available
+
+::method charin
+  expose fxTextInputControl
+  use arg start=1, length=.nil
+  string=fxTextInputControl~getText -- return "1" if any data available
+  if start=1 | length=.nil then return string
+  if length=.nil then return string~substr(start)
+  return string~substr(start,length)
+
+::method linein
+  expose fxTextInputControl enterPressed
+  use arg start=1, count=1
+
+  .my.app~ooRexxTryFX.fxml~Input~setVisible(.true)
+  enterPressed = .false
+  fxTextInputControl~setOnKeyPressed(bsfCreateRexxProxy(self,,"javafx.event.EventHandler"))
+  fxTextInputControl~requestFocus
+  guard on when enterPressed = .true
+  string=fxTextInputControl~getText -- return "1" if any data available
+  .Platform~runLater(bsfCreateRexxProxy(self,,.java.lang.Runnable))     -- hide the input area in the gui thread
+  /*
+  if start=1 | length=.nil then return string
+  if length=.nil then return string~substr(start)
+  return string~substr(start,length)
+  */
+  say "REXXin>"string
+  return string
+
+
+::method run
+  .TabManager~getInputArea~requestFocus                 -- set the focus to the codeArea
+  .my.app~ooRexxTryFX.fxml~Input~setVisible(.false)     -- hide the input text field
+  .StatusBarManager~setMessage("Done")
+
+::method handle
+    expose fxTextInputControl enterPressed
+    use arg keyEvent
+    signal on syntax
+    if keyEvent~getCode~equals(.keyCode~ENTER) then
+        enterPressed = .true
+    else return
+    syntax: return

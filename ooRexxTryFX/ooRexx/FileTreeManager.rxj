@@ -1,0 +1,175 @@
+::class FileTreeManager public
+::method init
+  expose filetree root
+  /* first decide if the user even wants to display a file tree */
+  if \.my.app~preferences~getProperty("displayFileTree") then
+    .my.app~ooRexxTryFX.fxml~FileTreePane~~setPrefWidth(0)~~setVisible(.false)
+  else do
+    /* build the tree infrastructure */
+    filetree = .my.app~ooRexxTryFX.fxml~FileTree
+    rp = bsfCreateRexxProxy(.RexxEventHandler~new,,"javafx.event.EventHandler")
+    mouseevent = bsf.import("javafx.scene.input.MouseEvent")
+    filetree~addEventHandler(mouseevent~MOUSE_CLICKED,rp)           -- add a mouse click event handler for the filetree
+    filetree~setOnKeyPressed(rp)                                    -- handle event when user clicks on return
+    filetree~setShowRoot(.false)
+    if .WindowsNT then do
+        call SysDriveMap
+        drives = result~subWords
+        root = .bsf~new("javafx.scene.control.TreeItem", "")
+        filetree~setRoot(root)
+        loop drive over drives  /* load all drives first */
+            folderIcon = .bsf~new("javafx.scene.image.ImageView", "resources/images/icon_folder.png")
+            subdir = .bsf~new("javafx.scene.control.TreeItem", drive || "/", folderIcon)
+            eventType = subdir~branchExpandedEvent
+            rp = bsfCreateRexxProxy(.RexxEventHandler~new,,"javafx.event.EventHandler")
+            subdir~addEventHandler(eventType, rp)
+            createNewFileItem = .bsf~new("javafx.scene.control.TreeItem", "Create new file")
+            createNewFileItem~setGraphic(.bsf~new("javafx.scene.image.ImageView", "resources/images/icon_newfile.png"))
+            subdir~getChildren~add(createNewFileItem)
+            root~getChildren~add(subdir)
+        end
+    end
+    else do
+        root = .bsf~new("javafx.scene.control.TreeItem", "/")
+        filetree~setRoot(root)
+        self~updateTree(root)                                      -- load all root files and directories to the "root" element
+    end
+  end
+
+
+::method updateTree
+  use arg root
+  fullPath = self~getFullPath(root)                                -- returns for example /full/path/
+  content  = self~parseDir(fullPath)                               -- returns a directory with two arrays: "files" and "dirs"
+  root~getChildren~remove(0,root~getChildren~size)                 -- remove all elements from the tree
+  do dir over content~dirs
+    folderIcon = .bsf~new("javafx.scene.image.ImageView", "resources/images/icon_folder.png")
+    subdir = .bsf~new("javafx.scene.control.TreeItem", dir~name, folderIcon)
+    eventType = subdir~branchExpandedEvent
+    rp = bsfCreateRexxProxy(.RexxEventHandler~new,,"javafx.event.EventHandler")
+    subdir~addEventHandler(eventType, rp)
+    subdir~getChildren~remove(0,subdir~getChildren~size)            -- remove all elements from the subtree
+    if subdir~getChildren~size = 0 then do                  -- remove all elements from the subtree
+      createNewFileItem = .bsf~new("javafx.scene.control.TreeItem", "Create new file")
+      createNewFileItem~setGraphic(.bsf~new("javafx.scene.image.ImageView", "resources/images/icon_newfile.png"))
+      subdir~getChildren~add(createNewFileItem)
+    end
+    root~getChildren~add(subdir)
+  end
+  do file over content~files
+    treeItem = .bsf~new("javafx.scene.control.TreeItem", file~name)
+    rexxExtensions = "rex", "rexx", "rxj", "rxo", "rexxhide"
+    if rexxExtensions~hasItem(file~extension) then
+      treeItem~setGraphic(.bsf~new("javafx.scene.image.ImageView", "resources/images/bsf4oorexx_032.png")~~setFitHeight(20.0) ~~setFitWidth(20.0))
+    else
+      treeItem~setGraphic(.bsf~new("javafx.scene.image.ImageView", "resources/images/icon_file.png"))
+    root~getChildren~add(treeItem)
+  end
+  if fullPath <> "/" then do                -- no one will ever want to create new files in the root directory, so just sort this option out
+    createNewFileItem = .bsf~new("javafx.scene.control.TreeItem", "Create new file")
+    createNewFileItem~setGraphic(.bsf~new("javafx.scene.image.ImageView", "resources/images/icon_newfile.png"))
+    root~getChildren~add(createNewFileItem)                                   -- add the option to create a new file as the last item
+  end
+
+::method parseDir
+    use arg dir
+    call SysFileTree dir, "files", "B"
+    root = .directory~new
+    root~files = .array~new
+    root~dirs = .array~new
+
+    do i=1 to files.0
+        parse var files.i . . . filetype filepathandname
+        fileinfos = .directory~new
+        fileinfos~all = files.i
+        fileinfos~path = filespec("path", filepathandname)~changestr("\", "/")                -- Windows uses backslashes for paths while ooRexx' SysFileTree requires slashes
+        fileinfos~name = filespec("name", filepathandname)
+        fileinfos~extension = filespec("extension", filepathandname)
+        if filetype~pos("D") > 0 then -- it's a directory
+           root~dirs~append(fileinfos)
+        else                          -- it's a file
+           root~files~append(fileinfos)
+    end
+    return root
+
+/* the following method returns the full path of a specific item in the tree */
+::method getFullPath
+  use arg currentItem
+  parentchain = .array~new
+  loop forever
+    if currentItem = .nil then leave
+    parentchain~append(currentItem~value)                      -- concatenate paths if there is a parent item
+    currentItem = currentItem~parent
+  end
+  reversedChain = .CircularQueue~new(parentchain~size)~appendAll(parentchain)~makeArray("lifo")
+  path = ""
+  loop with index idx item itm over reversedChain
+    path ||= itm
+    /*
+     - on windows os, the root element is "" followed by the drive in this form: "C:/", so we don't need to add a slash to those two indexes
+     - do not add "/" to the root element with index 1 of other operating systems, which is "/"
+    */
+    if .WindowsNT~?(idx > 2, idx <> 1) then
+        path ||= "/"
+  end
+  return path
+
+/* this method is called when starting ooRexxTryFX: its final goal is to recreates the filetree based on the preferences
+   we will go through to the path and expand the items on the way */
+::method openPath
+  expose filetree root
+  use strict arg path
+  parent = root
+  pathComponents = .array~new
+  path = path~changeStr("/", .endOfLine)
+  loop component over path
+    pathComponents~append(component)
+  end
+
+  loopAgain:
+  loop child over parent~getChildren
+    if pathComponents~items > 0 then do
+      if child~getValue~abbrev(pathComponents~at(1)) then do
+        child~setExpanded(.true)
+        pathComponents~delete(1)
+        parent = child
+        call loopAgain
+      end
+    end
+    --else
+  --  filetree~getSelectionModel~setSelectedItem(child)
+  end
+  .StatusBarManager~setMessage("Done")
+  .my.app~preloaderStage~close       -- close the preloader screen
+
+::method savePaths
+  expose root
+  itemsToSave = .array~new
+  parent = findExpandedChildren(root)
+  loopAgain:
+  loop expandedChild over parent
+    call findExpandedChildren expandedChild
+    if result~items <> 0 then do
+        parent = findExpandedChildren(expandedChild)
+        call loopAgain
+    end
+    else
+      itemsToSave~append(self~getFullPath(expandedChild))
+  end
+  .my.app~preferences~setProperty("expandedFileTreePaths", itemsToSave~makeString("Line", ";"))
+  .my.app~preferences~save(.prefPath)
+
+
+
+::routine findExpandedChildren private
+    use arg parent
+    expandedList = .array~new
+    loop child over parent~getChildren
+        if child~isExpanded then
+            expandedList~append(child)
+    end
+    return expandedList
+
+
+::requires bsf.cls
+::requires "ooRexx/RexxEventHandler.rxj"

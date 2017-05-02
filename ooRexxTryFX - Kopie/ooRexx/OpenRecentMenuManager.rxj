@@ -1,0 +1,79 @@
+::class OpenRecentMenuManager public
+  /* this method will load the 5 latest files to the open recent menu */
+::method init
+  expose desiredItems OpenRecentMenu config
+  use arg desiredItems = 10
+  OpenRecentMenu = .my.app~ooRexxTryFX.fxml~openRecentMenu
+  config = .stream~new("resources/config/recent_files.conf")
+  self~loadMenu
+
+::method loadMenu
+  expose desiredItems OpenRecentMenu config
+  config~open
+  itemlist = .array~new
+  OpenRecentMenu~getItems~remove(0, OpenRecentMenu~getItems~size) -- arguments: from index, to index; clears the menu to create new items
+  do i=1 to config~lines
+    filepath = config~lineIn
+    if \itemlist~hasItem(filepath) then do                    -- do not display the same item twice
+      itemlist~insert(filepath)
+      MenuItem = .bsf~new("javafx.scene.control.MenuItem", filepath)
+      rexxproxy = bsfCreateRexxProxy(.openFile~new(filepath,self),,"javafx.event.EventHandler")
+      MenuItem~setOnAction(rexxproxy)   -- attach an event handler to open the desired file and update the "open recent" Menu
+      OpenRecentMenu~items~add(MenuItem)
+    end
+  end
+  config~close
+  .my.app~openRecentItemList = itemlist   -- save the array in the main directory, in case new files get opened or stored later on
+  /* now, add a menu item to clear all items in this list, but only if there are any items to clear */
+  if config~lines > 0 then do
+    separator = .bsf~new("javafx.scene.control.SeparatorMenuItem")
+    clearAll  = .bsf~new("javafx.scene.control.MenuItem", "Clear Recent")
+    rp = bsfCreateRexxProxy(self,,"javafx.event.EventHandler")
+    clearAll~setOnAction(rp)
+    OpenRecentMenu~items~~add(separator)~~add(clearAll)
+  end
+
+/* this method will put the new item to the menu, update the config file "recent_files.conf" and rearrange the order of the items */
+::method updateMenu
+  expose desiredItems OpenRecentMenu config
+  use arg newItem
+  config~open("write replace")      -- open the stream to start writing at position 1 of the document
+  config~lineOut(newItem)           -- write the latest filepath in the first line
+  do i=1 to desiredItems-1          -- shift the array by 1 item
+      item = .my.app~openRecentItemList~at(i)
+      if item <> "" & item <> .nil then   -- only write to stream if the entry is not empty
+         config~lineOut(item)
+  end
+  config~close
+  self~loadMenu
+
+/* this method cleans all items of the list of recent files */
+::method handle
+  expose OpenRecentMenu config
+  config~open("write replace")
+  config~close
+  self~loadMenu
+
+::class openFile public
+::method init
+  expose filepath OpenRecentMenuManager
+  use arg filepath, OpenRecentMenuManager = (.environment~OpenRecentMenuManager)
+  if .WindowsNT then do
+    /* paths needs to be converted from C:/full/path to C:\\full\path */
+    filepath = filepath~~changestr("/","\") ~~replaceAt("\\", 3)
+    /* remove the last character, which is always a slash "/" because Windows cannot handle slashes after a file name */
+    if filepath~length > 1 then
+      filepath = filepath~substr(1,filepath~length-1)
+  end
+
+::method handle
+  expose filepath OpenRecentMenuManager
+  if \SysIsFile(filepath) then return
+  slotDir = .directory~new
+  slotDir~userData = .directory~new
+  slotDir~userData~useSpecificFile = filepath
+  call loadFile slotDir
+  --OpenRecentMenuManager~updateMenu(filepath)
+
+::requires "resources/fxml/ooRexxTryFXController.rxj"     -- used by "call loadFile .." in class "openFile"
+::requires "ooRexx/RexxEventHandler.rxj"

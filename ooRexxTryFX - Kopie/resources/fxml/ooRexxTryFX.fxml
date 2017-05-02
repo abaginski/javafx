@@ -1,0 +1,144 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.Menu?>
+<?import javafx.scene.control.MenuBar?>
+<?import javafx.scene.control.MenuItem?>
+<?import javafx.scene.control.SeparatorMenuItem?>
+<?import javafx.scene.control.SplitPane?>
+<?import javafx.scene.control.TabPane?>
+<?import javafx.scene.control.TextField?>
+<?import javafx.scene.control.TreeView?>
+<?import javafx.scene.image.Image?>
+<?import javafx.scene.image.ImageView?>
+<?import javafx.scene.layout.AnchorPane?>
+<?import javafx.scene.layout.BorderPane?>
+<?import javafx.scene.layout.VBox?>
+<?import org.fxmisc.richtext.InlineCssTextArea?>
+<?import org.fxmisc.flowless.VirtualizedScrollPane?>
+<?language rexx?>
+
+<VBox xmlns="http://javafx.com/javafx/8.0.111" xmlns:fx="http://javafx.com/fxml/1">
+  <fx:script source="ooRexxTryFXController.rxj" />
+  <children>
+    <MenuBar VBox.vgrow="NEVER">
+      <menus>
+        <Menu accelerator="Alt+F" mnemonicParsing="true" text="_File">
+          <items>
+            <MenuItem accelerator="Shortcut+N" mnemonicParsing="true" onAction="             .TabManager~newTab;              /* invoke the method 'newTab' from the TabManager */             " text="_New">
+                  <graphic>
+                      <ImageView>
+                          <Image url="resources/images/icon_newfile.png" />
+                      </ImageView>
+                  </graphic>
+              </MenuItem>
+            <MenuItem accelerator="Shortcut+O" mnemonicParsing="true" onAction="call loadFile arg(arg())" text="_Open…">
+                <graphic>
+                    <ImageView>
+                        <Image url="resources/images/icon_loadfile.png" />
+                    </ImageView>
+                </graphic>
+            </MenuItem>
+            <Menu fx:id="openRecentMenu" mnemonicParsing="false" text="Open Recent" />
+            <SeparatorMenuItem mnemonicParsing="false" />
+            <MenuItem accelerator="Shortcut+W" mnemonicParsing="false" onAction="             .TabManager~closeTab;              /* invoke the method 'closeTab' from the TabManager */             " text="Close" />
+            <MenuItem accelerator="Shortcut+Shift+W" mnemonicParsing="false" onAction="             call closeAllTabs;             " text="Close All" />
+            <SeparatorMenuItem mnemonicParsing="false" />
+            <MenuItem accelerator="Shortcut+S" mnemonicParsing="true" onAction="call saveFile arg(arg())" text="_Save">
+                <graphic>
+                    <ImageView>
+                        <Image url="resources/images/icon_savefile.png" />
+                    </ImageView>
+                </graphic>
+            </MenuItem>
+            <MenuItem accelerator="Shortcut+Shift+S" mnemonicParsing="false" onAction="call saveFileAs arg(arg())" text="Save As…">
+                <graphic>
+                    <ImageView>
+                        <Image url="resources/images/icon_saveas.png" />
+                    </ImageView>
+                </graphic>
+            </MenuItem>
+            <MenuItem mnemonicParsing="false" onAction="call saveAll arg(arg())" text="Save All"> <!-- accelerator="Shortcut+Alt+S"-->
+                <graphic>
+                    <ImageView>
+                        <Image url="resources/images/icon_saveall.png" />
+                    </ImageView>
+                </graphic>
+            </MenuItem>
+            <SeparatorMenuItem mnemonicParsing="false" />
+            <MenuItem mnemonicParsing="false" text="Preferences…" />
+            <SeparatorMenuItem mnemonicParsing="false" />
+            <MenuItem accelerator="Shortcut+Q" mnemonicParsing="true" onAction="call closeApp;" text="_Quit" />
+          </items>
+        </Menu>
+        <Menu mnemonicParsing="false" text="Edit">
+          <items>
+            <MenuItem mnemonicParsing="false" text="Select All" />
+            <MenuItem mnemonicParsing="false" text="Unselect All" />
+          </items>
+        </Menu>
+        <Menu mnemonicParsing="false" text="View">
+          <items>
+            <MenuItem accelerator="Shortcut+Plus" mnemonicParsing="false" onAction="call zoom in;" text="Zoom In" />
+            <MenuItem accelerator="Shortcut+Minus" mnemonicParsing="false" onAction="call zoom out;" text="Zoom Out" />
+            <SeparatorMenuItem />
+          </items>
+        </Menu>
+        <Menu mnemonicParsing="false" text="Help">
+          <items>
+            <MenuItem mnemonicParsing="false" text="About ooRexxTryFX" />
+          </items>
+        </Menu>
+            <Menu mnemonicParsing="false" text="Application">
+               <items>
+                  <MenuItem accelerator="Shortcut+Enter" mnemonicParsing="false" onAction="call runApp arg(arg());" text="Run Application" />
+                  <MenuItem mnemonicParsing="false" text="Run with Arguments" />
+                  <MenuItem accelerator="F5" mnemonicParsing="false" onAction="                   slotDir = arg(arg());                   userData = .directory~new;                   userData~useCurrentFile = .true;                   slotDir~userData = userData;                   call loadFile slotDir;                   " text="Reload" />
+               </items>
+            </Menu>
+      </menus>
+    </MenuBar>
+      <BorderPane VBox.vgrow="ALWAYS">
+      <center>
+      <SplitPane fx:id="SplitPane" dividerPositions="0.8272727272727273" orientation="VERTICAL" VBox.vgrow="ALWAYS">
+        <items>
+          <AnchorPane minHeight="29.0">
+               <children>
+                  <TabPane fx:id="TabPane" prefHeight="389.0" prefWidth="998.0" tabClosingPolicy="ALL_TABS" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
+
+                  </TabPane>
+               </children>
+            </AnchorPane>
+          <AnchorPane prefHeight="265.0" prefWidth="998.0">
+               <children>
+                   <VirtualizedScrollPane AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
+                       <content> <!-- since "content" is a @namedArg annotation in the Java source code, we can create instances in fxml even though there is no no-args constructor -->
+                           <InlineCssTextArea fx:id="Output" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0" />
+                       </content>
+                   </VirtualizedScrollPane>
+                   <TextField fx:id="Input" prefHeight="37.0" prefWidth="998.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" />
+               </children>
+            </AnchorPane>
+        </items>
+      </SplitPane>
+      </center>
+          <bottom>
+              <AnchorPane fx:id="StatusBar" maxHeight="30.0" prefHeight="20.0" BorderPane.alignment="BOTTOM_CENTER">
+				<children>
+                  <Label fx:id="status" layoutX="12.0" layoutY="1.0" text="Ready" />
+				</children>
+			   </AnchorPane>
+          </bottom>
+          <right>
+              <AnchorPane fx:id="FileTreePane" BorderPane.alignment="CENTER">
+                  <children>
+                      <TreeView fx:id="FileTree" layoutX="0.0" layoutY="120.0" prefHeight="575.0" prefWidth="300.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
+                      </TreeView>
+                  </children>
+              </AnchorPane>
+          </right>
+      </BorderPane>
+  </children>
+    <!-- comment: Rexx program that stores all fx:id objects in .local~rootLayout.fxml directory -->
+  <fx:script source="put_FXID_objects_into.my.app.rex" />
+</VBox>

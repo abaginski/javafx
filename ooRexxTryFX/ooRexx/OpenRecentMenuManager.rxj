@@ -17,6 +17,7 @@
     if \itemlist~hasItem(filepath) then do                    -- do not display the same item twice
       itemlist~insert(filepath)
       MenuItem = .bsf~new("javafx.scene.control.MenuItem", filepath)
+      MenuItem~setMnemonicParsing(.false)                     -- this instruction prevents a "bug" which hides "_" characters
       rexxproxy = bsfCreateRexxProxy(.openFile~new(filepath,self),,"javafx.event.EventHandler")
       MenuItem~setOnAction(rexxproxy)   -- attach an event handler to open the desired file and update the "open recent" Menu
       OpenRecentMenu~items~add(MenuItem)
@@ -50,15 +51,14 @@
 /* this method cleans all items of the list of recent files */
 ::method handle
   expose OpenRecentMenu config
-  config~open("write replace")
-  config~close
+  config~~open("write replace") ~~close      -- clear the config file
   self~loadMenu
 
 ::class openFile public
 ::method init
   expose filepath OpenRecentMenuManager
   use arg filepath, OpenRecentMenuManager = (.environment~OpenRecentMenuManager)
-  if .WindowsNT then do
+  if .WindowsNT & \SysIsFile(filepath) then do      -- convert the path if it does not lead to a file on Windows
     /* paths needs to be converted from C:/full/path to C:\\full\path */
     filepath = filepath~~changestr("/","\") ~~replaceAt("\\", 3)
     /* remove the last character, which is always a slash "/" because Windows cannot handle slashes after a file name */
@@ -68,12 +68,14 @@
 
 ::method handle
   expose filepath OpenRecentMenuManager
-  if \SysIsFile(filepath) then return
+  if \SysIsFile(filepath) then do
+    .StatusBarManager~setMessage("Error loading" filepath, "ERROR")
+    return
+  end
   slotDir = .directory~new
   slotDir~userData = .directory~new
   slotDir~userData~useSpecificFile = filepath
   call loadFile slotDir
-  --OpenRecentMenuManager~updateMenu(filepath)
 
 ::requires "resources/fxml/ooRexxTryFXController.rxj"     -- used by "call loadFile .." in class "openFile"
 ::requires "ooRexx/RexxEventHandler.rxj"

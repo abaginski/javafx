@@ -7,40 +7,51 @@
 
 ::routine runApp public
     use arg slotDir
-
-    .StatusBarManager~setMessage("Running ...")
+    .StatusBarManager~setMessage("Running ...", "LOADING")
+    timeStart = .dateTime~new
     tgtOutput=.my.app~ooRexxTryFX.fxml~Output   -- get "Output" TextArea object
-    tgtOutput~replaceText("")  -- delete output area
+    tgtOutput~replaceText("")  -- delete content of output area
     tgtInput=.my.app~ooRexxTryFX.fxml~Input
     tgtInput~setText("")
 
 -- rgf: hier k?nnte in Zukunft entschieden werden, welche RexxEngine zur Ausf?hrung benutzt werden soll
-    fxRexxEngine=.FXRexxEngine~latestFXRexxEngine   -- if a RexxEngine available it can be retrieved
-    if fxRexxEngine=.nil then      -- no RexxEngine created so far, create one
+    fxRexxEngine = .FXRexxEngine~latestFXRexxEngine   -- if a RexxEngine is available it can be retrieved
+    if fxRexxEngine = .nil then      -- no RexxEngine created so far, create one
     do
          -- usage                  (input,output,error,debugInput,traceOutput)
-       fxRexxEngine=.FXRexxEngine~new(tgtInput, tgtOutput, tgtOutput,tgtInput, tgtOutput)
-       .local~fx.RexxEngine=fxRexxEngine     -- diese soll die Default-RexxEngine sein (.fx.RexxEngine)
+       fxRexxEngine = .FXRexxEngine~new(tgtInput, tgtOutput, tgtOutput, tgtInput, tgtOutput)
+       .local~fx.RexxEngine = fxRexxEngine     -- diese soll die Default-RexxEngine sein (.fx.RexxEngine)
     end
 
   --  signal on syntax
-    ScriptContext = slotDir~scriptContext
+    scriptContext = slotDir~scriptContext
     CodeArea = .TabManager~getInputArea
     Code = CodeArea~getText
 
 -- rgf: why executing on a separate thread?
-    et=.ExecuteThread~new(fxRexxEngine~rexxEngine, Code)
-    et~run
-   -- runnable = BsfCreateRexxProxy(et, ,.java.lang.Runnable)
-   -- .java.lang.Thread~new(runnable)~~bsf.dispatch("start")              -- Run code in separate thread
-say "Rexx program started," .dateTime~new", et~busy="pp(et~busy) "et~done="pp(et~done)
-
-
-say "Rexx program may have ended already," .dateTime~new", et~busy="pp(et~busy) "et~done="pp(et~done)
-say "---"
-
+    et = .ExecuteThread~new(fxRexxEngine~rexxEngine, Code)
+    .local~et = et
+    runnable = bsfCreateRexxProxy(et,,.java.lang.Runnable)
+    .java.lang.Thread~new(runnable) ~~bsf.dispatch("start")              -- Run code in separate thread
+    say "Rexx program started," .dateTime~new", et~busy="pp(et~busy) "et~done="pp(et~done)
+    say "Rexx program may have ended already," .dateTime~new", et~busy="pp(et~busy) "et~done="pp(et~done)
+    say "---"
+  --guard on when et~done
+  redo:
   if et~done then
-    .StatusBarManager~setTempMessage("Done")
+    .StatusBarManager~setTempMessage("Execution time" timeStart~elapsed)
+  else if et~error then do
+    options = .stringTable~new
+    options~time = 15
+    options~type = "ERROR"
+    .StatusBarManager~setTempMessage("Error occured", options)
+  end
+  do
+    say "gotta wait [Controller:45]"
+    call sysSleep .3
+    call redo
+  end
+  return
 
 
 /* --------------------------------------------------------------------------------------------------- */
@@ -51,6 +62,7 @@ say "---"
 ::attribute res               -- attribute will receive the return value from the Rexx program; fetch it after "done" got .true
 ::attribute busy              -- indicates whether Rexx program is executing on separate thread
 ::attribute done              -- indicate that Rexx script ran
+::attribute error
 ::method init
    expose rexxEngine Code args busy done
    use strict arg rexxEngine, Code, args=.nil
@@ -61,12 +73,36 @@ say "---"
 ::method run
    expose rexxEngine Code args res busy done
    busy=.true                 -- indicate Rexx program is running
-   res=.fx.rexxEngine~rexxEngine~apply("tmp.code",0,0,Code,.nil,args) --java.lang.String source, int lineNo, int columnNo, java.lang.Object funcBody, java.util.Vector paramNames, java.util.Vector arguments)
+   signal on syntax
+   res=rexxEngine~apply("code",0,0,Code,.nil,args) --java.lang.String source, int lineNo, int columnNo, java.lang.Object funcBody, java.util.Vector paramNames, java.util.Vector arguments)
+   say pp("busy" busy) pp("done" done)
    busy=.false                -- indicate Rexx program is not running anymore
    done=.true                 -- indicate that Rexx program has run and is finished, save to fetch result "res"
    say self", method" pp(.context~name)", received Rexx result:" pp(res)
    return
 
+
+syntax:
+   co = condition("object")
+   errorMsg = ppCondition2(co)
+   .et~error=.true
+   .Platform~runLater(bsfCreateRexxProxy(.errorPrinter~new(errorMsg),,.java.lang.Runnable))
+   exit -1
+
+
+::class errorPrinter
+::method init
+  expose errorMsg
+  use arg errorMsg
+
+::method run
+  expose errorMsg
+  fxTextArea = .my.app~ooRexxTryFX.fxml~Output
+  from = fxTextArea~getLength
+  fxTextArea~appendText(errorMsg)
+  say fxTextArea~getLength
+  to = min(from + errorMsg~length, fxTextArea~getLength)
+  fxTextArea~setStyle(from, to, .styles["ERROR"])
 
 /* --------------------------------------------------------------------------------------------------- */
 
@@ -85,61 +121,24 @@ say "---"
 /* --------------------------------------------------------------------------------------------------- */
 
 ::routine saveFileAs public
-    use arg slotDir, skipDialog = .false    -- fetch the slotDir argument (BSF4ooRexx adds this as the last argument at the Java side)
-    scriptContext = slotDir~scriptContext   -- get the slotDir (the last) argument, get the entry "SCRIPTCONTEXT"
+  use arg slotDir, skipDialog = .false    -- fetch the slotDir argument (BSF4ooRexx adds this as the last argument at the Java side)
+  scriptContext = slotDir~scriptContext   -- get the slotDir (the last) argument, get the entry "SCRIPTCONTEXT"
 
-    Code = .TabManager~getInputArea~getText
+  Code = .TabManager~getInputArea~getText
+  alreadySavedFile = .TabManager~alreadySavedFile
 
-    FileChooser = .bsf~new("javafx.stage.FileChooser")                  -- instantiate the javafx FileChooser class
-    FileChooser~setTitle("Save file as")                                -- set the title for the FileChooser Dialog
-    extensions = bsf.createJavaArrayOf("java.lang.String", "*.*")
-    filter = .bsf~new("javafx.stage.FileChooser$ExtensionFilter", "all files", extensions)
-    FileChooser~getExtensionFilters~add(filter)
+  if \skipDialog then
+    file = .FileManager~saveDialog(alreadySavedFile)             -- show the save dialog
+  else
+    file = .bsf~new("java.io.File", alreadySavedFile)
 
-    alreadySavedFile = .TabManager~alreadySavedFile
-
-    if alreadySavedFile <> .nil then do
-      fileObj = .bsf~new("java.io.File", alreadySavedFile)
-      FileChooser~setInitialDirectory( fileObj~getParentFile )    -- predefine the directory
-      FileChooser~setInitialFileName( fileObj~toString )          -- predefine the filename
-    end
-    else do
-      /* set the current directory as default */
-      FileChooser~setInitialDirectory( .bsf~new("java.io.File", Directory()) )                     -- set to this directory
-    end
-    if \skipDialog then
-        file = FileChooser~showSaveDialog(.my.app~primaryStage)             -- show the save dialog
-    else
-        file = .bsf~new("java.io.File", alreadySavedFile)
-
-    if file \= .nil then do
-        filepath = file~toString
-        rexxStream = .stream~new(filepath)                                -- create an instance of rexx' stream class
-        rexxStream~open("both replace")                                   /* replace the first line with the content
-                                                                             instead of adding another */
-        do line over Code
-          rexxStream~lineOut(line) /*todo: remove the last line */                                         -- write the Code into that file
-        end
-        rexxStream~close                                                  -- release the lock on this file
-
-        /*todo: notification instead of alerts
-        alert = .fx.alert~new(.fx.Alert.Type~information)   -- create an error alert
-        alert~setTitle("success")
-        alert~setHeaderText(.nil)
-        alert~setContentText("File successfully saved!")
-        alert~showAndWait
-        */
-        .TabManager~saveFilepath(filepath)                                     -- save the file to eventually skip the dialog next time
-        filename = filespec("Name", filepath)
-        Tab = .TabManager~getCurrentTab
-        Tab~setText(filename)
-        Tab~setGraphic(.nil)                                             -- remove the "save" icon from the tab
-        .OpenRecentMenuManager~updateMenu(filepath)
-        say time()": File successfully saved!"
-        .my.app~ooRexxTryFX.fxml~SplitPane~setDividerPosition(0, 0.75)   -- arguments: index, position
-
-
-    end
+  if file \= .nil then do
+    filepath = file~toString
+    .FileManager~saveFile(filepath, Code)
+    .TabManager~saveFilepath(filepath)                                     -- save the file to eventually skip the dialog next time
+    .OpenRecentMenuManager~updateMenu(filepath)
+    .StatusBarManager~setTempMessage(filepath "successfully saved!")
+  end
 
 /* --------------------------------------------------------------------------------------------------- */
 
@@ -151,7 +150,7 @@ say "---"
       if userData~useCurrentFile <> .nil then do                       -- called by "Application" -> "Reload"
         savedFilepath = .TabManager~alreadySavedFile
         if savedFilepath = .nil then do
-          say time()": Reloading not possible"
+          .StatusBarManager~setMessage("Reloading not possible", "ERROR")
           return                                 -- leave the method, reloading not possible
         end
         file = .bsf~new("java.io.File", savedFilepath)
@@ -161,89 +160,49 @@ say "---"
         file = .bsf~new("java.io.File", filepath)
       end
     end
-    else do                                                               -- need to open a filechooser dialog
-      FileChooser = .bsf~new("javafx.stage.FileChooser")                  -- instantiate the javafx FileChooser class
-      FileChooser~setTitle("Load file")                                   -- set the title for the FileChooser Dialog
+    else                                                               -- need to open a filechooser dialog
+      file = .FileManager~openDialog(.TabManager~alreadySavedFile)
 
-      if .TabManager~alreadySavedFile <> .nil then do
-        fileObj = .bsf~new("java.io.File", .TabManager~alreadySavedFile)
-        initialDirectory = fileObj~getParentFile                          -- get a reference to the parent directory
-      end
-      else
-        initialDirectory = .bsf~new("java.io.File", Directory())
-
-      FileChooser~setInitialDirectory(initialDirectory)
-      file = FileChooser~showOpenDialog(.my.app~primaryStage)             -- show the dialog to load a file
-    end
     if file \= .nil then do
-       .TabManager~newTab                                                  -- always open the file in a new tab
+        Tab = .TabManager~newTab                                                  -- always open the file in a new tab
         filepath = file~toString                                            -- cast the "File" obj to a "String", thereby extracting the filepath
-        rexxStream = .stream~new(filepath)
-        loadedCode = ""
-		    do line over rexxStream
-			     loadedCode ||= line "0a"x                                       /* append the next line to the string loadedCode */
-        end
+        loadedCode = .FileManager~openFile(filepath)
         .TabManager~getInputArea~replaceText(loadedCode)
-        rexxStream~close
-        .StatusBarManager~setTempMessage(time()": File successfully opened!")
+        Tab~setGraphic(.nil)                  -- remove the save Icon from the Tab, because there is no new content
         .TabManager~saveFilepath(filepath)
         tooltip = .bsf~new("javafx.scene.control.Tooltip", filepath)
-        .TabManager~getCurrentTab~~setText( filespec("name", filepath) )~~setTooltip(tooltip)     -- set a tooltip and text to the tab
+        .TabManager~getCurrentTab~~setText( filespec("name", filepath) ) ~~setTooltip(tooltip)     -- set a tooltip and text to the tab
         .OpenRecentMenuManager~updateMenu(filepath)
+        options = .stringTable~new
+        options~type = "SUCCESS"
+        .StatusBarManager~setTempMessage(filepath " successfully opened!", options)
     end
 
 /* --------------------------------------------------------------------------------------------------- */
 
-
-/** Class that outputs strings to TextArea.
-*/
-/*
-::class fxOutputStream subclass outputStream -- 2017-04-03, rgf
-::method init
-  expose fxTextArea           -- the text area to output to
-  use arg fxTextArea          -- fetch TextArea to output to
-
-::method charOut
-  expose fxTextArea           -- get access to the TextArea we want to write to
-  use strict arg string="", charPosition=(-1)     -- ignore position, we have a transient stream here
-  if string<>"" then fxTextArea~appendText(string)  -- output received characters
-  return 0              -- transient stream, return 0 as position
-
-::method lineOut
-  forward message "SAY" -- let the SAY method carry out the operation
-
-::method say
-  expose fxTextArea           -- get access to the TextArea we want to write to
-  use arg string="", linePosition=(-1)            -- ignore position, we have a transient stream here
-  if string<>"" then fxTextArea~appendText(string || "0a"x)  -- output received characters, append NL character
-
-
-
-::class fxInputStream subclass inputStream
-::method init
-  expose fxTextField
-  use arg fxTextField
-
-::method unknown
-  say pp("unknown method:") arg(1)
-
-::method lineIn
-  expose fxTextField   -- the text input to get data from
-  say fxTextField~getText
--- TODO: forward message to rexx engine
-
-
-*/
 /* --------------------------------------------------------------------------------------------------- */
 ::routine closeAllTabs public
   loop i=1 to .TabManager~allTabs~size
     .TabManager~closeTab
   end
 
+/** this routine will save all tabs which have a known filepath, so they were opened or saved before */
 ::routine saveAll public
   use arg slotDir
-    .TabManager~saveAll
-  return
+  allTabs = .TabManager~allTabs
+  alreadySavedFilepaths = .TabManager~alreadySavedFilepaths
+  saveCounter = 0
+  loop with index idx item tab over allTabs
+    filepath = alreadySavedFilepaths~at(idx)
+    if filepath <> .nil then do
+      .FileManager~saveFile(filepath, tab~content~content~getText)
+      tab~setGraphic(.nil)
+      saveCounter += 1
+    end
+  end
+  .StatusBarManager~setMessage(saveCounter "files were saved", "SUCCESS")
+
+
 
 ::routine zoom public
   use arg mode
@@ -264,4 +223,7 @@ say "---"
 /* this routine will walk the filetree using a recursive loop and the private routine down below and save all expanded directories in the preferences, then close the application */
 ::routine closeApp public
   .FileTreeManager~savePaths
-  --.Platform~exit
+  say "shutdown"
+  .Platform~exit
+
+::requires "rgf_util2.rex"

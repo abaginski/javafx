@@ -14,9 +14,9 @@
 /* --------------------------------------------------------------------------------------------------- */
 
 ::requires "BSF.CLS"    -- get Java support
+::requires "rgf_util2.rex"
 
 ::class fxRexxEngine public
-
 ::attribute latestFXRexxEngine class  -- for storing the latest created rexxEngine
 /* or:
 ::attribute latestRexxEngine get class          -- for storing the latest created rexxEngine
@@ -29,28 +29,35 @@
 
 ::attribute rexxEngine           get   -- do not allow to change this
 
+::attribute workingQueue        -- the queue object to use for monitor data that needs to be processed on the JavaFX Application thread
+
 ::attribute inputStream         -- if changing it later, invoke "redirect" method!
 ::attribute outputStream        -- if changing it later, invoke "redirect" method!
 ::attribute errorStream         -- if changing it later, invoke "redirect" method!
 ::attribute debugInputStream    -- if changing it later, invoke "redirect" method!
 ::attribute traceOutputStream   -- if changing it later, invoke "redirect" method!
+
 ::method init
-  expose rexxEngine inputStream outputStream errorStream debugInputStream traceOutputStream
+  expose rexxEngine inputStream outputStream errorStream debugInputStream traceOutputStream fxTextArea workingQueue
    -- fetch the TextArea (TA) or TextField (TF) objects, if any
   use strict arg fxInputTF=.nil, fxOutputTA=.nil, fxErrorTA=.nil, fxDebugInputTF=.nil, fxTraceOutputTA=.nil
 
+      -- in this implementation we only use the output TextArea and the input TextField
+  workingQueue=.WorkingQueue~new(fxOutputTA, fxInputTF)
+
       -- create a new Rexx engine
   rexxEngine=.bsf~new("org.apache.bsf.BSFManager")~loadScriptingEngine("rexx")
+
       -- define the monitor objects
-  if fxInputTF<>.nil       then inputStream      =.fxInputStream ~new(fxInputTF,      "INPUT")
+  if fxInputTF<>.nil       then inputStream      =.fxInputStream ~new(fxInputTF,      "INPUT",       workingQueue)
                            else inputStream      =.nil
-  if fxOutputTA<>.nil      then outputStream     =.fxOutputStream~new(fxOutputTA,     "OUTPUT")
+  if fxOutputTA<>.nil      then outputStream     =.fxOutputStream~new(fxOutputTA,     "OUTPUT",      workingQueue)
                            else outputStream     =.nil
-  if fxErrorTA<>.nil       then errorStream      =.fxOutputStream~new(fxOutputTA,     "ERROR")
+  if fxErrorTA<>.nil       then errorStream      =.fxOutputStream~new(fxOutputTA,     "ERROR",       workingQueue)
                            else errorStream      =.nil
-  if fxDebugInputTF<>.nil  then debugInputStream =.fxInputStream ~new(fxDebugInputTF, "DEBUGINPUT")
+  if fxDebugInputTF<>.nil  then debugInputStream =.fxInputStream ~new(fxDebugInputTF, "DEBUGINPUT",  workingQueue)
                            else debugInputStream =.nil
-  if fxTraceOutputTA<>.nil then traceOutputStream=.fxOutputStream~new(fxOutputTA,     "TRACEOUTPUT")
+  if fxTraceOutputTA<>.nil then traceOutputStream=.fxOutputStream~new(fxOutputTA,     "TRACEOUTPUT", workingQueue)
                            else traceOutputStream=.nil
 
   self~redirect      -- now have the RexxEngine instance redirect the monitors in its own .local environment directory
@@ -106,44 +113,66 @@
   end
 
   if argNr>1 then    -- do we have to redirect ?
-    rexxEngine~apply("FXRexxEngine.rex_redirect()", 0, 0, mb~string, .nil, vargs)
+    say mb~string
 
-
+  rexxEngine~apply("FXRexxEngine.rex_redirect()", 0, 0, mb~string, .nil, vargs)
 
 
 /* The following classes allow to adjust the behaviour (e.g. colors etc.) for the monitored streams */
 
 /** Class that outputs strings to TextArea.   */
 ::class fxOutputStream subclass outputStream -- 2017-04-03, rgf
-::attribute type  -- name of monitor to represent
+::attribute type           -- name of monitor to represent
+::attribute fxTextArea     -- TextArea object to write data to
+::attribute workingQueue   -- working queue to store monitor information
 
 ::method init
-  expose fxTextArea type      -- the text area to output to
-  use strict arg fxTextArea, type   -- fetch TextArea to output to, type of output
+  expose fxTextArea type workingQueue     -- the text area to output to
+  use strict arg fxTextArea, type, workingQueue   -- fetch TextArea to output to, type of output
+-- .stdout~say("line#" .line "-" self"::init, fxTextArea="pp(fxTextArea) "type="pp(type) "workingQueue="pp(workingQueue)  )
+
 
 ::method charOut
-  expose fxTextArea           -- get access to the TextArea we want to write to
+  expose fxTextArea type workingQueue           -- get access to the TextArea we want to write to
   use strict arg string="", charPosition=(-1)     -- ignore position, we have a transient stream here
-  if string<>"" then fxTextArea~appendText(string)  -- output received characters
+
+  -- if string<>"" then fxTextArea~appendText(string)  -- output received characters
+   -- queue output to be done in the JavaFX Application thread
+  if string<>"" then workingQueue~queue("O", "C", type, string)
   return 0              -- transient stream, return 0 as position
 
 ::method lineOut
   forward message "SAY" -- let the SAY method carry out the operation
 
 ::method say
-  expose fxTextArea type           -- get access to the TextArea we want to write to
+  expose fxTextArea type workingQueue           -- get access to the TextArea we want to write to
   use arg string="", linePosition=(-1)            -- ignore position, we have a transient stream here
-  if string<>"" then do
+
+   -- queue output to be done in the JavaFX Application thread
+  workingQueue~queue("O", "L", type, string) -- if empty string, still add a LF !
+
+/*
+  else
     if type="OUTPUT" & \string~pos("REXXin>") then          -- output REXXout only if string does not start with REXXin
       string = "REXXout>" || string
-    fxTextArea~appendText(string || "0a"x)  -- output received characters, append NL character
-    fxTextArea~setStyle(fxTextArea~getLength - string~length - 1, fxTextArea~getLength, .styles[type])
+
+    rexxThread = .rexxThread~new(fxTextArea, string, type)
+    .Platform~runLater(bsfCreateRexxProxy(rexxThread,,.java.lang.Runnable))
   end
 
 
   --.vSplitPane~setDividerPosition(0, 0.65)       /* grow the Output Area: */ -- arguments: index, position
 
 
+::class rexxThread private
+::method init
+  expose fxTextArea string type
+  use arg fxTextArea, string, type
+::method run
+  expose fxTextArea string type
+  fxTextArea~appendText(string || "0a"x)  -- output received characters, append NL character
+  fxTextArea~setStyle(fxTextArea~getLength - string~length - 1, fxTextArea~getLength, .styles[type])
+*/
 
 /** Class that inputs strings from a TextField.   */
 ::class fxInputStream subclass inputStream
@@ -151,7 +180,7 @@
 
 ::method init
   expose fxTextInputControl type -- the text input to get data from (e.g. a TextField)
-  use strict arg fxTextInputControl, type
+  use arg fxTextInputControl, type
 
   -- TODO: register an event handler to learn about key presses for charIn(), first solution does merely a getText() on all
 
@@ -181,7 +210,7 @@
   fxTextInputControl~requestFocus
   guard on when enterPressed = .true
   string=fxTextInputControl~getText -- return "1" if any data available
-  .Platform~runLater(bsfCreateRexxProxy(self,,.java.lang.Runnable))     -- hide the input area in the gui thread
+  .Platform~runLater(bsfCreateRexxProxy(.Thread~new,,.java.lang.Runnable))     -- hide the input area in the gui thread
   /*
   if start=1 | length=.nil then return string
   if length=.nil then return string~substr(start)
@@ -191,10 +220,6 @@
   return string
 
 
-::method run
-  .TabManager~getInputArea~requestFocus                 -- set the focus to the codeArea
-  .my.app~ooRexxTryFX.fxml~Input~setVisible(.false)     -- hide the input text field
-  .StatusBarManager~setMessage("Done")
 
 ::method handle
     expose fxTextInputControl enterPressed
@@ -204,3 +229,111 @@
         enterPressed = .true
     else return
     syntax: return
+
+
+::class Thread
+::method run
+  .TabManager~getInputArea~requestFocus                 -- set the focus to the codeArea
+  .my.app~ooRexxTryFX.fxml~Input~setVisible(.false)     -- hide the input text field
+  .StatusBarManager~setMessage("Done")
+
+
+-------------------------------------------------------------------------------------
+-------------------------------------------------------------------------------------
+-- rgf: class that remembers the string and the original standard file destination
+::class MonitorData
+::attribute op       -- operation, one of I[nput] or O[utput]
+::attribute mode     -- C[har{in|out}], L[ine{in|out|say}]
+::attribute name     -- name of monitor, i.e. one of INPUT, OUTPUT, ERROR, DEBUGINPUT, TRACEOUTPUT
+::attribute data     -- string data to send to destination or empty string if input operation
+::method init
+  expose         op  mode  name  data
+  use strict arg op, mode, name, data
+
+-- .stdout~say("l#" .line self"::init - op="pp(op) "mode="pp(mode) "name="pp(name) "data~left(20)="pp(data~left(min(20,data~length))) )
+
+-------------------------------------------------------------------------------------
+-- rgf: queue that collects .output, .error, .traceoutput strings and processes them on the JavaFX Application thread
+::class WorkingQueue subclass queue public
+::attribute objQueue       -- a queue containing monitor information, if any
+::attribute rexxRunnable
+::attribute runLaterProxy  -- a RexxProxy that processes objQueue on the JavaFX Application thread
+::method init
+  expose objQueue runLaterProxy rexxRunnable
+  use strict arg fxTextArea, fxTextField
+
+  objQueue=.queue~new   -- backup queue with a Rexx .Queue object
+   -- create and save the callback RexxProxy for later use in our queue-method
+  rexxRunnable=.ProcessQueue~new(self,fxTextArea,fxTextField)
+   -- NOTE: it seems that creating the RexxProxy in the JavaFX Application thread is not accepted by Platform.runLater(),
+   --       so creating it in the queue method below
+  runLaterProxy=.nil -- BSFCreateRexxProxy(rexxRunnable, , .java.lang.Runnable)
+
+::method queue
+  expose objQueue runLaterProxy rexxRunnable
+  use strict arg op, mode, monitorName, data  -- cf. class monitorData below
+  mData=.MonitorData~new(op, mode, monitorName, data)
+  self~queue:super(mData)        -- queue the monitor object data for later processing
+
+-- .stdout~say(self"::queue, line#" pp(.line) .dateTime~new "-->" "tid="pp(bsfGetTID())  "op="pp(op) "mode="pp(mode) "name="pp(monitorName~left(3)) "data="pp(data~left(min(25,data~length))) )
+
+  if .nil=runLaterProxy then runLaterProxy=BSFCreateRexxProxy(rexxRunnable, , .java.lang.Runnable)
+  .Platform~runLater(runLaterProxy)
+
+  --call syssleep .05     -- give JavaFX some time to process the queued event and update the graphical representation!
+
+-------------------------------------------------------------------------------------
+   -- rgf: this class will process the output data in the JavaFX Application thread using Platform.runLater()
+   --      implements java.langRunnable's run() method
+   --      NOTE: only handle one item on the queue for which a runLater got invoked! Otherwise the loop in
+   --            the FX Application Thread continues to process all other objects that have appeared in the
+   --            meantime in the loop, not given the FX Application Thread a chance to have the control
+   --            update/refresh its representation (Rexx is faster anyway :) )
+::class ProcessQueue public
+::attribute fxTextArea     -- FX TextArea object to write data to
+::attribute fxTextField    -- FX TextField to read data from
+::attribute workingQueue   -- the queue object that contains the monitor data to process
+::method init
+  expose fxTextArea workingQueue counter
+  use strict arg workingQueue, fxTextArea, fxTextField
+  counter=0
+
+-- .stdout~say(self"::init, line#" pp(.line) .dateTime~new "fxTextArea="pp(fxTextArea) pp(fxTextArea~toString) )
+
+::method run                  -- does the bloody ;) work (will get invoked in the JavaFX Application Thread by JavaFX)
+  expose fxTextArea workingQueue counter
+
+/*
+.stdout~say(self"::run, line#" pp(.line) .dateTime~new  "<--" "tid="pp(bsfGetTID()) -
+            ".P~FXAppThread?="pp(.Platform~isFXApplicationThread) -
+            pp(workingQueue~items) "queued items" "<== "~copies(6))
+*/
+
+  monitorData=workingQueue~pull  -- pull an item, if none there .nil gets returned
+  if .nil<>monitorData then
+  do
+     if monitorData~op="O" then
+     do
+        data=monitorData~data
+        if monitorData~mode="L" then
+           data=monitorData~data || "0a"x  -- line mode, append LF
+        else
+           data=monitorData~data           -- char mode, do NOT append anything!
+
+        fxTextArea~appendText(data)  -- append data
+        fxTextArea~setStyle(max(fxTextArea~getLength-data~length-1, 0), fxTextArea~getLength, .styles[monitorData~name])
+     end
+     else   -- .input or .debugInput
+     do
+         nop   -- TODO: insert logic for getting input or debugInput
+     end
+/*
+.stdout~say(self"::run, line#" pp(.line) .dateTime~new  "<--" "tid="pp(bsfGetTID()) -
+            ".P~FXAppThread?="pp(.Platform~isFXApplicationThread) -
+            pp(workingQueue~items) "queued items" "<== "~copies(6) "(in queue process loop)")
+*/
+  end
+
+  fxTextArea~setEstimatedScrollY(99999)  -- scroll to end
+-- .stdout~say(self"::run, line#" pp(.line) .dateTime~new  "<--" "tid="pp(bsfGetTID()) ".P~FXAppThread?="pp(.Platform~isFXApplicationThread) "counter="pp(counter) "about to return from run()! <--" )
+

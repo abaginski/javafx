@@ -1,5 +1,6 @@
 ::class TabManager public
 ::attribute allTabs                             -- the controller routine "closeAllTabs" uses this attribute
+::attribute alreadySavedFilepaths
 ::method init
 /* variable initialisation */
   expose allTabs TabPane alreadySavedFilepaths tabCounter
@@ -19,7 +20,7 @@
   TabPane~getSelectionModel~select(Tab)
   allTabs~insert(Tab)
 
-  codeArea = .bsf~new("org.fxmisc.richtext.CodeArea", "trace i; do i=1 to 55; say 55/i; end;") -- trace ?R; pull v; say v") --SAY ((12+4)*5+4)/0 -- "trace i; parse pull tmp; say tmp"
+  codeArea = .bsf~new("org.fxmisc.richtext.CodeArea", "do i=1 to 150; say i/0; end") -- "trace i; do i=1 to 55; say 55/i; end;") -- trace ?R; pull v; say v") --SAY ((12+4)*5+4)/0 -- "trace i; parse pull tmp; say tmp"
   virtualizedScrollPane = .bsf~new("org.fxmisc.flowless.VirtualizedScrollPane", codeArea)
   anchorPane = .bsf~new("javafx.scene.layout.AnchorPane")       -- this anchorPane allows the codeArea to stretch
   anchorPane~~setBottomAnchor(codeArea,0)~~setRightAnchor(codeArea,0)~~setTopAnchor(codeArea,0)~~setLeftAnchor(codeArea,0)
@@ -34,7 +35,7 @@
   codeArea~addEventFilter(scrollEvent~SCROLL, rp)
   LineNumberFactory = bsf.import("org.fxmisc.richtext.LineNumberFactory")
   codeArea~setParagraphGraphicFactory(LineNumberFactory~get(codeArea))    -- add line numbers to each row
-  
+
   predicate = bsfCreateRexxProxy(.SyntaxHighlighter~new,,"java.util.function.Predicate")
   consumer = bsfCreateRexxProxy(.SyntaxHighlighter~new,,"java.util.function.Consumer")
   eventStream = codeArea~richChanges~filter(predicate)            -- keep track of all changes
@@ -42,6 +43,7 @@
   
   rp = bsfCreateRexxProxy(self,,"javafx.event.EventHandler")
   codeArea~setOnKeyPressed(rp)
+  return Tab
   
 ::method unknown
 	say ">unknown method:"arg() arg(1)

@@ -8,7 +8,7 @@
   insertedText = richTextChange~inserted~getText
   
   if Tab~getGraphic = .nil then do
-    Tab~setGraphic(.bsf~new("javafx.scene.image.ImageView", "resources/images/icon_savefile_15.png"))
+     Tab~setGraphic(.bsf~new("javafx.scene.image.ImageView", "resources/images/icon_savefile_15.png"))
   end
   
  
@@ -23,7 +23,7 @@
 
           */
 
-::method test           /* though that's a very stupid name for a method, but it's legit: called by "filter()" */
+::method test           /* although that's a very stupid name for a method, it's legit: called by "filter()" method in the TabManager Class */
   use arg ch
   return \ch~getInserted~equals(ch~getRemoved)
   

@@ -60,7 +60,7 @@
     treeItem = .bsf~new("javafx.scene.control.TreeItem", file~name)
     rexxExtensions = "rex", "rexx", "rxj", "rxo", "rexxhide"
     if rexxExtensions~hasItem(file~extension) then
-      treeItem~setGraphic(.bsf~new("javafx.scene.image.ImageView", "resources/images/bsf4oorexx_032.png")~~setFitHeight(20.0) ~~setFitWidth(20.0))
+      treeItem~setGraphic(.bsf~new("javafx.scene.image.ImageView", "resources/images/bsf4oorexx_032.png") ~~setFitHeight(20.0) ~~setFitWidth(20.0))
     else
       treeItem~setGraphic(.bsf~new("javafx.scene.image.ImageView", "resources/images/icon_file.png"))
     root~getChildren~add(treeItem)

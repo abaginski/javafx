@@ -1,0 +1,9 @@
+a=18  
+say 'hi'  
+trace i  
+say a*3/2  
+trace off  
+.error~say( 'ho' 'via .error')  
+say a*3/2
+max=5
+do i=1 to max; say i/max; end

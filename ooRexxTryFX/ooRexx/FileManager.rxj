@@ -1,0 +1,68 @@
+::class FileManager public
+/** the purpose of this class is to display file choosers and save/load files to a filepath */
+
+::method saveDialog
+  use arg alreadySavedFile
+  FileChooser = .bsf~new("javafx.stage.FileChooser")                  -- instantiate the javafx FileChooser class
+  FileChooser~setTitle("Save file as")                                -- set the title for the FileChooser Dialog
+  extensions = bsf.createJavaArrayOf("java.lang.String", "*.*")
+  filter = .bsf~new("javafx.stage.FileChooser$ExtensionFilter", "all files", extensions)
+  FileChooser~getExtensionFilters~add(filter)
+  if alreadySavedFile <> .nil then do
+    fileObj = .bsf~new("java.io.File", alreadySavedFile)
+    FileChooser~setInitialDirectory( fileObj~getParentFile )    -- predefine the directory
+    FileChooser~setInitialFileName( fileObj~toString )          -- predefine the filename
+  end
+  else do
+    /* set the current directory as default */
+    FileChooser~setInitialDirectory( .bsf~new("java.io.File", Directory()) )                     -- set to this directory
+  end
+  return FileChooser~showSaveDialog(.my.app~primaryStage)
+
+
+::method saveFile
+  use arg filepath, Code
+  rexxStream = .stream~new(filepath)                                -- create an instance of rexx' stream class
+  rexxStream~open("both replace")                                   /* replace the first line with the content                                                                             instead of adding another */
+  do line over Code
+    rexxStream~lineOut(line)                                       -- write the Code into that file
+  end
+  rexxStream~close                                                  -- release the lock on this file
+  filename = filespec("Name", filepath)
+  Tab = .TabManager~getCurrentTab
+  Tab~setText(filename)
+  Tab~setGraphic(.nil)                                             -- remove the "save" icon from the tab
+  return
+
+::method openDialog
+  use arg alreadySavedFile
+  FileChooser = .bsf~new("javafx.stage.FileChooser")                  -- instantiate the javafx FileChooser class
+  FileChooser~setTitle("Load file")                                   -- set the title for the FileChooser Dialog
+  if alreadySavedFile <> .nil then do
+    fileObj = .bsf~new("java.io.File", alreadySavedFile)
+    initialDirectory = fileObj~getParentFile                          -- get a reference to the parent directory
+  end
+  else
+    initialDirectory = .bsf~new("java.io.File", Directory())          -- use the current directory as default
+  FileChooser~setInitialDirectory(initialDirectory)
+  return FileChooser~showOpenDialog(.my.app~primaryStage)             -- show the dialog to load a file
+
+
+::method openFile
+  use arg filepath
+  say pp(filepath)
+  rexxStream = .stream~new(filepath)
+  loadedCode = ""
+  lineNo = 1
+  do line over rexxStream
+    if lineNo = 1 then
+      loadedCode = line                           -- do not prepend a EOL character on the first line
+    else
+      loadedCode ||= .endOfLine || line                                       /* append the next line to the string loadedCode */
+    lineNo += 1
+  end
+  rexxStream~close
+  return loadedCode
+
+
+::requires bsf.cls

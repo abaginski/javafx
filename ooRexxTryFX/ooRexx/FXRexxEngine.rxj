@@ -279,8 +279,7 @@
 
   if .nil=runLaterProxy then runLaterProxy=BSFCreateRexxProxy(rexxRunnable, , .java.lang.Runnable)
   .Platform~runLater(runLaterProxy)
-
-  --call syssleep .05     -- give JavaFX some time to process the queued event and update the graphical representation!
+  call syssleep .05     -- give JavaFX some time to process the queued event and update the graphical representation!
 
 -------------------------------------------------------------------------------------
    -- rgf: this class will process the output data in the JavaFX Application thread using Platform.runLater()

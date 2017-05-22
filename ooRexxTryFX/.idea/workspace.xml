@@ -15,84 +15,11 @@
   <component name="ExecutionTargetManager" SELECTED_TARGET="default_target" />
   <component name="FileEditorManager">
     <leaf SIDE_TABS_SIZE_LIMIT_KEY="300">
-      <file leaf-file-name="ooRexxTryFX.fxml" pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/resources/fxml/ooRexxTryFX.fxml">
-          <provider editor-type-id="JavaFX-Scene-Builder">
-            <state />
-          </provider>
+      <file leaf-file-name="ooRexxTryFX.rxj" pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/ooRexxTryFX.rxj">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="194">
-              <caret line="146" column="30" lean-forward="false" selection-start-line="146" selection-start-column="21" selection-end-line="146" selection-end-column="30" />
-              <folding />
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file leaf-file-name="FileTreeManager.rxj" pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/ooRexx/FileTreeManager.rxj">
-          <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="214">
-              <caret line="141" column="32" lean-forward="true" selection-start-line="141" selection-start-column="32" selection-end-line="141" selection-end-column="32" />
-              <folding />
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file leaf-file-name="StatusBarManager.rxj" pinned="false" current-in-tab="true">
-        <entry file="file://$PROJECT_DIR$/ooRexx/StatusBarManager.rxj">
-          <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="199">
-              <caret line="28" column="0" lean-forward="true" selection-start-line="28" selection-start-column="0" selection-end-line="28" selection-end-column="0" />
-              <folding />
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file leaf-file-name="CLR.CLS" pinned="false" current-in-tab="false">
-        <entry file="file://C:/Program Files (x86)/BSF4ooRexx/CLR.CLS">
-          <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="-144">
-              <caret line="104" column="2" lean-forward="true" selection-start-line="104" selection-start-column="2" selection-end-line="104" selection-end-column="2" />
-              <folding />
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file leaf-file-name="SyntaxHighlighter.rxj" pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/ooRexx/SyntaxHighlighter.rxj">
-          <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="225">
-              <caret line="9" column="34" lean-forward="false" selection-start-line="9" selection-start-column="34" selection-end-line="9" selection-end-column="34" />
-              <folding />
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file leaf-file-name="TabManager.rxj" pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/ooRexx/TabManager.rxj">
-          <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="382">
-              <caret line="125" column="5" lean-forward="false" selection-start-line="125" selection-start-column="5" selection-end-line="125" selection-end-column="5" />
-              <folding />
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file leaf-file-name="ooRexxTryFX.css" pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/resources/stylesheets/ooRexxTryFX.css">
-          <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="170">
-              <caret line="10" column="54" lean-forward="true" selection-start-line="10" selection-start-column="54" selection-end-line="10" selection-end-column="54" />
-              <folding />
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file leaf-file-name="FXRexxEngine.rxj" pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/ooRexx/FXRexxEngine.rxj">
-          <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="622">
-              <caret line="282" column="4" lean-forward="false" selection-start-line="282" selection-start-column="4" selection-end-line="282" selection-end-column="4" />
+            <state relative-caret-position="282">
+              <caret line="114" column="113" lean-forward="false" selection-start-line="114" selection-start-column="113" selection-end-line="114" selection-end-column="113" />
               <folding />
             </state>
           </provider>
@@ -101,18 +28,38 @@
       <file leaf-file-name="ooRexxTryFXController.rxj" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/resources/fxml/ooRexxTryFXController.rxj">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="399">
-              <caret line="44" column="21" lean-forward="true" selection-start-line="44" selection-start-column="21" selection-end-line="44" selection-end-column="21" />
+            <state relative-caret-position="291">
+              <caret line="48" column="26" lean-forward="true" selection-start-line="48" selection-start-column="26" selection-end-line="48" selection-end-column="26" />
               <folding />
             </state>
           </provider>
         </entry>
       </file>
-      <file leaf-file-name="RexxEventHandler.rxj" pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/ooRexx/RexxEventHandler.rxj">
+      <file leaf-file-name="StatusBarManager.rxj" pinned="false" current-in-tab="true">
+        <entry file="file://$PROJECT_DIR$/ooRexx/StatusBarManager.rxj">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="676">
-              <caret line="33" column="56" lean-forward="false" selection-start-line="33" selection-start-column="56" selection-end-line="33" selection-end-column="56" />
+            <state relative-caret-position="286">
+              <caret line="42" column="67" lean-forward="false" selection-start-line="42" selection-start-column="67" selection-end-line="42" selection-end-column="67" />
+              <folding />
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file leaf-file-name="TabManager.rxj" pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/ooRexx/TabManager.rxj">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="45">
+              <caret line="22" column="91" lean-forward="false" selection-start-line="22" selection-start-column="91" selection-end-line="22" selection-end-column="91" />
+              <folding />
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file leaf-file-name="FXRexxEngine.rxj" pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/ooRexx/FXRexxEngine.rxj">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="-396">
+              <caret line="281" column="80" lean-forward="false" selection-start-line="281" selection-start-column="80" selection-end-line="281" selection-end-column="80" />
               <folding />
             </state>
           </provider>
@@ -136,6 +83,7 @@
       <find>sysslee</find>
       <find>statusbar</find>
       <find>1234</find>
+      <find>occu</find>
     </findStrings>
     <replaceStrings>
       <replace>resources/images/</replace>
@@ -168,9 +116,9 @@
         <option value="$PROJECT_DIR$/ooRexx/FileTreeManager.rxj" />
         <option value="$PROJECT_DIR$/ooRexxTryFX.rxj" />
         <option value="$PROJECT_DIR$/resources/fxml/ooRexxTryFX.fxml" />
-        <option value="$PROJECT_DIR$/ooRexx/TabManager.rxj" />
         <option value="$PROJECT_DIR$/ooRexx/FXRexxEngine.rxj" />
         <option value="$PROJECT_DIR$/resources/fxml/ooRexxTryFXController.rxj" />
+        <option value="$PROJECT_DIR$/ooRexx/TabManager.rxj" />
         <option value="$PROJECT_DIR$/ooRexx/StatusBarManager.rxj" />
       </list>
     </option>
@@ -197,8 +145,6 @@
     </navigator>
     <panes>
       <pane id="Scratches" />
-      <pane id="PackagesPane" />
-      <pane id="Scope" />
       <pane id="ProjectPane">
         <subPane>
           <PATH>
@@ -277,6 +223,8 @@
           </PATH>
         </subPane>
       </pane>
+      <pane id="PackagesPane" />
+      <pane id="Scope" />
     </panes>
   </component>
   <component name="PropertiesComponent">
@@ -511,7 +459,7 @@
   </component>
   <component name="ToolWindowManager">
     <frame x="-8" y="86" width="1616" height="822" extended-state="6" />
-    <editor active="false" />
+    <editor active="true" />
     <layout>
       <window_info id="Palette" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="5" side_tool="false" content_ui="tabs" />
       <window_info id="TODO" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="9" side_tool="false" content_ui="tabs" />
@@ -550,6 +498,22 @@
     <watches-manager />
   </component>
   <component name="editorHistoryManager">
+    <entry file="file://$PROJECT_DIR$/resources/fxml/ooRexxTryFXController.rxj">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="748">
+          <caret line="44" column="21" lean-forward="true" selection-start-line="44" selection-start-column="21" selection-end-line="44" selection-end-column="21" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/ooRexx/RexxEventHandler.rxj">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="561">
+          <caret line="33" column="56" lean-forward="false" selection-start-line="33" selection-start-column="56" selection-end-line="33" selection-end-column="56" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
     <entry file="file://$PROJECT_DIR$/ooRexxTryFX.rxj">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="3519">
@@ -820,20 +784,13 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/test.rxj">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="234">
-          <caret line="9" column="18" lean-forward="false" selection-start-line="9" selection-start-column="18" selection-end-line="9" selection-end-column="18" />
-        </state>
-      </provider>
-    </entry>
+    <entry file="file://$PROJECT_DIR$/test.rxj" />
     <entry file="file://$PROJECT_DIR$/ooRexx/json-rgf.cls" />
     <entry file="file://$PROJECT_DIR$/EnvironmentSymPrinter.rxj" />
     <entry file="file://$PROJECT_DIR$/rgf_test_pgm.rxj">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="34">
           <caret line="2" column="9" lean-forward="true" selection-start-line="2" selection-start-column="9" selection-end-line="2" selection-end-column="9" />
-          <folding />
         </state>
       </provider>
     </entry>
@@ -841,7 +798,6 @@
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="440">
           <caret line="23" column="2" lean-forward="false" selection-start-line="23" selection-start-column="2" selection-end-line="23" selection-end-column="2" />
-          <folding />
         </state>
       </provider>
     </entry>
@@ -849,6 +805,56 @@
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="-1256">
           <caret line="2" column="0" lean-forward="true" selection-start-line="2" selection-start-column="0" selection-end-line="2" selection-end-column="0" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/ooRexx/RexxEventHandler.rxj">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="561">
+          <caret line="33" column="56" lean-forward="false" selection-start-line="33" selection-start-column="56" selection-end-line="33" selection-end-column="56" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://C:/Program Files (x86)/BSF4ooRexx/CLR.CLS">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="1768">
+          <caret line="104" column="2" lean-forward="false" selection-start-line="104" selection-start-column="2" selection-end-line="104" selection-end-column="2" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/ooRexx/SyntaxHighlighter.rxj">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="153">
+          <caret line="9" column="34" lean-forward="false" selection-start-line="9" selection-start-column="34" selection-end-line="9" selection-end-column="34" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/resources/stylesheets/ooRexxTryFX.css">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="255">
+          <caret line="15" column="0" lean-forward="true" selection-start-line="15" selection-start-column="0" selection-end-line="15" selection-end-column="0" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/ooRexx/FileTreeManager.rxj">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="316">
+          <caret line="141" column="32" lean-forward="false" selection-start-line="141" selection-start-column="32" selection-end-line="141" selection-end-column="32" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/resources/fxml/ooRexxTryFX.fxml">
+      <provider editor-type-id="JavaFX-Scene-Builder">
+        <state />
+      </provider>
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="262">
+          <caret line="146" column="30" lean-forward="false" selection-start-line="146" selection-start-column="21" selection-end-line="146" selection-end-column="30" />
           <folding />
         </state>
       </provider>
@@ -861,85 +867,34 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/ooRexx/RexxEventHandler.rxj">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="676">
-          <caret line="33" column="56" lean-forward="false" selection-start-line="33" selection-start-column="56" selection-end-line="33" selection-end-column="56" />
-          <folding />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/resources/fxml/ooRexxTryFX.fxml">
-      <provider editor-type-id="JavaFX-Scene-Builder">
-        <state />
-      </provider>
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="194">
-          <caret line="146" column="30" lean-forward="false" selection-start-line="146" selection-start-column="21" selection-end-line="146" selection-end-column="30" />
-          <folding />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/ooRexx/FileTreeManager.rxj">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="214">
-          <caret line="141" column="32" lean-forward="true" selection-start-line="141" selection-start-column="32" selection-end-line="141" selection-end-column="32" />
-          <folding />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/resources/stylesheets/ooRexxTryFX.css">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="170">
-          <caret line="10" column="54" lean-forward="true" selection-start-line="10" selection-start-column="54" selection-end-line="10" selection-end-column="54" />
-          <folding />
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/ooRexx/TabManager.rxj">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="382">
-          <caret line="125" column="5" lean-forward="false" selection-start-line="125" selection-start-column="5" selection-end-line="125" selection-end-column="5" />
-          <folding />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/ooRexx/SyntaxHighlighter.rxj">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="225">
-          <caret line="9" column="34" lean-forward="false" selection-start-line="9" selection-start-column="34" selection-end-line="9" selection-end-column="34" />
+        <state relative-caret-position="45">
+          <caret line="22" column="91" lean-forward="false" selection-start-line="22" selection-start-column="91" selection-end-line="22" selection-end-column="91" />
           <folding />
         </state>
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/ooRexx/FXRexxEngine.rxj">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="622">
-          <caret line="282" column="4" lean-forward="false" selection-start-line="282" selection-start-column="4" selection-end-line="282" selection-end-column="4" />
+        <state relative-caret-position="-396">
+          <caret line="281" column="80" lean-forward="false" selection-start-line="281" selection-start-column="80" selection-end-line="281" selection-end-column="80" />
           <folding />
         </state>
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/resources/fxml/ooRexxTryFXController.rxj">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="399">
-          <caret line="44" column="21" lean-forward="true" selection-start-line="44" selection-start-column="21" selection-end-line="44" selection-end-column="21" />
-          <folding />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://C:/Program Files (x86)/BSF4ooRexx/CLR.CLS">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="-144">
-          <caret line="104" column="2" lean-forward="true" selection-start-line="104" selection-start-column="2" selection-end-line="104" selection-end-column="2" />
+        <state relative-caret-position="291">
+          <caret line="48" column="26" lean-forward="true" selection-start-line="48" selection-start-column="26" selection-end-line="48" selection-end-column="26" />
           <folding />
         </state>
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/ooRexx/StatusBarManager.rxj">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="199">
-          <caret line="28" column="0" lean-forward="true" selection-start-line="28" selection-start-column="0" selection-end-line="28" selection-end-column="0" />
+        <state relative-caret-position="286">
+          <caret line="42" column="67" lean-forward="false" selection-start-line="42" selection-start-column="67" selection-end-line="42" selection-end-column="67" />
           <folding />
         </state>
       </provider>

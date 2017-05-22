@@ -20,7 +20,7 @@
   TabPane~getSelectionModel~select(Tab)
   allTabs~insert(Tab)
 
-  codeArea = .bsf~new("org.fxmisc.richtext.CodeArea", "do i=1 to 150; say i/0; end") -- "trace i; do i=1 to 55; say 55/i; end;") -- trace ?R; pull v; say v") --SAY ((12+4)*5+4)/0 -- "trace i; parse pull tmp; say tmp"
+  codeArea = .bsf~new("org.fxmisc.richtext.CodeArea", "trace i".endOfLine"do i=1 to 10 by 2".endOfLine"say i".endOfLine"end".endOfLine"1/0") -- "trace i; do i=1 to 55; say 55/i; end;") -- trace ?R; pull v; say v") --SAY ((12+4)*5+4)/0 -- "trace i; parse pull tmp; say tmp"
   virtualizedScrollPane = .bsf~new("org.fxmisc.flowless.VirtualizedScrollPane", codeArea)
   anchorPane = .bsf~new("javafx.scene.layout.AnchorPane")       -- this anchorPane allows the codeArea to stretch
   anchorPane~~setBottomAnchor(codeArea,0)~~setRightAnchor(codeArea,0)~~setTopAnchor(codeArea,0)~~setLeftAnchor(codeArea,0)

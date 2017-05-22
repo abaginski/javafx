@@ -38,16 +38,18 @@
     say "---"
   --guard on when et~done
   redo:
-  if et~done then
-    .StatusBarManager~setTempMessage("Execution time" timeStart~elapsed)
+  if et~done then do
+    timeEnd = .dateTime~new
+    elapsed = timeStart - timeEnd
+    .StatusBarManager~setTempMessage("Execution time" elapsed~seconds)
+  end
   else if et~error then do
     options = .stringTable~new
     options~time = 15
     options~type = "ERROR"
-    .StatusBarManager~setTempMessage("Error occured", options)
+    .StatusBarManager~setTempMessage("An Error occured", options)
   end
-  do
-    say "gotta wait [Controller:45]"
+  else do
     call sysSleep .3
     call redo
   end
@@ -85,7 +87,7 @@
 syntax:
    co = condition("object")
    errorMsg = ppCondition2(co)
-   .et~error=.true
+   .et~error = .true
    .Platform~runLater(bsfCreateRexxProxy(.errorPrinter~new(errorMsg),,.java.lang.Runnable))
    exit -1
 
@@ -94,13 +96,11 @@ syntax:
 ::method init
   expose errorMsg
   use arg errorMsg
-
 ::method run
   expose errorMsg
   fxTextArea = .my.app~ooRexxTryFX.fxml~Output
   from = fxTextArea~getLength
   fxTextArea~appendText(errorMsg)
-  say fxTextArea~getLength
   to = min(from + errorMsg~length, fxTextArea~getLength)
   fxTextArea~setStyle(from, to, .styles["ERROR"])
 

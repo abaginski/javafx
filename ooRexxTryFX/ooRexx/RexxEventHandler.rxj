@@ -15,13 +15,16 @@
       event~consume                 -- consume the event to prevent default behavor of this event
     end
     when "KEY_PRESSED" then do
+      signal on syntax
       condition1 = event~getCode~equals(.keyCode~ENTER)             -- currently, we are only interested in clicks on the return key
       currentItem = .my.app~ooRexxTryFX.fxml~FileTree~getSelectionModel~getSelectedItem
-      condition2 = currentItem~isLeaf     -- a leaf is a tree item with no children, e.g. a file
+      condition2 = currentItem~isLeaf     -- a leaf is a tree item with no children, e.g. a file, this statement may cause exceptions if the filetree is not selected
       if condition1 & condition2 then do
         filepath = .FileTreeManager~getFullPath(currentItem)
-        .openFile~new(filepath)~~handle
+        if \self~handleNewFileCreation(filepath) then
+          .openFile~new(filepath)~~handle
       end
+      syntax: return
     end
     when "MOUSE_CLICKED" then do -- fired by the file tree
       signal on syntax                                             -- intercept all errors
@@ -32,15 +35,14 @@
       condition3 = currentItem~isLeaf     -- a leaf is a tree item with no children, e.g. a file
       if condition1 & condition2 & condition3 then do
         filepath = .FileTreeManager~getFullPath(currentItem)
-        .openFile~new(filepath)~~handle
+        if \self~handleNewFileCreation(filepath) then
+          .openFile~new(filepath)~~handle
       end
       syntax: return                                               -- do not output any error messages
     end
-    when "BranchExpandedEvent" then do
-      signal off syntax
+    when "BranchExpandedEvent" then
       /* this event gets fired when the user clicks expands a directory in the tree view */
       .FileTreeManager~updateTree(caller)
-    end
     when "SCROLL" then do
       /* the following handler zooms the current codeArea based on the scroll amount of the user */
       if event~isShortcutDown then do               -- only do something if control is pressed
@@ -53,6 +55,26 @@
     otherwise
       say "[information] uncaught event {"eventName"}"
   end
+
+::method handleNewFileCreation
+  use arg filepath
+  if filepath~lastPos("/") = filepath~length then
+    filepath = filepath~left(filepath~length-1)
+  /* let's check if the user wants to create a new file, e.g. filename ends with "Create new file" */
+  posOfLastSlash = filepath~lastPos("/")
+  if filepath~right(filepath~length - posOfLastSlash) = "Create new file" then do
+    tab = .TabManager~newTab
+    tab~setText("New File")
+    .TabManager~alreadySavedFilepaths~put(filepath~left(posOfLastSlash), .TabManager~getTabIndex +1)
+    .my.app~primaryStage~setTitle(pp(tab~getText) "ooRexxTryFX")
+    opts = .stringTable~new
+    opts~time = 10
+    opts~type = "SUCCESS"
+    .StatusBarManager~setTempMessage("File created", opts)
+    return .true
+  end
+  else
+    return .false
 
 ::method unknown
   say "[information] uncaught call {"arg(1)"}"

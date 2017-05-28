@@ -98,7 +98,9 @@
             <Menu mnemonicParsing="false" text="Application">
                <items>
                   <MenuItem accelerator="Shortcut+Enter" mnemonicParsing="false" onAction="call runApp arg(arg());" text="Run Application" />
-                  <MenuItem mnemonicParsing="false" text="Run with Arguments" />
+                  <MenuItem mnemonicParsing="false" text="Run with Arguments" onAction="slotDir = arg(arg());
+                  slotDir~runWithArgs = .true;
+                  call runApp slotDir" />
                   <MenuItem accelerator="F5" mnemonicParsing="false" onAction="                   slotDir = arg(arg());                   userData = .directory~new;                   userData~useCurrentFile = .true;                   slotDir~userData = userData;                   call loadFile slotDir;                   " text="Reload" />
                </items>
             </Menu>

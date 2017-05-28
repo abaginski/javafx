@@ -8,11 +8,18 @@
 ::routine runApp public
     use arg slotDir
     .StatusBarManager~setMessage("Running ...", "LOADING")
-    timeStart = .dateTime~new
     tgtOutput=.my.app~ooRexxTryFX.fxml~Output   -- get "Output" TextArea object
-    tgtOutput~replaceText("")  -- delete content of output area
     tgtInput=.my.app~ooRexxTryFX.fxml~Input
+    tgtOutput~replaceText("")  -- delete content of output area
     tgtInput~setText("")
+    say slotDir~hasIndex("runWithArgs")
+    say slotDir~hasItem("runWithArgs")
+    say slotDir~runWithArgs
+    if slotDir~runWithArgs = .true then do
+      inputStream = .fxInputStream~new(tgtInput, "INPUT")
+      inputStream~lineIn
+    end
+    timeStart = .dateTime~new
 
 -- rgf: hier k?nnte in Zukunft entschieden werden, welche RexxEngine zur Ausf?hrung benutzt werden soll
     fxRexxEngine = .FXRexxEngine~latestFXRexxEngine   -- if a RexxEngine is available it can be retrieved
@@ -50,7 +57,7 @@
     .StatusBarManager~setTempMessage("An Error occured", options)
   end
   else do
-    call sysSleep .3
+    call sysSleep .3      -- wait 1/3 of a second before checking for completion again
     call redo
   end
   return
@@ -108,13 +115,17 @@ syntax:
 
 ::routine saveFile public
     use arg slotDir
-
-    if .TabManager~alreadySavedFile <> .nil then
-        skipDialog = .true                                  /* if a file was previously selected to open or save, use it
-                                                               to save it the new content into that file, therefore skipping the
-                                                               file selection dialog */
-    else
-        skipDialog = .false                                 -- default behaviour: do not skip the dialog
+    filepath = .TabManager~alreadySavedFile
+    select
+      when SysIsFileDirectory(filepath) then do     -- in case "Create new file" was clicked
+        slotDir~dirPath = filepath || "newfile.rxj"
+        skipDialog = .false
+      end
+      when filepath = .nil then
+        skipDialog = .false
+      otherwise
+        skipDialog = .true                                    /* if a file was previously selected to open or save, use it to save it the new content into that file, therefore skipping the file selection dialog */
+    end
 
    call saveFileAs slotDir, skipDialog
 
@@ -122,22 +133,29 @@ syntax:
 
 ::routine saveFileAs public
   use arg slotDir, skipDialog = .false    -- fetch the slotDir argument (BSF4ooRexx adds this as the last argument at the Java side)
-  scriptContext = slotDir~scriptContext   -- get the slotDir (the last) argument, get the entry "SCRIPTCONTEXT"
+  scriptContext = slotDir~scriptContext   -- get the entry "SCRIPTCONTEXT"
 
   Code = .TabManager~getInputArea~getText
-  alreadySavedFile = .TabManager~alreadySavedFile
+  --if slotDir~hasIndex("dirPath") then
+  alreadySavedFile = slotDir~dirPath
+  if alreadySavedFile = .nil then
+    alreadySavedFile = .TabManager~alreadySavedFile
 
+/*
   if \skipDialog then
     file = .FileManager~saveDialog(alreadySavedFile)             -- show the save dialog
   else
-    file = .bsf~new("java.io.File", alreadySavedFile)
+    file = .bsf~new("java.io.File", alreadySavedFile)*/
+  file = (skipDialog)~?(.bsf~new("java.io.File", alreadySavedFile),.FileManager~saveDialog(alreadySavedFile))
 
   if file \= .nil then do
     filepath = file~toString
     .FileManager~saveFile(filepath, Code)
     .TabManager~saveFilepath(filepath)                                     -- save the file to eventually skip the dialog next time
     .OpenRecentMenuManager~updateMenu(filepath)
-    .StatusBarManager~setTempMessage(filepath "successfully saved!")
+    options = .stringTable~new
+    options~type = "SUCCESS"
+    .StatusBarManager~setTempMessage(filepath "successfully saved!",options)
   end
 
 /* --------------------------------------------------------------------------------------------------- */
@@ -223,7 +241,6 @@ syntax:
 /* this routine will walk the filetree using a recursive loop and the private routine down below and save all expanded directories in the preferences, then close the application */
 ::routine closeApp public
   .FileTreeManager~savePaths
-  say "shutdown"
   .Platform~exit
 
 ::requires "rgf_util2.rex"

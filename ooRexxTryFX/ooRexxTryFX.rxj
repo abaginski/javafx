@@ -199,13 +199,13 @@ syntax:
 ::method changed
   expose primaryStage
   use arg property, oldValue, newValue
-
   if property~getName="maximized" & oldValue=1 & newValue=0 then do
     primaryStage~setHeight(.my.app~preferences["defaultHeight"])
     primaryStage~setWidth(.my.app~preferences["defaultWidth"])
     primaryStage~centerOnScreen
   end
   propertyName = (property~getName="position" & newValue>=0 & newValue<=1)~?("hSplitPaneDiverPosition", property~getName)
+  --say pp(propertyName newValue)
   .my.app~preferences~setProperty(propertyName, newValue)
   .my.app~preferences~save(.prefPath)
 

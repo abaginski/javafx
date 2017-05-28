@@ -11,7 +11,7 @@
   if alreadySavedFile <> .nil then do
     fileObj = .bsf~new("java.io.File", alreadySavedFile)
     FileChooser~setInitialDirectory( fileObj~getParentFile )    -- predefine the directory
-    FileChooser~setInitialFileName( fileObj~toString )          -- predefine the filename
+    FileChooser~setInitialFileName( fileObj~getName )          -- predefine the filename
   end
   else do
     /* set the current directory as default */
@@ -50,16 +50,13 @@
 
 ::method openFile
   use arg filepath
-  say pp(filepath)
   rexxStream = .stream~new(filepath)
   loadedCode = ""
-  lineNo = 1
-  do line over rexxStream
+  loop with index lineNo item line over rexxStream
     if lineNo = 1 then
       loadedCode = line                           -- do not prepend a EOL character on the first line
     else
       loadedCode ||= .endOfLine || line                                       /* append the next line to the string loadedCode */
-    lineNo += 1
   end
   rexxStream~close
   return loadedCode

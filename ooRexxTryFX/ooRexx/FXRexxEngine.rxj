@@ -204,7 +204,8 @@
   expose fxTextInputControl enterPressed
   use arg start=1, count=1
 
-  .my.app~ooRexxTryFX.fxml~Input~setVisible(.true)
+  --.my.app~ooRexxTryFX.fxml~Input~setVisible(.true)
+  fxTextInputControl~setVisible(.true)
   enterPressed = .false
   fxTextInputControl~setOnKeyPressed(bsfCreateRexxProxy(self,,"javafx.event.EventHandler"))
   fxTextInputControl~requestFocus

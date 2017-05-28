@@ -111,7 +111,7 @@
 /**
  ** this method returns the 0-based index of the current tab
  **/
-::method getTabIndex private
+::method getTabIndex
   expose TabPane
   SelectionModel = TabPane~getSelectionModel
   TabIndex = SelectionModel~getSelectedIndex

@@ -54,6 +54,11 @@
   config~~open("write replace") ~~close      -- clear the config file
   self~loadMenu
 
+
+
+
+
+
 ::class openFile public
 ::method init
   expose filepath OpenRecentMenuManager
@@ -72,8 +77,8 @@
     .StatusBarManager~setMessage("Error loading" filepath, "ERROR")
     return
   end
-  slotDir = .directory~new
-  slotDir~userData = .directory~new
+  slotDir = .stringTable~new
+  slotDir~userData = .stringTable~new
   slotDir~userData~useSpecificFile = filepath
   call loadFile slotDir
 

@@ -16,8 +16,6 @@
 <?import javafx.scene.layout.VBox?>
 <?import org.fxmisc.flowless.VirtualizedScrollPane?>
 <?import org.fxmisc.richtext.InlineCssTextArea?>
-<?import org.kordamp.ikonli.javafx.FontIcon?>
-
 
 <VBox maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="800.0" prefWidth="1300.0" xmlns="http://javafx.com/javafx/8.0.111" xmlns:fx="http://javafx.com/fxml/1">
   <fx:script source="ooRexxTryFXController.rxj" />
@@ -98,7 +96,9 @@
             <Menu mnemonicParsing="false" text="Application">
                <items>
                   <MenuItem accelerator="Shortcut+Enter" mnemonicParsing="false" onAction="call runApp arg(arg());" text="Run Application" />
-                  <MenuItem mnemonicParsing="false" text="Run with Arguments" />
+                  <MenuItem mnemonicParsing="false" text="Run with Arguments" onAction="slotDir = arg(arg());
+                  slotDir~runWithArgs = .true;
+                  call runApp slotDir" />
                   <MenuItem accelerator="F5" mnemonicParsing="false" onAction="                   slotDir = arg(arg());                   userData = .directory~new;                   userData~useCurrentFile = .true;                   slotDir~userData = userData;                   call loadFile slotDir;                   " text="Reload" />
                </items>
             </Menu>

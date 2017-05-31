@@ -7,36 +7,43 @@
 
 ::routine runApp public
     use arg slotDir
-    .StatusBarManager~setMessage("Running ...", "LOADING")
+    args = .nil
+    /* first of all, save the code in a backup file */
+    scriptContext = slotDir~scriptContext         -- todo: necessary?
+    Code = .TabManager~getInputArea~getText
+    tmpFilepath = .TabManager~alreadySavedFile
+    if \SysIsFile(tmpFilePath) then
+       tmpFilepath = Directory() || .seperator || "backupRxjFile" || time()~changeStr(":","") || ".rxj"
+    else      -- valid filepath
+       tmpFilepath ||= "_backup.rxj"
+    tmpStream = .stream~new(tmpFilepath)
+    tmpStream~open("write replace")
+    loop codeLine over Code
+      tmpStream~lineOut(codeLine)
+    end
+    tmpStream~close
     tgtOutput=.my.app~ooRexxTryFX.fxml~Output   -- get "Output" TextArea object
     tgtInput=.my.app~ooRexxTryFX.fxml~Input
     tgtOutput~replaceText("")  -- delete content of output area
-    tgtInput~setText("")
-    say slotDir~hasIndex("runWithArgs")
-    say slotDir~hasItem("runWithArgs")
-    say slotDir~runWithArgs
+    --tgtInput~setText("")
     if slotDir~runWithArgs = .true then do
-      inputStream = .fxInputStream~new(tgtInput, "INPUT")
-      inputStream~lineIn
+      .StatusBarManager~setMessage("waiting for arguments", "LOADING")
+      userInput = .userInput~new
+      args = userInput~getUserInput
+      --todo: save args TabManager
     end
+    .StatusBarManager~setMessage("Running ...", "LOADING")
     timeStart = .dateTime~new
 
 -- rgf: hier k?nnte in Zukunft entschieden werden, welche RexxEngine zur Ausf?hrung benutzt werden soll
     fxRexxEngine = .FXRexxEngine~latestFXRexxEngine   -- if a RexxEngine is available it can be retrieved
-    if fxRexxEngine = .nil then      -- no RexxEngine created so far, create one
-    do
+    if fxRexxEngine = .nil then do     -- no RexxEngine created so far, create one
          -- usage                  (input,output,error,debugInput,traceOutput)
        fxRexxEngine = .FXRexxEngine~new(tgtInput, tgtOutput, tgtOutput, tgtInput, tgtOutput)
        .local~fx.RexxEngine = fxRexxEngine     -- diese soll die Default-RexxEngine sein (.fx.RexxEngine)
     end
-
-  --  signal on syntax
-    scriptContext = slotDir~scriptContext
-    CodeArea = .TabManager~getInputArea
-    Code = CodeArea~getText
-
 -- rgf: why executing on a separate thread?
-    et = .ExecuteThread~new(fxRexxEngine~rexxEngine, Code)
+    et = .ExecuteThread~new(fxRexxEngine~rexxEngine, Code, args)
     .local~et = et
     runnable = bsfCreateRexxProxy(et,,.java.lang.Runnable)
     .java.lang.Thread~new(runnable) ~~bsf.dispatch("start")              -- Run code in separate thread
@@ -48,7 +55,8 @@
   if et~done then do
     timeEnd = .dateTime~new
     elapsed = timeStart - timeEnd
-    .StatusBarManager~setTempMessage("Execution time" elapsed~seconds)
+    .StatusBarManager~setTempMessage("Execution time" elapsed~seconds "seconds")
+    SysFileDelete(tmpFilepath)
   end
   else if et~error then do
     options = .stringTable~new
@@ -60,8 +68,6 @@
     call sysSleep .3      -- wait 1/3 of a second before checking for completion again
     call redo
   end
-  return
-
 
 /* --------------------------------------------------------------------------------------------------- */
 
@@ -81,9 +87,15 @@
 
 ::method run
    expose rexxEngine Code args res busy done
-   busy=.true                 -- indicate Rexx program is running
+   busy = .true                 -- indicate Rexx program is running
    signal on syntax
-   res=rexxEngine~apply("code",0,0,Code,.nil,args) --java.lang.String source, int lineNo, int columnNo, java.lang.Object funcBody, java.util.Vector paramNames, java.util.Vector arguments)
+   /* create args vector */
+   v = .bsf~new("java.util.Vector")
+   if args <> .nil then         -- .nil does not have a makeArray method
+     loop argument over args~makeArray(" ")
+       v~add(argument)
+     end
+   res=rexxEngine~apply("code",0,0,Code,.nil,v) --java.lang.String source, int lineNo, int columnNo, java.lang.Object funcBody, java.util.Vector paramNames, java.util.Vector arguments)
    say pp("busy" busy) pp("done" done)
    busy=.false                -- indicate Rexx program is not running anymore
    done=.true                 -- indicate that Rexx program has run and is finished, save to fetch result "res"
@@ -126,7 +138,6 @@ syntax:
       otherwise
         skipDialog = .true                                    /* if a file was previously selected to open or save, use it to save it the new content into that file, therefore skipping the file selection dialog */
     end
-
    call saveFileAs slotDir, skipDialog
 
 /* --------------------------------------------------------------------------------------------------- */
@@ -136,17 +147,14 @@ syntax:
   scriptContext = slotDir~scriptContext   -- get the entry "SCRIPTCONTEXT"
 
   Code = .TabManager~getInputArea~getText
-  --if slotDir~hasIndex("dirPath") then
   alreadySavedFile = slotDir~dirPath
-  if alreadySavedFile = .nil then
+  if \SysFileExists(alreadySavedFile) then
     alreadySavedFile = .TabManager~alreadySavedFile
 
-/*
   if \skipDialog then
     file = .FileManager~saveDialog(alreadySavedFile)             -- show the save dialog
   else
-    file = .bsf~new("java.io.File", alreadySavedFile)*/
-  file = (skipDialog)~?(.bsf~new("java.io.File", alreadySavedFile),.FileManager~saveDialog(alreadySavedFile))
+    file = .bsf~new("java.io.File", alreadySavedFile)
 
   if file \= .nil then do
     filepath = file~toString
@@ -242,5 +250,45 @@ syntax:
 ::routine closeApp public
   .FileTreeManager~savePaths
   .Platform~exit
+
+
+::class UserInput public
+::attribute mode
+::attribute initText
+
+::method init
+  expose mode initText
+  use arg mode, initText
+  mode = (mode <> "MODE")~?(mode, "line")       -- if there is no arg(1), mode will be set to "MODE"
+  if mode~upper = "L" then
+     mode = "line"
+  if mode~upper = "C" then
+     mode = "char"
+  initText = (initText <> "INITTEXT")~?(initText, "")
+
+::method getUserInput
+  expose mode initText enterPressed
+  --say pp(.Platform~isFxApplicationThread)
+  inputControl = .my.app~ooRexxTryFX.fxml~Input
+  inputControl~setVisible(.true)
+  inputControl~setText(initText)
+  enterPressed = .false
+  inputControl~setOnKeyPressed(bsfCreateRexxProxy(self,,"javafx.event.EventHandler"))
+  inputControl~requestFocus
+  guard on when enterPressed
+  inputControl~setVisible(.false)               -- hide the input text field
+  inputControl~getParent~requestFocus
+--  .StatusBarManager~setMessage("Done")
+  return inputControl~getText
+
+::method handle
+  expose enterPressed
+  use arg keyEvent
+  signal on syntax
+  if keyEvent~getCode~equals(.keyCode~ENTER) then
+      enterPressed = .true
+  else return
+  syntax: return
+
 
 ::requires "rgf_util2.rex"

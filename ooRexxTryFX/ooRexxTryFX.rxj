@@ -1,8 +1,8 @@
 parse source .environment~os . .environment~s
 parse version v .
 
-.environment~WindowsNT = (.os = "WindowsNT")~?(.true, .false)
-
+.environment~setEntry("WindowsNT", (.os = "WindowsNT")~?(.true, .false))
+.environment~setEntry("seperator", (.WindowsNT)~?("\", "/"))
 .local~setEntry("argumentList", .array~new)        -- save the argument list in the local variable to make it accessible
 loop i=1 to arg()
   .argumentList[i]=arg(i)
@@ -15,6 +15,7 @@ end
 .environment~setEntry("my.app", .stringTable~new)
 .environment~java.lang.Runnable = bsf.import("java.lang.Runnable")
 .environment~java.lang.Thread = bsf.import("java.lang.Thread")
+.environment~javafx.event.EventHandler = bsf.import("javafx.event.EventHandler")
 .environment~Platform = bsf.import("javafx.application.Platform")
 .environment~keyCode = bsf.import("javafx.scene.input.KeyCode")
 .environment~setEntry("styles", .stringTable~new)

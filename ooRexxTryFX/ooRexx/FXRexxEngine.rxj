@@ -204,14 +204,7 @@
   expose fxTextInputControl enterPressed
   use arg start=1, count=1
 
-  --.my.app~ooRexxTryFX.fxml~Input~setVisible(.true)
-  fxTextInputControl~setVisible(.true)
-  enterPressed = .false
-  fxTextInputControl~setOnKeyPressed(bsfCreateRexxProxy(self,,"javafx.event.EventHandler"))
-  fxTextInputControl~requestFocus
-  guard on when enterPressed = .true
-  string=fxTextInputControl~getText -- return "1" if any data available
-  .Platform~runLater(bsfCreateRexxProxy(.Thread~new,,.java.lang.Runnable))     -- hide the input area in the gui thread
+  string = getUserInput()               -- defined in the controller
   /*
   if start=1 | length=.nil then return string
   if length=.nil then return string~substr(start)
@@ -222,21 +215,7 @@
 
 
 
-::method handle
-    expose fxTextInputControl enterPressed
-    use arg keyEvent
-    signal on syntax
-    if keyEvent~getCode~equals(.keyCode~ENTER) then
-        enterPressed = .true
-    else return
-    syntax: return
 
-
-::class Thread
-::method run
-  .TabManager~getInputArea~requestFocus                 -- set the focus to the codeArea
-  .my.app~ooRexxTryFX.fxml~Input~setVisible(.false)     -- hide the input text field
-  .StatusBarManager~setMessage("Done")
 
 
 -------------------------------------------------------------------------------------

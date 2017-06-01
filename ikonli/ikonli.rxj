@@ -1,0 +1,46 @@
+
+.environment~setEntry("my.app", .directory~new)
+parse source . . s
+.local~appDirectory = filespec("Location", s)   -- determine path to this Rexx program
+jfile = .bsf~new("java.io.File",.local~appDirectory)
+urlAppDir = jfile~toUri~toUrl
+.my.app~appClzLdr = .bsf~new("java.net.URLClassLoader", bsf.createJavaArrayOf("java.net.URL", urlAppDir))
+.my.app~fxmlLoader = bsf.loadClass("javafx.fxml.FXMLLoader")
+.my.app~rexxHandler = .rxDocHandler~new
+rxApp = BsfCreateRexxProxy(.my.app~rexxHandler,,"javafx.application.Application")
+.my.app~rxApp = rxApp
+signal on syntax
+rxApp~launch(rxApp~getClass, .nil)     -- need to use this version of launch in order to work
+exit 0
+
+syntax:
+   co = condition("object")
+   say "ppCondition2(co):"
+   say ppCondition2(co)
+   exit -1
+
+::requires "BSF.CLS"    -- get Java support
+::requires "rgf_util2.rex"
+
+/* implements the abstract method "start" for the Java class javafx.application.Application
+   (BSF4ooRexx also supplies another (trailing) slotDir (a Rexx Directory) argument, as "start" is
+   invoked from Java)
+*/
+::class RxDocHandler
+  /***************************************************************************************/
+
+::method start    -- will be invoked by the "launch" method
+  use arg primaryStage  -- we get the primary stage to use for our UI
+
+     /* loads the fxml document defining the GUI elements, sets up a scene for it and shows it */
+    .my.app~primaryStage = primaryStage -- save the primary stagee in our directory
+
+    mainSceneFXMLUrl = .my.app~appClzLdr~findResource("fxml/ikonli.fxml")
+    mainSceneFXML    = .my.app~fxmlLoader~load( mainSceneFXMLUrl )   -- load the fxml document
+
+    -- create a scene from the FXML DOM and assign it to the primaryStage
+    mainScene = .bsf~new("javafx.scene.Scene", mainSceneFXML) -- create a scene for our document
+    primaryStage~setScene(mainScene)   -- set the stage to our scene
+
+    primaryStage~show                          -- show the stage
+    return

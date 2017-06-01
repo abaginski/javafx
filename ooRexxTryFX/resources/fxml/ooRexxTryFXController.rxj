@@ -28,9 +28,10 @@
     --tgtInput~setText("")
     if slotDir~runWithArgs = .true then do
       .StatusBarManager~setMessage("waiting for arguments", "LOADING")
-      userInput = .userInput~new
+      savedArgs = .TabManager~getSavedArgs
+      userInput = .userInput~new("line", savedArgs)
       args = userInput~getUserInput
-      --todo: save args TabManager
+      .TabManager~saveArgs(args)
     end
     .StatusBarManager~setMessage("Running ...", "LOADING")
     timeStart = .dateTime~new

@@ -1,14 +1,16 @@
 ::class TabManager public
 ::attribute allTabs                             -- the controller routine "closeAllTabs" uses this attribute
 ::attribute alreadySavedFilepaths
+::attribute savedArgs
 ::method init
 /* variable initialisation */
-  expose allTabs TabPane alreadySavedFilepaths tabCounter
+  expose allTabs TabPane alreadySavedFilepaths tabCounter savedArgs
   tabCounter = 0
   TabPane = .my.app~ooRexxTryFX.fxml~TabPane
   TabPane~getSelectionModel~selectedItemProperty~addListener(bsfCreateRexxProxy(.ChangeListener~new,,"javafx.beans.value.ChangeListener"))
   allTabs = .array~new
   alreadySavedFilepaths = .array~new
+  savedArgs = .array~new
   /* load a code area to the tab */
   self~newTab             -- create the first Tab
 
@@ -105,7 +107,22 @@
   expose allTabs alreadySavedFilepaths
   use arg filepath
   currentTabIndex = self~getTabIndex()
-  alreadySavedFilepaths~put(filepath, currentTabIndex+1)
+  alreadySavedFilepaths~put(filepath, currentTabIndex + 1)
+
+/**
+ * this methods get and set the value of arguments used for each tab
+ */
+::method getSavedArgs
+  expose allTabs savedArgs
+  currentTabIndex = self~getTabIndex()
+  currentArgs = savedArgs~at( currentTabIndex + 1 )
+  return currentArgs
+
+::method saveArgs
+  expose allTabs savedArgs
+  use arg args
+  currentTabIndex = self~getTabIndex()
+  savedArgs~put(args, currentTabIndex + 1)
 
 
 /**
@@ -119,12 +136,15 @@
 
 
 
+
+
+
+
 ::class ChangeListener
 ::method changed
   use arg property, oldValue, newValue
   if newValue <> .nil then
     .my.app~primaryStage~setTitle(pp(newValue~getText) "| ooRexxTryFX")
-
 
 
 ::requires "BSF.CLS"    -- get Java Support

@@ -18,13 +18,13 @@
         root = .bsf~new("javafx.scene.control.TreeItem", "")
         filetree~setRoot(root)
         loop drive over drives  /* load all drives first */
-            folderIcon = .bsf~new("javafx.scene.image.ImageView", "resources/images/icon_folder.png")
+            folderIcon = .bsf~new("org.kordamp.ikonli.javafx.FontIcon", "oct-file-directory") --.bsf~new("javafx.scene.image.ImageView", "resources/images/icon_folder.png")
             subdir = .bsf~new("javafx.scene.control.TreeItem", drive || "/", folderIcon)
             eventType = subdir~branchExpandedEvent
             rp = bsfCreateRexxProxy(.RexxEventHandler~new,,"javafx.event.EventHandler")
             subdir~addEventHandler(eventType, rp)
             createNewFileItem = .bsf~new("javafx.scene.control.TreeItem", "Create new file")
-            createNewFileItem~setGraphic(.bsf~new("javafx.scene.image.ImageView", "resources/images/icon_newfile.png"))
+            createNewFileItem~setGraphic(.bsf~new("org.kordamp.ikonli.javafx.FontIcon", "oct-plus"))--.bsf~new("javafx.scene.image.ImageView", "resources/images/icon_newfile.png"))
             subdir~getChildren~add(createNewFileItem)
             root~getChildren~add(subdir)
         end
@@ -43,7 +43,7 @@
   content  = self~parseDir(fullPath)                               -- returns a directory with two arrays: "files" and "dirs"
   root~getChildren~remove(0,root~getChildren~size)                 -- remove all elements from the tree
   do dir over content~dirs
-    folderIcon = .bsf~new("javafx.scene.image.ImageView", "resources/images/icon_folder.png")
+    folderIcon = .bsf~new("org.kordamp.ikonli.javafx.FontIcon", "oct-file-directory")
     subdir = .bsf~new("javafx.scene.control.TreeItem", dir~name, folderIcon)
     eventType = subdir~branchExpandedEvent
     rp = bsfCreateRexxProxy(.RexxEventHandler~new,,"javafx.event.EventHandler")
@@ -51,7 +51,7 @@
     subdir~getChildren~remove(0,subdir~getChildren~size)            -- remove all elements from the subtree
     if subdir~getChildren~size = 0 then do                  -- remove all elements from the subtree
       createNewFileItem = .bsf~new("javafx.scene.control.TreeItem", "Create new file")
-      createNewFileItem~setGraphic(.bsf~new("javafx.scene.image.ImageView", "resources/images/icon_newfile.png"))
+      createNewFileItem~setGraphic(.bsf~new("org.kordamp.ikonli.javafx.FontIcon", "oct-plus"))
       subdir~getChildren~add(createNewFileItem)
     end
     root~getChildren~add(subdir)
@@ -62,12 +62,12 @@
     if rexxExtensions~hasItem(file~extension) then
       treeItem~setGraphic(.bsf~new("javafx.scene.image.ImageView", "resources/images/bsf4oorexx_032.png") ~~setFitHeight(20.0) ~~setFitWidth(20.0))
     else
-      treeItem~setGraphic(.bsf~new("javafx.scene.image.ImageView", "resources/images/icon_file.png"))
+      treeItem~setGraphic(.bsf~new("org.kordamp.ikonli.javafx.FontIcon", "oct-file"))
     root~getChildren~add(treeItem)
   end
   if fullPath <> "/" then do                -- no one will ever want to create new files in the root directory, so just sort this option out
     createNewFileItem = .bsf~new("javafx.scene.control.TreeItem", "Create new file")
-    createNewFileItem~setGraphic(.bsf~new("javafx.scene.image.ImageView", "resources/images/icon_newfile.png"))
+    createNewFileItem~setGraphic(.bsf~new("org.kordamp.ikonli.javafx.FontIcon", "oct-plus"))
     root~getChildren~add(createNewFileItem)                                   -- add the option to create a new file as the last item
   end
 

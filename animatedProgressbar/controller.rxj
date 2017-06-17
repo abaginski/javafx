@@ -1,0 +1,19 @@
+::routine startClicked public
+  use arg slotDir
+  /*@get(startButton abortButton progress)*/
+  startButton~setDisable(.true)
+  abortButton~setDisable(.false)
+  progress~~setVisible(.true) ~~setProgress(0)
+  .progressbarManager~log("GUI updated")
+  .environment~dp~displayProgress
+
+::routine abortClicked public
+  use arg slotDir
+  /*@get(startButton abortButton)*/
+  .dp~progressStoppedByUser = .true
+  .progressbarManager~log("Aborting process")
+  .progressbarManager~update(0)
+  abortButton~setDisable(.true)
+
+::requires "BSF.CLS"
+::requires "ProgressDefinition.cls"

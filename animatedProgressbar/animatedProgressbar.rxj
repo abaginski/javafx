@@ -1,0 +1,115 @@
+.environment~setEntry("my.app", .directory~new)
+parse source . . s
+.local~appDirectory = filespec("Location", s)   -- determine path to this Rexx program
+jfile = .bsf~new("java.io.File",.local~appDirectory)
+urlAppDir = jfile~toUri~toUrl
+.my.app~appClzLdr = .bsf~new("java.net.URLClassLoader", bsf.createJavaArrayOf("java.net.URL", urlAppDir))
+.my.app~fxmlLoader = bsf.loadClass("javafx.fxml.FXMLLoader")
+.my.app~rexxHandler = .rxDocHandler~new
+rxApp = BsfCreateRexxProxy(.my.app~rexxHandler,,"javafx.application.Application")
+.my.app~rxApp = rxApp
+signal on syntax
+rxApp~launch(rxApp~getClass, .nil)     -- need to use this version of launch in order to work
+exit 0
+
+
+syntax:
+   co = condition("object")
+   say "ppCondition2(co):"
+   say ppCondition2(co)
+   exit -1
+
+::requires "BSF.CLS"    -- get Java support
+::requires "rgf_util2.rex"
+
+/* implements the abstract method "start" for the Java class javafx.application.Application
+   (BSF4ooRexx also supplies another (trailing) slotDir (a Rexx Directory) argument, as "start" is
+   invoked from Java)
+*/
+::class RxDocHandler
+  /***************************************************************************************/
+
+::method start    -- will be invoked by the "launch" method
+  use arg primaryStage  -- we get the primary stage to use for our UI
+     /* loads the fxml document defining the GUI elements, sets up a scene for it and shows it */
+    .my.app~primaryStage = primaryStage -- save the primary stagee in our directory
+
+    mainSceneFXMLUrl = .my.app~appClzLdr~findResource("animatedProgressbar.fxml")
+    mainSceneFXML    = .my.app~fxmlLoader~load( mainSceneFXMLUrl )   -- load the fxml document
+
+    -- create a scene from the FXML DOM and assign it to the primaryStage
+    mainScene = .bsf~new("javafx.scene.Scene", mainSceneFXML) -- create a scene for our document
+    primaryStage~setScene(mainScene)   -- set the stage to our scene
+
+	progress = .my.app~animatedProgressbar.fxml~progress
+	progress~setVisible(.false)
+	.environment~abortButton = .my.app~animatedProgressbar.fxml~abortButton
+	.environment~startButton = .my.app~animatedProgressbar.fxml~startButton
+	.abortButton~setDisable(.true)
+	.startButton~requestFocus
+	.environment~setEntry("progressbarManager", .ProgressbarManager~new(progress))
+	
+	
+    primaryStage~show                          -- show the stage
+    return
+	
+	
+	
+::class ProgressbarManager
+::method init
+  expose progressbar logArea
+  use arg progressbar
+  logArea = .my.app~animatedProgressbar.fxml~logArea
+  
+::method update
+  expose progressbar
+  use arg newValue
+  oldValue = progressbar~getProgress
+  --progressbar~setProgress(newValue)
+  self~animateProgressBar(oldValue, newValue)
+  if newValue = 1 then
+	.abortButton~setDisable(.true)
+  
+::method log
+  expose logArea
+  use arg message
+  logArea~appendText(message .endOfLine)
+  
+::method animateProgressBar
+  expose progressbar
+   use arg from=0, to=0.5, range=1.0
+
+   if \.my.app~hasEntry("clzRexxTask") then  -- create a Java proxy class
+   do    -- define and store the proxy class
+       -- create a new Java proxy class where the methods named "call" and "updateProgress" get defined
+       .my.app~clzRexxTask=bsf.createProxyClass("javafx.concurrent.Task", "RexxTask", "call", "updateProgress")
+   end
+
+   jobj =BSFCreateRexxProxy(.rexxTask~new(from,to,range))   -- create a Java proxy for the Rexx object
+   jtask=.my.app~clzRexxTask~new(jobj)             -- create a Java object, invocations handled by the Rexx object
+
+   progressbar~progressProperty~unbind -- make sure we release a binding
+   progressbar~progressProperty~bind(jtask~progressProperty)
+   .bsf~new("java.lang.Thread",jtask)~bsf.dispatch("start")          -- start the Task
+
+/* The "javafx.concurrent.Task" allows to interface with JavaFX objects in a background
+*  thread such that updates get carried out on the JavaFX application thread.
+*/
+::class rexxTask -- extending the abstract class "javafx.concurrent.Task" with Rexx
+::method init     -- constructor
+  expose start end range   -- progress bar
+  use arg start, end, range=1.00
+
+::method call     -- implementation of the abstract method
+  expose start end range   -- progress bar
+  use arg slotDir
+
+  do i=start to end by 0.05   -- increase by 5% steps
+     slotDir~javaObject~updateProgress(i,range)
+     call SysSleep 0.075      -- sleep 0.075 seconds before increasing again
+  end
+  return .true
+
+::method updateProgress -- this implementation allows one to forward to the protected method "updateProgress"
+  use arg currValue, range, slotDir
+  slotDir~javaObject~updateProgress_forwardToSuper(currValue,range)

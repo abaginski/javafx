@@ -1,0 +1,92 @@
+say .dateTime~new "starting..."
+
+.environment~setEntry("dp", .displayProgress~new(0,100))   -- create the progress object, supply lower and upper bound value
+.dp~showGUI          -- start displaying
+
+w =.worker~new(.dp)         -- create the worker, give it the progress object
+w~work(1,57)               -- start the work
+w~workDone                 -- wait for work done
+
+say .dateTime~new "ended."
+
+
+
+::requires "ProgressDefinition.cls"
+
+------------------------------------------------ Sample DisplayProgress class
+   -- use multiple inheritance
+::class DisplayProgress inherit ProgressDefinition
+
+::method init
+  forward class (.ProgressDefinition) continue -- let the ProgressDefinition constructor handle the arguments
+  say "lowerBound="self~lowerBound "upperBound=" self~upperBound "currentValue="self~currentValue "currentPosition="self~currentPosition
+
+::method displayProgress
+  say self "displayProgress, just arrived, TID="sysqueryprocess("TID")
+  reply
+  say self "displayProgress, continuing work on a new thread, TID="sysqueryprocess("TID")
+  oldPosition=-1
+  do while self~processingEnded=.false
+     if oldPosition<>self~currentPosition then
+     do
+		newValue = format(self~currentPosition*100,3,2) / 100
+		.progressbarManager~log("Arrived at" newValue * 100 "%")
+		.progressbarManager~update(newValue)
+--        say self~lowerBound".."self~currentValue".."self~upperBound "->" self~currentPosition*100.00"%"
+        say self~lowerBound".."self~currentValue".."self~upperBound "->" format(self~currentPosition*100,3,2)"%"
+        oldPosition=self~currentPosition
+     end
+     call sysSleep 1    -- sleep a second
+  end
+
+  if \self~progressStoppedByUser then do
+	   -- show end-of-progress values
+	  .progressbarManager~update(1)
+	  .progressbarManager~log("Worker done")
+	  say self~lowerBound".."self~currentValue".."self~upperBound "->" format(self~currentPosition*100,3,2)"%"
+	  say self "displayProcess ending."
+  end
+  else
+	.progressbarManager~log("successfully aborted")
+    
+::method showGUI unguarded
+  reply									-- return to main flow
+  call "animatedProgressbar.rxj"		-- start the javaFX gui
+
+------------------------------------------------ Sample Worker class: needs access to the displayProgress object
+
+::class Worker
+::attribute progressIndicator
+::method init
+  expose progressIndicator workDone
+  use strict arg progressIndicator
+  workDone=.false
+
+::attribute workDone
+
+::method work
+  expose progressIndicator  workDone
+  say self "work, just arrived, progressIndicator="progressIndicator", workDone="workDone", TID="sysqueryprocess("TID")
+  use strict arg startValue, endValue
+
+  reply                 -- return to caller, proceed in a new thread
+  say self "work, continuing on new thread, startValue="startValue", endValue="endValue", TID="sysqueryprocess("TID")
+   -- set the lower and upper bound values
+  progressIndicator~lowerBound=startValue
+  progressIndicator~upperBound=endValue
+
+  do i=startValue to endValue          -- loop
+     progressIndicator~currentValue=i  -- set value for progress indicator
+     call syssleep 0.13
+     if progressIndicator~progressStoppedByUser=.true then
+     do
+        say .dateTime~new self "progressStoppedByUser=.true, aborting work!"
+        workDone=.true
+        return
+     end
+  end
+  progressIndicator~processingEnded=.true
+  workDone=.true
+
+
+

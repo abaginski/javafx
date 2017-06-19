@@ -5,6 +5,8 @@
   abortButton~setDisable(.false)
   progress~~setVisible(.true) ~~setProgress(0)
   .progressbarManager~log("GUI updated")
+  .environment~startTime = .dateTime~new
+  .progressbarManager~log("Starting time:" .startTime~normalTime)
   .environment~dp~displayProgress
 
 ::routine abortClicked public
@@ -14,6 +16,8 @@
   .progressbarManager~log("Aborting process")
   .progressbarManager~update(0)
   abortButton~setDisable(.true)
-
-::requires "BSF.CLS"
-::requires "ProgressDefinition.cls"
+  
+::routine restartApp public
+  .my.app~primaryStage~hide
+  rexx "mainApp.rxj"
+  

@@ -10,7 +10,6 @@ w~workDone                 -- wait for work done
 say .dateTime~new "ended."
 
 
-
 ::requires "ProgressDefinition.cls"
 
 ------------------------------------------------ Sample DisplayProgress class
@@ -23,22 +22,23 @@ say .dateTime~new "ended."
 
 ::method displayProgress
   say self "displayProgress, just arrived, TID="sysqueryprocess("TID")
-  reply
+  -- diese Methode wird iim "FX Application Thread" aufgerufen und muss auch dort arbeiten
+  -- das "reply" arbeitet in einem neuen Thread und JavaFX wirft einen Fehler auf!
+  -- reply
   say self "displayProgress, continuing work on a new thread, TID="sysqueryprocess("TID")
   oldPosition=-1
   do while self~processingEnded=.false
      if oldPosition<>self~currentPosition then
      do
-		newValue = format(self~currentPosition*100,3,2) / 100
-		.progressbarManager~log("Arrived at" newValue * 100 "%")
-		.progressbarManager~update(newValue)
+		newValue = format(self~currentPosition*100,3,2)
+		.progressbarManager~update(newValue / 100)
+		.progressbarManager~log("Arrived at" newValue "%")
 --        say self~lowerBound".."self~currentValue".."self~upperBound "->" self~currentPosition*100.00"%"
         say self~lowerBound".."self~currentValue".."self~upperBound "->" format(self~currentPosition*100,3,2)"%"
         oldPosition=self~currentPosition
      end
      call sysSleep 1    -- sleep a second
   end
-
   if \self~progressStoppedByUser then do
 	   -- show end-of-progress values
 	  .progressbarManager~update(1)
@@ -48,11 +48,29 @@ say .dateTime~new "ended."
   end
   else
 	.progressbarManager~log("successfully aborted")
-    
-::method showGUI unguarded
-  reply									-- return to main flow
-  call "animatedProgressbar.rxj"		-- start the javaFX gui
+  endTime = .dateTime~new
+  .progressbarManager~log("Execution ended at" endTime~normalTime)
+  diff = endTime - .startTime
+  if diff~seconds > 60 then do
+	diffOutput = diff~minutes "minutes"
+	if diff~minutes <> 1 then
+		diffOutput ||= "s"
+  end
+  else do
+	diffOutput = diff~seconds "second"
+	if diff~seconds <> 1 then
+		diffOutput ||= "s"
+  end
+  .progressbarManager~log("Total execution time was" diffOutput)
 
+  
+::method showGUI unguarded
+  reply								-- return to main flow
+  call "animatedProgressbar.rxj"	-- setup and start the javaFX gui
+
+::method GUIstopped
+  say "GUI stopped, main app is aware"
+  
 ------------------------------------------------ Sample Worker class: needs access to the displayProgress object
 
 ::class Worker
@@ -62,7 +80,9 @@ say .dateTime~new "ended."
   use strict arg progressIndicator
   workDone=.false
 
-::attribute workDone
+::method workDone
+  expose workDone
+  guard on when workDone=.true
 
 ::method work
   expose progressIndicator  workDone

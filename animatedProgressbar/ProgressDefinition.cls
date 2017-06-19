@@ -11,7 +11,6 @@
 
 */
 
-
 ::class ProgressDefinition mixinclass object public
 
 /* Constructor method.
@@ -125,7 +124,7 @@
 ::attribute progressStoppedByUser get
   expose progressStoppedByUser
   return progressStoppedByUser
-  
+
 ::attribute progressStoppedByUser set
   expose progressStoppedByUser processingEnded
   use strict arg progressStoppedByUser

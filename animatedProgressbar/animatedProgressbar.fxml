@@ -37,7 +37,7 @@
       <children>
         <HBox fx:id="actionParent" alignment="CENTER">
           <children>
-            <Button fx:id="actionButton" mnemonicParsing="false" text="Refresh" HBox.hgrow="NEVER">
+            <Button fx:id="actionButton" onAction="call restartApp" mnemonicParsing="false" text="Restart" HBox.hgrow="NEVER">
               <HBox.margin>
                 <Insets right="14.0" />
               </HBox.margin>

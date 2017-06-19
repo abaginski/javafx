@@ -40,48 +40,52 @@ syntax:
     -- create a scene from the FXML DOM and assign it to the primaryStage
     mainScene = .bsf~new("javafx.scene.Scene", mainSceneFXML) -- create a scene for our document
     primaryStage~setScene(mainScene)   -- set the stage to our scene
-
+	primaryStage~setTitle(pp("title of window"))
 	progress = .my.app~animatedProgressbar.fxml~progress
 	progress~setVisible(.false)
 	.environment~abortButton = .my.app~animatedProgressbar.fxml~abortButton
 	.environment~startButton = .my.app~animatedProgressbar.fxml~startButton
-	.abortButton~setDisable(.true)
+	.abortButton~disable = .true
 	.startButton~requestFocus
 	.environment~setEntry("progressbarManager", .ProgressbarManager~new(progress))
-	
-	
+	primaryStage~setOnCloseRequest(bsfCreateRexxProxy(self,,"javafx.event.EventHandler"))
     primaryStage~show                          -- show the stage
     return
-	
-	
-	
+
+::method handle
+	use arg WindowEvent
+	say pp("GUI stopped, notifying main app")
+	.dp~GUIstopped
+
+
 ::class ProgressbarManager
 ::method init
   expose progressbar logArea
   use arg progressbar
   logArea = .my.app~animatedProgressbar.fxml~logArea
-  
+
 ::method update
   expose progressbar
   use arg newValue
   oldValue = progressbar~getProgress
-  --progressbar~setProgress(newValue)
+  --progressbar~setProgress(newValue)		-- no animation
   self~animateProgressBar(oldValue, newValue)
   if newValue = 1 then
 	.abortButton~setDisable(.true)
-  
+	-- or treat it like a Rexx attribute: .abortButton~disable=.true
+
 ::method log
   expose logArea
   use arg message
   logArea~appendText(message .endOfLine)
-  
+
 ::method animateProgressBar
   expose progressbar
    use arg from=0, to=0.5, range=1.0
 
    if \.my.app~hasEntry("clzRexxTask") then  -- create a Java proxy class
    do    -- define and store the proxy class
-       -- create a new Java proxy class where the methods named "call" and "updateProgress" get defined
+       -- create a new Java proxy class where the methods named "call"
        .my.app~clzRexxTask=bsf.createProxyClass("javafx.concurrent.Task", "RexxTask", "call", "updateProgress")
    end
 
@@ -92,6 +96,7 @@ syntax:
    progressbar~progressProperty~bind(jtask~progressProperty)
    .bsf~new("java.lang.Thread",jtask)~bsf.dispatch("start")          -- start the Task
 
+
 /* The "javafx.concurrent.Task" allows to interface with JavaFX objects in a background
 *  thread such that updates get carried out on the JavaFX application thread.
 */
@@ -100,16 +105,21 @@ syntax:
   expose start end range   -- progress bar
   use arg start, end, range=1.00
 
+  
 ::method call     -- implementation of the abstract method
   expose start end range   -- progress bar
   use arg slotDir
 
-  do i=start to end by 0.05   -- increase by 5% steps
+  step = 0.01
+  do i=start+step to end~format(1,2) by step  -- increase by 5% steps
      slotDir~javaObject~updateProgress(i,range)
-     call SysSleep 0.075      -- sleep 0.075 seconds before increasing again
+     call SysSleep 0.0075      -- sleep 0.075 seconds before increasing again
   end
   return .true
 
+  
 ::method updateProgress -- this implementation allows one to forward to the protected method "updateProgress"
   use arg currValue, range, slotDir
   slotDir~javaObject~updateProgress_forwardToSuper(currValue,range)
+  
+  

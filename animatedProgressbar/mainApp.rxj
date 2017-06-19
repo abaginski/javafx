@@ -22,9 +22,6 @@ say .dateTime~new "ended."
 
 ::method displayProgress
   say self "displayProgress, just arrived, TID="sysqueryprocess("TID")
-  -- diese Methode wird iim "FX Application Thread" aufgerufen und muss auch dort arbeiten
-  -- das "reply" arbeitet in einem neuen Thread und JavaFX wirft einen Fehler auf!
-  -- reply
   say self "displayProgress, continuing work on a new thread, TID="sysqueryprocess("TID")
   oldPosition=-1
   do while self~processingEnded=.false

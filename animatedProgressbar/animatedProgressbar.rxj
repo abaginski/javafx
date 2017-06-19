@@ -41,6 +41,8 @@ syntax:
     mainScene = .bsf~new("javafx.scene.Scene", mainSceneFXML) -- create a scene for our document
     primaryStage~setScene(mainScene)   -- set the stage to our scene
 	primaryStage~setTitle(pp("title of window"))
+	imgIcon = .bsf~new("javafx.scene.image.Image","bsf4oorexx_032.png")
+    primaryStage~getIcons~add(imgIcon)         -- set application icon
 	progress = .my.app~animatedProgressbar.fxml~progress
 	progress~setVisible(.false)
 	.environment~abortButton = .my.app~animatedProgressbar.fxml~abortButton
@@ -58,6 +60,10 @@ syntax:
 	.dp~GUIstopped
 
 
+	
+	
+	
+	
 ::class ProgressbarManager
 ::method init
   expose progressbar logArea

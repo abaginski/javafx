@@ -4,7 +4,7 @@ say .dateTime~new "starting..."
 .dp~showGUI          -- start displaying
 
 w =.worker~new(.dp)         -- create the worker, give it the progress object
-w~work(1,57)               -- start the work
+w~work(1,270)               -- start the work
 w~workDone                 -- wait for work done
 
 say .dateTime~new "ended."
@@ -30,7 +30,11 @@ say .dateTime~new "ended."
 		newValue = format(self~currentPosition*100,3,2)
 		.progressbarManager~update(newValue / 100)
 		.progressbarManager~log("Arrived at" newValue "%")
---        say self~lowerBound".."self~currentValue".."self~upperBound "->" self~currentPosition*100.00"%"
+		now = .DateTime~new
+		estimatedLength = ((now - .startTime) / newValue) * 100			-- calculate the estimated total duration
+		timeLeft = .startTime + estimatedLength - now					-- calculate the remaining time
+		if timeLeft~seconds > 10 | .remainingTimeManager~alreadyExceeded60s then
+		  .remainingTimeManager~setEstimate(timeLeft)				-- only show the label if the estimated time exceeds a minute or was shown before
         say self~lowerBound".."self~currentValue".."self~upperBound "->" format(self~currentPosition*100,3,2)"%"
         oldPosition=self~currentPosition
      end
@@ -39,6 +43,7 @@ say .dateTime~new "ended."
   if \self~progressStoppedByUser then do
 	   -- show end-of-progress values
 	  .progressbarManager~update(1)
+	  .remainingTimeManager~hide
 	  .progressbarManager~log("Worker done")
 	  say self~lowerBound".."self~currentValue".."self~upperBound "->" format(self~currentPosition*100,3,2)"%"
 	  say self "displayProcess ending."

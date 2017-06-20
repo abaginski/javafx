@@ -50,6 +50,9 @@ syntax:
 	.abortButton~disable = .true
 	.startButton~requestFocus
 	.environment~setEntry("progressbarManager", .ProgressbarManager~new(progress))
+	.environment~setEntry("remainingTimeManager", .remainingTimeManager~new)
+	.environment~setEntry("Platform", bsf.import("javafx.application.Platform"))
+  
 	primaryStage~setOnCloseRequest(bsfCreateRexxProxy(self,,"javafx.event.EventHandler"))
     primaryStage~show                          -- show the stage
     return
@@ -61,14 +64,47 @@ syntax:
 
 
 	
+
+::class remainingTimeManager
+::attribute estimate
+::attribute alreadyExceeded60s
+::method init
+  expose remainingTime alreadyExceeded60s
+  remainingTime = .my.app~animatedProgressbar.fxml~remainingTime
+  alreadyExceeded60s = .false
 	
+/*	
+::method showEstimate
+  expose remainingTime
+  remainingTime~setText("Remaining time: ∞")
+  */
+  
+::method hide
+  expose remainingTime
+  remainingTime~visible = .false		
+::method show
+  expose remainingTime
+  remainingTime~visible = .true		
 	
+::method setEstimate
+  expose remainingTime alreadyExceeded60s
+  use arg estimate
+  alreadyExceeded60s = .true
+  remainingTime~setText("Remaining time:" estimate~seconds "seconds")
+/*  self~countDown(estimate)
+  
+  
+::method countDown unguarded
+  use arg current
+  self~setEstimate(current~addSeconds(-1))
+*/
 	
 ::class ProgressbarManager
 ::method init
   expose progressbar logArea
   use arg progressbar
   logArea = .my.app~animatedProgressbar.fxml~logArea
+  
 
 ::method update
   expose progressbar

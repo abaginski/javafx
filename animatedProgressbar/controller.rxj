@@ -20,4 +20,3 @@
 ::routine restartApp public
   .my.app~primaryStage~hide
   rexx "mainApp.rxj"
-  

@@ -20,6 +20,7 @@
   label~setText(msg)
   select case type
     when "SUCCESS" then
+		/* TODO: Replace with FontIcon */
       /* Image(java.lang.String url, double requestedWidth, double requestedHeight, boolean preserveRatio, boolean smooth) */
       statusIcon~setImage(.bsf~new("javafx.scene.image.Image", "resources/images/success.png", 17.0, 17.0, 1, 1))
     when "ERROR" then

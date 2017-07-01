@@ -74,7 +74,7 @@
                 </graphic>
             </MenuItem>
             <SeparatorMenuItem mnemonicParsing="false" />
-            <MenuItem mnemonicParsing="false" text="Preferences…">
+            <MenuItem mnemonicParsing="false" text="Preferences…" onAction="call openPreferences">
                     <graphic>
                             <FontIcon iconLiteral="oct-tools" iconSize="15" />
                     </graphic>

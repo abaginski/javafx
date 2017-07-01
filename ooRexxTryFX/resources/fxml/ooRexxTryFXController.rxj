@@ -215,20 +215,21 @@ syntax:
 
 /** this routine will save all tabs which have a known filepath, so they were opened or saved before */
 ::routine saveAll public
-  use arg slotDir
   allTabs = .TabManager~allTabs
   alreadySavedFilepaths = .TabManager~alreadySavedFilepaths
   saveCounter = 0
+	savedFilepaths = .array~new			-- needed for the return value for preferencesController :: savePreferences routine
   loop with index idx item tab over allTabs
     filepath = alreadySavedFilepaths~at(idx)
     if filepath <> .nil then do
       .FileManager~saveFile(filepath, tab~content~content~getText)
+			savedFilepaths~append(filepath)
       tab~setGraphic(.nil)
       saveCounter += 1
     end
   end
   .StatusBarManager~setMessage(saveCounter "files were saved", "SUCCESS")
-
+	return savedFilepaths
 
 
 ::routine zoom public
@@ -251,6 +252,42 @@ syntax:
 ::routine closeApp public
   .FileTreeManager~savePaths
   .Platform~exit
+  
+  
+::routine openPreferences public
+	stage = .bsf~new("javafx.stage.Stage")
+	.my.app~preferencesStage = stage
+	/* before loading the preferences fxml file, set an environmental variable which will cause put_FXID_objects_into.my.app.rex to save the fx:id key in the .my.app~preferences.fxml directory as-is, not translating everything to upper case
+	we will need that later on to find the corresponding propertie in the preferences file
+	for further information see put_FXID_objects_into.my.app.rex line 
+	*/
+	.my.app~keepCapitalizationInDirKey = .true
+	preferencesFXMLUrl = .my.app~appClzLdr~findResource("resources/fxml/preferences.fxml")
+	preferencesFXML = .my.app~fxmlLoader~load( preferencesFXMLUrl )
+	stage~setScene(.bsf~new("javafx.scene.Scene", preferencesFXML))
+	stage~setTitle("Preferences")
+	bsf4oorexxImage = .bsf~new("javafx.scene.image.Image","resources/images/bsf4oorexx_032.png")
+  stage~getIcons~add(bsf4oorexxImage)         -- set application icon
+	/* now, load default values to the input fields inside the preferences stage */
+	--.my.app~preferences.fxml~inputPrefHeight~setText(.my.app~preferences["height"])
+	--.my.app~preferences.fxml~inputPrefWidth~setText(.my.app~preferences["width"])
+	
+	loop with index inputName item inputField over .my.app~preferences.fxml
+		correspondingPropertyValue = .my.app~preferences[inputName]
+		select
+			when inputField~string~contains("TextField") then
+				inputField~text = correspondingPropertyValue
+			when inputField~string~contains("CheckBox") then
+				inputField~selected = (correspondingPropertyValue=.true)~?(.true,.false)
+			when inputField~string~contains("ChoiceBox") then
+				inputField~value = correspondingPropertyValue
+			when inputField~string~contains("ColorPicker") then
+				inputField~value = .fx.Paint~valueOf(correspondingPropertyValue)
+			otherwise nop
+		end
+	end
+	stage~show
+	.my.app~keepCapitalizationInDirKey = .false			-- turn this off again to prevent errors when loading a new fxml file and accessing its objects through .my.app Directive
 
 
 ::class UserInput public
@@ -263,7 +300,7 @@ syntax:
   mode = (mode <> "MODE")~?(mode, "line")       -- if there is no arg(1), mode will be set to "MODE"
   if mode~upper = "L" then
      mode = "line"
-  if mode~upper = "C" then
+  else if mode~upper = "C" then
      mode = "char"
   initText = (initText <> "INITTEXT")~?(initText, "")
 
@@ -291,5 +328,7 @@ syntax:
   else return
   syntax: return
 
+  
+  
 
 ::requires "rgf_util2.rex"

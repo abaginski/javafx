@@ -15,15 +15,19 @@
 <?import javafx.scene.layout.RowConstraints?>
 <?import javafx.scene.layout.VBox?>
 <?import javafx.scene.text.Font?>
+<?import javafx.collections.*?>
+<?import java.lang.String?>
+<?language rexx?>
 
 <GridPane hgap="14.0" maxHeight="+Infinity" maxWidth="+Infinity" minHeight="-Infinity" minWidth="-Infinity" vgap="20.0" xmlns="http://javafx.com/javafx/8.0.102" xmlns:fx="http://javafx.com/fxml/1">
-  <children>
+  <fx:script source="preferencesController.rxj" />
+	<children>
     <VBox maxHeight="+Infinity" maxWidth="+Infinity" minHeight="-Infinity" prefWidth="400.0" spacing="7.0" GridPane.columnIndex="1" GridPane.rowIndex="0">
       <children>
             <HBox>
                <children>
                   <Pane HBox.hgrow="ALWAYS" />
-              <Label fx:id="detailsLabel" text="preferred height :" textAlignment="LEFT" wrapText="true">
+              <Label text="preferred height :" textAlignment="LEFT" wrapText="true">
                 <font>
                   <Font size="12.0" />
                 </font>
@@ -32,7 +36,7 @@
                      </HBox.margin>
               </Label>
                   <Pane HBox.hgrow="ALWAYS" />
-                  <TextField prefWidth="176.0" />
+                  <TextField prefWidth="176.0" fx:id="height"  /> <!-- inputPrefHeight -->
                </children>
             </HBox>
             <HBox layoutX="10.0" layoutY="10.0">
@@ -47,7 +51,7 @@
                      </HBox.margin>
                   </Label>
                   <Pane HBox.hgrow="ALWAYS" />
-                  <TextField prefWidth="175.0" />
+                  <TextField prefWidth="175.0" fx:id="width" /> <!-- inputPrefWidth -->
                </children>
             </HBox>
             <HBox layoutX="10.0" layoutY="42.0">
@@ -62,7 +66,7 @@
                      </HBox.margin>
                   </Label>
                   <Pane HBox.hgrow="ALWAYS" />
-                  <CheckBox mnemonicParsing="false" prefWidth="175.0">
+                  <CheckBox mnemonicParsing="false" fx:id="maximized" prefWidth="175.0">
                      <HBox.margin>
                         <Insets />
                      </HBox.margin>
@@ -84,7 +88,7 @@
                      </HBox.margin>
                   </Label>
                   <Pane HBox.hgrow="ALWAYS" />
-                  <CheckBox mnemonicParsing="false" prefWidth="175.0">
+                  <CheckBox mnemonicParsing="false" fx:id="displayFileTree" prefWidth="175.0">
                      <HBox.margin>
                         <Insets />
                      </HBox.margin>
@@ -104,7 +108,7 @@
                      </HBox.margin>
                   </Label>
                   <Pane HBox.hgrow="ALWAYS" />
-                  <CheckBox mnemonicParsing="false" prefWidth="175.0">
+                  <CheckBox mnemonicParsing="false" fx:id="indentUsingSpaces" prefWidth="175.0">
                      <HBox.margin>
                         <Insets />
                      </HBox.margin>
@@ -123,7 +127,19 @@
                      </HBox.margin>
                   </Label>
                   <Pane HBox.hgrow="ALWAYS" />
-                  <ChoiceBox prefWidth="175.0" />
+                  <ChoiceBox fx:id="TabInSpaces" prefWidth="175.0">
+										<items>
+												<FXCollections fx:factory="observableArrayList">
+														<String fx:value="2" />
+														<String fx:value="3" />
+														<String fx:value="4" />
+														<String fx:value="5" />
+														<String fx:value="6" />
+														<String fx:value="7" />
+														<String fx:value="8" />
+												</FXCollections>
+										</items>
+									</ChoiceBox>
                </children>
             </HBox>
             <HBox layoutX="10.0" layoutY="122.0">
@@ -138,7 +154,7 @@
                      </HBox.margin>
                   </Label>
                   <Pane HBox.hgrow="ALWAYS" />
-                  <CheckBox mnemonicParsing="false" prefWidth="175.0">
+                  <CheckBox mnemonicParsing="false" fx:id="autoLineBreak" prefWidth="175.0">
                      <HBox.margin>
                         <Insets />
                      </HBox.margin>
@@ -157,7 +173,7 @@
                      </HBox.margin>
                   </Label>
                   <Pane HBox.hgrow="ALWAYS" />
-                  <TextField prefWidth="175.0" />
+                  <TextField fx:id="outputAreaFontSize" prefWidth="175.0" />
                </children>
             </HBox>
             <HBox layoutX="10.0" layoutY="202.0">
@@ -172,14 +188,14 @@
                      </HBox.margin>
                   </Label>
                   <Pane HBox.hgrow="ALWAYS" />
-                  <TextField prefWidth="175.0" />
+                  <TextField fx:id="codeAreaFontSize" prefWidth="175.0" />
                </children>
             </HBox>
             <Separator prefWidth="200.0" />
             <HBox layoutX="10.0" layoutY="234.0">
                <children>
                   <Pane HBox.hgrow="ALWAYS" />
-                  <Label fx:id="detailsLabel1311" text="ERROR color :" textAlignment="LEFT" wrapText="true">
+                  <Label text="ERROR color :" textAlignment="LEFT" wrapText="true">
                      <font>
                         <Font size="12.0" />
                      </font>
@@ -188,13 +204,13 @@
                      </HBox.margin>
                   </Label>
                   <Pane HBox.hgrow="ALWAYS" />
-                  <ColorPicker editable="true" maxWidth="175.0" prefWidth="175.0" promptText="choose" />
+                  <ColorPicker editable="true" fx:id="errorColor" maxWidth="175.0" prefWidth="175.0" promptText="choose" />
                </children>
             </HBox>
             <HBox layoutX="10.0" layoutY="276.0">
                <children>
                   <Pane HBox.hgrow="ALWAYS" />
-                  <Label fx:id="detailsLabel13111" text="TRACE color :" textAlignment="LEFT" wrapText="true">
+                  <Label text="TRACE color :" textAlignment="LEFT" wrapText="true">
                      <font>
                         <Font size="12.0" />
                      </font>
@@ -203,13 +219,13 @@
                      </HBox.margin>
                   </Label>
                   <Pane HBox.hgrow="ALWAYS" />
-                  <ColorPicker editable="true" maxWidth="175.0" prefWidth="175.0" promptText="choose" />
+                  <ColorPicker editable="true" fx:id="traceColor" maxWidth="175.0" prefWidth="175.0" promptText="choose" />
                </children>
             </HBox>
             <HBox layoutX="10.0" layoutY="308.0">
                <children>
                   <Pane HBox.hgrow="ALWAYS" />
-                  <Label fx:id="detailsLabel131111" text="INPUT color :" textAlignment="LEFT" wrapText="true">
+                  <Label text="INPUT color :" textAlignment="LEFT" wrapText="true">
                      <font>
                         <Font size="12.0" />
                      </font>
@@ -218,27 +234,27 @@
                      </HBox.margin>
                   </Label>
                   <Pane HBox.hgrow="ALWAYS" />
-                  <ColorPicker editable="true" maxWidth="175.0" prefWidth="175.0" promptText="choose" />
+                  <ColorPicker editable="true" fx:id="inputColor" maxWidth="175.0" prefWidth="175.0" promptText="choose" />
                </children>
             </HBox>
       </children>
     </VBox>
     <HBox maxHeight="-Infinity" maxWidth="+Infinity" minHeight="-Infinity" minWidth="-Infinity" GridPane.columnIndex="1" GridPane.rowIndex="1">
       <children>
-        <HBox fx:id="actionParent" alignment="CENTER">
+        <HBox alignment="CENTER">
           <HBox.margin>
             <Insets />
           </HBox.margin>
         </HBox>
         <Pane maxWidth="+Infinity" HBox.hgrow="ALWAYS" />
-        <Button fx:id="cancelButton" cancelButton="true" minWidth="80.0" mnemonicParsing="false" text="Cancel" HBox.hgrow="NEVER">
+        <Button fx:id="cancelButton" onAction="call closePreferences" cancelButton="true" minWidth="80.0" mnemonicParsing="false" text="Cancel" HBox.hgrow="NEVER">
           <HBox.margin>
             <Insets />
           </HBox.margin>
         </Button>
         <HBox fx:id="okParent" alignment="CENTER">
           <children>
-            <Button fx:id="okButton" minWidth="80.0" mnemonicParsing="false" text="Ok" HBox.hgrow="NEVER">
+            <Button fx:id="okButton" onAction="call savePreferences arg(arg())" minWidth="80.0" mnemonicParsing="false" text="Ok" HBox.hgrow="NEVER">
               <HBox.margin>
                 <Insets left="14.0" />
               </HBox.margin>
@@ -259,4 +275,6 @@
     <RowConstraints maxHeight="+Infinity" minHeight="-Infinity" valignment="CENTER" vgrow="ALWAYS" />
     <RowConstraints maxHeight="-Infinity" minHeight="-Infinity" vgrow="NEVER" />
   </rowConstraints>
+	    <!-- comment: Rexx program that stores all fx:id objects in .local~rootLayout.fxml directory -->
+  <fx:script source="put_FXID_objects_into.my.app.rex" />
 </GridPane>

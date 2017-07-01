@@ -1,0 +1,35 @@
+::routine savePreferences public	
+	/* save the preferences in the preferences properties object */
+	loop with index inputName item inputField over .my.app~preferences.fxml
+		correspondingPropertyValue = .my.app~preferences[inputName]
+		select
+			when inputField~string~contains("TextField") then
+				correspondingPropertyValue = inputField~text
+			when inputField~string~contains("CheckBox") then
+				correspondingPropertyValue = inputField~isSelected
+			when inputField~string~contains("ChoiceBox") | -
+					 inputField~string~contains("ColorPicker") then
+				correspondingPropertyValue = inputField~value
+			otherwise nop
+		end
+	end
+	.my.app~preferences~save(.prefPath)				-- persistantly save the preferences
+	/* now ask the user if he wishes to apply the changes now */
+	alert = .fx.Alert~new(.fx.Alert.Type~confirmation)   -- create a confirmation alert
+	alert~setTitle("Apply")
+	alert~setHeaderText(.nil)
+	alert~setContentText("Some of these changes need a restart of ooRexxTryFX in order to be applied." .endOfLine || "Do you wish to restart now?")
+	call closePreferences
+	pressedButton = alert~showAndWait                    -- show the confirmation dialog
+	if pressedButton~get~toString = .fx.ButtonType~OK~toString then do -- close the app only if "OK" was clicked
+			savedFilepaths = saveAll()				-- save all documents
+			args = savedFilepaths~makeString("Line", " ")
+			.my.app~primaryStage~hide
+			rexx .s args
+	end				
+	.StatusbarManager~setMessage("Preferences saved", "SUCCESS")
+	
+::routine closePreferences public
+	.my.app~preferencesStage~hide
+	
+::requires "./resources/fxml/ooRexxTryFXController.rxj"

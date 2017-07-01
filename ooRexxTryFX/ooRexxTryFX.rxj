@@ -15,12 +15,15 @@ end
 .environment~setEntry("my.app", .stringTable~new)
 .environment~java.lang.Runnable = bsf.import("java.lang.Runnable")
 .environment~java.lang.Thread = bsf.import("java.lang.Thread")
+.environment~fx.Paint = bsf.import("javafx.scene.paint.Paint")
+.environment~fx.Alert = bsf.import("javafx.scene.control.Alert")
+.environment~fx.Alert.Type = bsf.import("javafx.scene.control.Alert$AlertType")
+.environment~fx.ButtonType = bsf.import("javafx.scene.control.ButtonType")
 .environment~javafx.event.EventHandler = bsf.import("javafx.event.EventHandler")
 .environment~Platform = bsf.import("javafx.application.Platform")
 .environment~keyCode = bsf.import("javafx.scene.input.KeyCode")
-.environment~setEntry("styles", .stringTable~new)
 .environment~setEntry("prefPath", "resources/config/preferences.conf")
--- .local~setEntry("blockChanges", 0)
+.environment~setEntry("styles", .stringTable~new)
 .styles~OUTPUT     = "-fx-fill: #0f0c0c; -fx-font-family: monospace; "
 .styles~INPUT      = "-fx-fill: #0f0c0c; -fx-font-family: sans-serif; -fx-font-style: italic; -fx-background-color: #1d1d1d;"
 .styles~ERROR      = "-fx-fill: #fc3232; -fx-font-family: monospace; "
@@ -114,7 +117,9 @@ syntax:
   .my.app~mainScene~setOnDragDropped(bsfCreateRexxProxy(self,,"javafx.event.EventHandler"))
   .my.app~ooRexxTryFX.fxml~Input~setVisible(.false)                     -- hide the input area, which is used for "pull" operations
   .my.app~ooRexxTryFX.fxml~Output~setEditable(.false)                   -- do not allow to change the output area
-  EventStream = .my.app~ooRexxTryFX.fxml~Output~totalHeightEstimateProperty~changes
+  .my.app~ooRexxTryFX.fxml~Output~setStyle("-fx-font-size:" .my.app~preferences["outputAreaFontSize"] || "pt")
+	
+	EventStream = .my.app~ooRexxTryFX.fxml~Output~totalHeightEstimateProperty~changes
   EventStream~subscribe(bsfCreateRexxProxy(.Subscriber~new,,"java.util.function.Consumer"))
   primaryStage~setScene(.my.app~mainScene)   -- set the stage to our scene
   primaryStage~setTitle("[Untitled 0] ooRexxTryFX")

@@ -25,7 +25,9 @@ thisProg=filespec("Name", thisProg)
      -- is to receive information about those JavaFX objects that have a unique "fx:id" value;
 if \.environment~hasEntry("my.app") then
    .environment~setEntry("my.app", .directory~new)
-
+if \.environment~entry("my.app")~hasEntry("keepCapitalizationInDirKey") then
+   .my.app~setEntry("keepCapitalizationInDirKey", .false)
+	 
 bDebug=(.my.app~bDebug=.false)  -- set debug mode
 
 if bDebug then say .dateTime~new " ==> ---> arrived in Rexx program '"thisProg"' ..."
@@ -68,8 +70,10 @@ dir2obj =.directory~new         -- all GLOBAL_SCOPE entries, mapping uppercase a
 bindings=.jsr223~getBindings(scriptContext,.jsr223~global_scope)  -- get the Bindings for the global scope
 keys=bindings~keySet~makearray -- get the kay values as a Rexx array
 do key over keys
-   val=bindings~get(key)       -- fetch the key's value
-   dir2obj ~setEntry(key,val)  -- save it in our directory
+	val=bindings~get(key)       -- fetch the key's value
+	if \.my.app~keepCapitalizationInDirKey then
+		key = key~upper					 -- translate the KEY to uppercase
+	dir2obj ~put(val,key)      -- save it in our directory
 end
 
 if bDebug then

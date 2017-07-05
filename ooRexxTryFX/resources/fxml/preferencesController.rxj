@@ -82,11 +82,11 @@
     filename =  filespec("Name", downloadURL)
     destinationPath = destinationDirectory || filename
     outputStream = .bsf~new("java.io.BufferedOutputStream", .bsf~new("java.io.FileOutputStream", destinationPath))
-    bufferLength = 4086*2
-    buffer = bsf.createJavaArray("byte.class", bufferLength)
+    bufferSize = 4086*2
+    buffer = bsf.createJavaArray("byte.class", bufferSize)
     .Gui~updateLabel("Downloading ...")
     readBytes = inputStream~read(buffer)
-    increment = (bufferLength / filesize) / totalURLs
+    increment = (bufferSize / filesize) / totalURLs
     loop while readBytes <> -1
       outputStream~write(buffer, 0, readBytes)
       readBytes = inputStream~read(buffer)

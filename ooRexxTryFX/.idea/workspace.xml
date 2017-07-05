@@ -74,7 +74,7 @@
         <entry file="file://$PROJECT_DIR$/resources/fxml/preferencesController.rxj">
           <provider selected="true" editor-type-id="text-editor">
             <state relative-caret-position="702">
-              <caret line="85" column="22" lean-forward="true" selection-start-line="85" selection-start-column="22" selection-end-line="85" selection-end-column="22" />
+              <caret line="85" column="57" lean-forward="false" selection-start-line="85" selection-start-column="57" selection-end-line="85" selection-end-column="57" />
               <folding />
             </state>
           </provider>
@@ -84,7 +84,7 @@
         <entry file="file://$PROJECT_DIR$/../UnzipUtil.rxj">
           <provider selected="true" editor-type-id="text-editor">
             <state relative-caret-position="1254">
-              <caret line="56" column="11" lean-forward="true" selection-start-line="49" selection-start-column="2" selection-end-line="56" selection-end-column="11" />
+              <caret line="56" column="11" lean-forward="false" selection-start-line="49" selection-start-column="2" selection-end-line="56" selection-end-column="11" />
               <folding />
             </state>
           </provider>
@@ -95,16 +95,6 @@
           <provider selected="true" editor-type-id="text-editor">
             <state relative-caret-position="633">
               <caret line="33" column="0" lean-forward="false" selection-start-line="33" selection-start-column="0" selection-end-line="33" selection-end-column="0" />
-              <folding />
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file leaf-file-name="problem.rxj" pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/problem.rxj">
-          <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="624">
-              <caret line="20" column="15" lean-forward="false" selection-start-line="20" selection-start-column="15" selection-end-line="20" selection-end-column="22" />
               <folding />
             </state>
           </provider>
@@ -762,12 +752,12 @@
       <updated>1493542584500</updated>
       <workItem from="1498985449248" duration="54000" />
       <workItem from="1498985538373" duration="7977000" />
-      <workItem from="1499004941158" duration="35467000" />
+      <workItem from="1499004941158" duration="36318000" />
     </task>
     <servers />
   </component>
   <component name="TimeTrackingManager">
-    <option name="totallyTimeSpent" value="43498000" />
+    <option name="totallyTimeSpent" value="44349000" />
   </component>
   <component name="TodoView">
     <todo-panel id="selected-file">
@@ -1157,7 +1147,7 @@
     <entry file="file://$PROJECT_DIR$/../UnzipUtil.rxj">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="1254">
-          <caret line="56" column="11" lean-forward="true" selection-start-line="49" selection-start-column="2" selection-end-line="56" selection-end-column="11" />
+          <caret line="56" column="11" lean-forward="false" selection-start-line="49" selection-start-column="2" selection-end-line="56" selection-end-column="11" />
           <folding />
         </state>
       </provider>
@@ -1165,7 +1155,7 @@
     <entry file="file://$PROJECT_DIR$/resources/fxml/preferencesController.rxj">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="702">
-          <caret line="85" column="22" lean-forward="true" selection-start-line="85" selection-start-column="22" selection-end-line="85" selection-end-column="22" />
+          <caret line="85" column="57" lean-forward="false" selection-start-line="85" selection-start-column="57" selection-end-line="85" selection-end-column="57" />
           <folding />
         </state>
       </provider>

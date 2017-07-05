@@ -15,6 +15,7 @@ end
 .environment~setEntry("my.app", .stringTable~new)
 .environment~java.lang.Runnable = bsf.import("java.lang.Runnable")
 .environment~java.lang.Thread = bsf.import("java.lang.Thread")
+.environment~Executor = bsf.import("java.util.concurrent.Executors")~newSingleThreadExecutor
 .environment~fx.Paint = bsf.import("javafx.scene.paint.Paint")
 .environment~fx.Alert = bsf.import("javafx.scene.control.Alert")
 .environment~fx.Alert.Type = bsf.import("javafx.scene.control.Alert$AlertType")
@@ -24,23 +25,28 @@ end
 .environment~keyCode = bsf.import("javafx.scene.input.KeyCode")
 .environment~setEntry("prefPath", "resources/config/preferences.conf")
 .environment~setEntry("styles", .stringTable~new)
-.styles~OUTPUT     = "-fx-fill: #0f0c0c; -fx-font-family: monospace; "
-.styles~INPUT      = "-fx-fill: #0f0c0c; -fx-font-family: sans-serif; -fx-font-style: italic; -fx-background-color: #1d1d1d;"
-.styles~ERROR      = "-fx-fill: #fc3232; -fx-font-family: monospace; "
-.styles~TRACEOUTPUT= "-fx-fill: #4286f4; -fx-font-family: monospace; "
-.styles~DEBUGINPUT = "-fx-fill: #4286f4; -fx-font-family: sans-serif; -fx-font-style: italic; -fx-background-color: #1d1d1d;"
-
-call bsf.import "javafx.stage.StageStyle", "StageStyle"
-
 /* load preferences */
 .my.app~preferences = .properties~load(.prefPath) /* load the entries of the file "preferences.conf" into a directive */
+.my.app~isPluginActive   = .my.app~preferences["isPluginActive"]
 .my.app~codeAreaFontSize = .my.app~preferences["codeAreaFontSize"]    /* save the font size in an environmental variable outside the config file */
 
-appDirectory = filespec("Location", .s)   -- determine path to this Rexx program
-jfile = .bsf~new("java.io.File",appDirectory)
+.styles~OUTPUT     = "-fx-fill:" .my.app~preferences["outputColor"]"; -fx-font-family: monospace; "
+.styles~INPUT      = "-fx-fill:" .my.app~preferences["inputColor"]"; -fx-font-family: sans-serif; -fx-font-style: italic; -fx-background-color: #1d1d1d;"
+.styles~ERROR      = "-fx-fill:" .my.app~preferences["errorColor"]"; -fx-font-family: monospace; "
+.styles~TRACEOUTPUT= "-fx-fill:" .my.app~preferences["traceColor"]"; -fx-font-family: monospace; "
+.styles~DEBUGINPUT = "-fx-fill: #4286f4; -fx-font-family: sans-serif; -fx-font-style: italic; -fx-background-color: #1d1d1d;"
+
+.environment~appDirectory = filespec("Location", .s)   -- determine path to this Rexx program
+jfile = .bsf~new("java.io.File",.appDirectory)
 urlAppDir = jfile~toUri~toUrl
-.my.app~appClzLdr = .bsf~new("java.net.URLClassLoader", bsf.createJavaArrayOf("java.net.URL", urlAppDir))
-   -- load the FXMLLoader class, save it for multiple usages
+clzUrls = bsf.createJavaArray("java.net.URL", 3)        -- create a java array with space for 3 items
+clzUrls[1] = urlAppDir                                  -- url to base directory
+if .my.app~isPluginActive then do
+    clzUrls[2] = .bsf~new("java.io.File", "java/ooRexxPlugin4IntelliJ.jar")~toURI~toURL
+    clzUrls[3] = .bsf~new("java.io.File", "java/ooRexxStandaloneAdapter.jar")~toURI~toURL
+end
+.my.app~appClzLdr = .bsf~new("java.net.URLClassLoader", clzUrls) -- load the FXMLLoader class, save it for multiple usages
+
 .my.app~fxmlLoader = bsf.loadClass("javafx.fxml.FXMLLoader")
 .my.app~rexxHandler = .rxDocHandler~new
 rxApp = BsfCreateRexxProxy(.my.app~rexxHandler,,"javafx.application.Application")
@@ -59,7 +65,6 @@ LauncherImpl~launchApplication(rxApp~getClass, preloader~getClass, .nil)     /* 
 exit 0
 syntax:
    co = condition("object")
-   say "ppCondition2(co):"
    say ppCondition2(co)
    exit -1
 
@@ -78,11 +83,9 @@ syntax:
 ::method start    -- will be invoked by the "launch" method
   use arg preloaderStage  -- we get the primary stage to use for our UI
   .my.app~preloaderStage = preloaderStage
-
-  preloaderStage~initStyle(.StageStyle~UNDECORATED) -- hide the border and its controls like "close" and "maximise"
+  preloaderStage~initStyle(bsf.import("javafx.stage.StageStyle")~UNDECORATED) -- hide the border and its controls like "close" and "maximise"
   preloaderFXMLUrl = .my.app~appClzLdr~findResource("resources/fxml/preloader.fxml")
   preloaderFXML    = .my.app~fxmlLoader~load( preloaderFXMLUrl )   -- load the fxml document
-
   preloaderScene   = .bsf~new("javafx.scene.Scene", preloaderFXML)
   preloaderStage~setScene(preloaderScene)   -- set the stage to our scene
   preloaderStage~setAlwaysOnTop(.true)      -- overlay primary stage if needed
@@ -102,7 +105,6 @@ syntax:
 
   mainSceneFXMLUrl = .my.app~appClzLdr~findResource("resources/fxml/ooRexxTryFX.fxml")
   mainSceneFXML    = .my.app~fxmlLoader~load( mainSceneFXMLUrl )   -- load the fxml document
-
   .environment~TabManager            = .TabManager~new                  -- create a new TabManager from "resources/TabManager.rxj"
   .environment~OpenRecentMenuManager = .OpenRecentMenuManager~new       -- call the responsible class to fill the "OpenRecent" Menu with items
   .environment~FileTreeManager       = .FileTreeManager~new
@@ -112,13 +114,13 @@ syntax:
   .environment~vDivider              = .environment~vSplitPane~getDividers~get(0)
    -- create a scene from the FXML DOM and assign it to the primaryStage
   .my.app~mainScene = .bsf~new("javafx.scene.Scene", mainSceneFXML)     -- create a scene for our document
-  .my.app~mainScene~getStylesheets~add("resources/stylesheets/ooRexxTryFX.css")
-  .my.app~mainScene~setOnDragOver(bsfCreateRexxProxy(self,,"javafx.event.EventHandler"))
+  .my.app~mainScene~getStylesheets~~add("resources/stylesheets/ooRexxTryFX.css") -
+                                  ~~add("resources/stylesheets/SyntaxHighlighter.css")
+  .my.app~mainScene   ~setOnDragOver(bsfCreateRexxProxy(self,,"javafx.event.EventHandler"))
   .my.app~mainScene~setOnDragDropped(bsfCreateRexxProxy(self,,"javafx.event.EventHandler"))
-  .my.app~ooRexxTryFX.fxml~Input~setVisible(.false)                     -- hide the input area, which is used for "pull" operations
+  .my.app~ooRexxTryFX.fxml~Input ~setVisible(.false)                     -- hide the input area, which is used for "pull" operations
   .my.app~ooRexxTryFX.fxml~Output~setEditable(.false)                   -- do not allow to change the output area
   .my.app~ooRexxTryFX.fxml~Output~setStyle("-fx-font-size:" .my.app~preferences["outputAreaFontSize"] || "pt")
-	
 	EventStream = .my.app~ooRexxTryFX.fxml~Output~totalHeightEstimateProperty~changes
   EventStream~subscribe(bsfCreateRexxProxy(.Subscriber~new,,"java.util.function.Consumer"))
   primaryStage~setScene(.my.app~mainScene)   -- set the stage to our scene

@@ -29,6 +29,7 @@
   Tab~setContent( virtualizedScrollPane  ) -- attach the fxml document to the current pane
   Tab~setOnCloseRequest( bsfCreateRexxProxy(.RexxEventHandler~new,,"javafx.event.EventHandler") )
 
+
   codeArea~setStyle("-fx-font-size:" .my.app~preferences["codeAreaFontSize"] || "pt")
   codeArea~setWrapText(.my.app~preferences["autoLineBreak"])
   /* handle scroll events to change the font size when the user scrolls with the mousewheel and control up */
@@ -38,11 +39,18 @@
   LineNumberFactory = bsf.import("org.fxmisc.richtext.LineNumberFactory")
   codeArea~setParagraphGraphicFactory(LineNumberFactory~get(codeArea))    -- add line numbers to each row
 
-  predicate = bsfCreateRexxProxy(.SyntaxHighlighter~new,,"java.util.function.Predicate")
-  consumer = bsfCreateRexxProxy(.SyntaxHighlighter~new,,"java.util.function.Consumer")
-  eventStream = codeArea~richChanges~filter(predicate)            -- keep track of all changes
-  eventStream~subscribe(consumer)
-  
+	if .my.app~isPluginActive then do		-- apply syntax highlighting if the classes are provided
+		predicate = bsfCreateRexxProxy(.SyntaxHighlighter~new,,"java.util.function.Predicate")
+		consumer = bsfCreateRexxProxy(.SyntaxHighlighter~new,,"java.util.function.Consumer")
+		supplier = bsfCreateRexxProxy(.SyntaxHighlighter~new,,"java.util.function.Supplier")
+		function = bsfCreateRexxProxy(.SyntaxHighlighter~new,,"java.util.function.Function")
+		eventStream = codeArea~richChanges~filter(predicate)            -- keep track of all changes
+		Duration = bsf.import("java.time.Duration")
+		taskStream = eventStream~successionEnds(Duration~ofMillis(500)) ~supplyTask(supplier)				--compute highlighting
+		awaitingEventStream = taskStream~awaitLatest(codeArea~richChanges)
+		eventStream = awaitingEventStream~filterMap(function)
+		eventStream~subscribe(consumer)											--apply highlighting
+	end
   rp = bsfCreateRexxProxy(self,,"javafx.event.EventHandler")
   codeArea~setOnKeyPressed(rp)
   return Tab

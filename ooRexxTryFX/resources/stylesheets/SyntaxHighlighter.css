@@ -1,3 +1,4 @@
+/* nice blue #4286f4 */
 .keyword {
     -fx-fill: purple;
     -fx-font-weight: bold;
@@ -25,6 +26,11 @@
 	-fx-fill: cadetblue;
 }
 
+/*.paragraph-box*/
 .paragraph-box:has-caret {
-    -fx-background-color: #f2f9fc;
+    -fx-background-color: #eaeaea;
+}
+
+.paragraph-box {
+	-fx-font-family: "Consolas", monospace;
 }

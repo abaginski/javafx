@@ -1,0 +1,132 @@
+::routine savePreferences public	
+	/* save the preferences in the preferences properties object */
+	loop with index inputName item inputField over .my.app~preferences.fxml
+		correspondingPropertyValue = .my.app~preferences[inputName]
+		select
+			when inputField~string~contains("TextField") then
+				correspondingPropertyValue = inputField~text
+			when inputField~string~contains("CheckBox") then
+				correspondingPropertyValue = inputField~isSelected
+			when inputField~string~contains("ChoiceBox") | -
+					 inputField~string~contains("ColorPicker") then
+				correspondingPropertyValue = inputField~value
+			otherwise nop
+		end
+	end
+	.my.app~preferences~save(.prefPath)				-- persistantly save the preferences
+	/* now ask the user if he wishes to apply the changes now */
+	alert = .fx.Alert~new(.fx.Alert.Type~confirmation)   -- create a confirmation alert
+	alert~setTitle("Apply")
+	alert~setHeaderText(.nil)
+	alert~setContentText("Some of these changes need a restart of ooRexxTryFX in order to be applied." .endOfLine || "Do you wish to restart now?")
+	call closePreferences
+	pressedButton = alert~showAndWait                    -- show the confirmation dialog
+	if pressedButton~get~toString = .fx.ButtonType~OK~toString then do -- close the app only if "OK" was clicked
+			savedFilepaths = saveAll()				-- save all documents
+			args = savedFilepaths~makeString("Line", " ")
+			.my.app~primaryStage~hide
+			rexx .s args
+	end				
+	.StatusbarManager~setMessage("Preferences saved", "SUCCESS")
+	
+::routine closePreferences public
+	.my.app~preferencesStage~hide
+
+::routine enablePlugin public
+    use arg slotDir
+    scriptContext = slotDir~scriptContext
+    okButton = scriptContext~getAttribute("okButton")
+    caller = scriptContext~getAttribute("event")~target
+    if caller~isSelected then do
+        /* the user wants to enable syntax highlighting */
+        /* first: check, if the necessary JARs are present */
+        aseik.plugin = SysIsFile(.appDirectory || "java/ooRexxPlugin4IntelliJ.jar")
+        aseik.adapter = SysIsFile(.appDirectory || "java/ooRexxStandaloneAdapter.jar")
+        if \aseik.plugin | \aseik.adapter then do
+            /* in case the jars are not present we need to download them */
+            /* let's ask the user if he wants that (free space, internet connection) */
+            downloadSize = 16061
+            alert = .fx.Alert~new(.fx.Alert.Type~confirmation)   -- create a confirmation alert
+            alert~setTitle("Download dependencies")
+            alert~setHeaderText(.nil)
+            alert~setContentText("Syntax Highlighting for ooRexx needs to be downloaded from the Web in order to use it." .endOfLine || "Download size:" downloadSize "KB" .endOfLine || "Do you wish to start the Download now?")
+            pressedButton = alert~showAndWait                    -- show the confirmation dialog
+            if pressedButton~get~toString = .fx.ButtonType~OK~toString then do
+                progressBar = .bsf~new("javafx.scene.control.ProgressBar", 0.0) ~~setPrefWidth(175.0)
+                textLabel = caller~getParent~getChildren~get(1)
+                caller~getParent~getChildren~~remove(3,4)~~add(progressBar) -- remove the checkbox and add the progressbar to the parent panel
+                okButton~disable = .true            -- disable the save button, just to be sure to not mess up things
+                -- zipLocation = "http://downloads.sourceforge.net/project/bsf4oorexx/Sandbox/aseik/ooRexxIDEA/beta/1.0.3.1/OoRexxStandaloneExample.zip?r=&ts=1499021946&use_mirror=netix"
+                 zipLocation = "http://www.colorado.edu/conflict/peace/download/peace.zip"
+                downloadHelper = .DownloadHelper~new(progressBar, textLabel, zipLocation)
+                downloadHelper~startDownload
+            end
+            else
+                caller~selected = .false            -- uncheck the checkbox for now
+        end
+    end
+
+
+::class DownloadHelper
+::method init
+  expose progressBar textLabel zipLocation
+  use arg progressBar, textLabel, zipLocation
+
+::method startDownload
+  .Platform~runLater(bsfCreateRexxProxy(self,,.java.lang.Runnable))
+
+::method run
+  expose progressBar textLabel zipLocation
+  textLabel~setText("Downloading")
+  url = .bsf~new("java.net.URL", zipLocation)
+  /*URL website = new URL("http://www.website.com/information.asp");
+  ReadableByteChannel rbc = Channels.newChannel(website.openStream());
+  FileOutputStream fos = new FileOutputStream("information.html");
+  fos.getChannel().transferFrom(rbc, 0, Long.MAX_VALUE);
+  */
+  urlConnection = url~openConnection
+  inputStream = urlConnection~getInputStream
+  say inputStream~available
+  /*do while inputStream~available <> 0
+    say inputStream~available
+  end
+*/
+  localZipLocation = .appDirectory || "java/tmpPlugin/"
+  localZipLocationFile = .bsf~new("java.io.File", localZipLocation)
+  localZipLocationFile~mkdirs         -- create the Directory "tmpPlugin"
+  --localZipLocationFile~createNewFile                -- create the bare bones Zip Archive
+  --inputStream~transferTo(.bsf~new("java.io.FileOutputStream", localZipLocationFile))
+
+  zipIn = .bsf~new("java.util.zip.ZipInputStream", inputStream)
+  entry = zipIn~getNextEntry
+  loop while entry <> .nil
+    filePath = localZipLocation || .seperator || entry~getName
+    if \entry~isDirectory then
+        self~extractFile(zipIn, filePath)       -- it is a file, extract it
+    else do
+        .bsf~new("java.io.File", filePath)~mkdir
+    end
+    zipIn~closeEntry
+    entry = zipIn~getNextEntry
+  end
+
+    say inputStream~available
+
+    /**
+     * Extracts a zip entry (file entry)
+     * @param zipIn
+     * @param filePath
+     * @throws IOException
+     */
+::method extractFile
+  use arg zipIn, filePath
+  bos = .bsf~new("java.io.BufferedOutputStream", .bsf~new("java.io.FileOutputStream", filePath))
+  bytesIn = bsf.createJavaArray("byte.class", 1024)
+  read = 0
+  loop while (read = zipIn~read(bytesIn)) <> -1
+    bos~write(bytesIn, 0, read)
+  end
+  bos~close
+
+
+::requires "./resources/fxml/ooRexxTryFXController.rxj"

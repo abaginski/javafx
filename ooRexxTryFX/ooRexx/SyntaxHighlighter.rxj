@@ -1,35 +1,126 @@
 ::class SyntaxHighlighter public
-::method init
+::method init /* moving those imports into the init method will load them after the splash screen and that's good, because the user will then know, that he is waiting for something instead of looking at an empty screen */
+  call bsf.import "java.util.Optional"   , "Optional"
+  call bsf.import "java.util.Collections", "Collections"
+  if .my.app~isPluginActive then do
+    .local~clzDirective       = .my.app~appClzLdr~loadClass("org.oorexx.ide.lang.psi.OoRexxDirective")
+    .local~clzDirectiveMethod = .my.app~appClzLdr~loadClass("org.oorexx.ide.lang.psi.OoRexxDirectiveMethod")
+    .local~clzKeyword         = .my.app~appClzLdr~loadClass("org.oorexx.ide.lang.psi.OoRexxKeywordInstruction")
+    .local~ooRexxParser       = .my.app~appClzLdr~loadClass("org.oorexx.ide.standalone.OoRexxStandaloneParser")
+  end
 
 ::method accept
-  use arg richTextChange, slotDir
-  Tab = .TabManager~getCurrentTab
+  use arg StyleSpans
   codeArea = .TabManager~getInputArea
-  insertedText = richTextChange~inserted~getText
-  
+	codeArea~setStyleSpans(0, StyleSpans)		-- apply the styleSpans built in the "call" method below
+  Tab = .TabManager~getCurrentTab
   if Tab~getGraphic = .nil then do
      Tab~setGraphic(.bsf~new("javafx.scene.image.ImageView", "resources/images/icon_savefile_15.png"))
   end
-  
- 
-
-  /* say richTextChange~toString results in:
-    RichTextChange{
-                  position: 18
-                  type: INSERTION
-                  removed: Par[[]; StyledText[text="", style=[]]]
-                  inserted: Par[[]; StyledText[text="j", style=[]]]
-          }
-
-          */
+	
 
 ::method test           /* although that's a very stupid name for a method, it's legit: called by "filter()" method in the TabManager Class */
   use arg ch
   return \ch~getInserted~equals(ch~getRemoved)
   
   
+::method get
+  task = bsfCreateRexxProxy(self,,"javafx.concurrent.Task")     -- execute the task in this class
+  .Executor~execute(task)
+  return task
+	
+	
+/* called by the supplyTask method - Supplier Interface in the TabManager class */
+::method call
+	code = .TabManager~getInputArea~getText
+	spansBuilder = .bsf~new("org.fxmisc.richtext.model.StyleSpansBuilder")
+	--shame 
+	/*tmpStream = .stream~new("tmp")
+	tmpStream~open("write replace")
+	loop codeLine over code
+		tmpStream~lineOut(codeLine)
+	end
+	tmpStream~lineIn
+	tmpStream~close*/
+	--shame end 
+	file = .bsf~new("java.io.File", "tmp")
+	psiFile = .ooRexxParser~parse(file)
+	root = psiFile~getNode~getPsi
+	lastLen = 0
+	.local~instructionLengthMap = .stringTable~new
+	call walkTheAST 0, root
+	loop with index styleClass item len over .instructionLengthMap
+		say pp(styleClass len)
+		spansBuilder~add(.Collections~singleton(styleClass), len)
+		lastLen = len
+	end
+	spansBuilder~add(.Collections~emptyList, code~length - lastLen) /* todo: len instead of lastLen?*/		-- fill the last
+	return spansBuilder~create			
+
+	
+/* called by java.util.Function */
+::method apply
+	use arg res, slotDir	/* res as in result */
+	if res~isSuccess then
+		return .Optional~of(res~get)
+	else do
+		res~getFailure~printStackTrace
+		return .Optional~empty
+	end
+
 ::method unknown
   say "[information] unhandled call {"arg(1)"}"
   
   
   ::requires bsf.cls
+	
+	
+::routine walkTheAST
+  use arg level, root
+
+ --    say copies(" ", level+1) pp2(child~getNode~getText) "09"X child~getNode~getElementType~toString "09"X "Offset: "                          child~getNode~getTextOffset "09"X "Length: " child~getNode~getTextLength
+
+
+  DO child over root~getChildren
+    IF .clzKeyword~isInstance(child) THEN
+        DO
+        children=child~getChildren
+
+        END
+
+
+    IF child~getChildren~items=0 THEN do
+        SAY pp(child~getNode~getText) "09"X child~getNode~getElementType~toString "09"X "Offset: " child~getNode~getTextOffset "09"X "length: " child~getNode~getTextLength
+			 itm = child~getNode~getTextLength
+			 idx = child~getNode~getElementType~toString
+			 .instructionLengthMap~put(itm, idx)
+		end
+     if child~getChildren~items>0 then
+        call walkTheAST level+1, child
+  END
+	/*
+::routine walkTheAST
+  use arg level, root
+  do child over root~getChildren
+     if .clzDirective~isInstance(child) then
+     do
+         children=child~getChildren
+         if .clzDirectiveMethod~isInstance(children[2]) then
+         do
+           --say "--------------"
+           --say "Method start"
+           --say "--------------"
+         end
+     end
+		 
+     say copies(" ", level+1) child~getNode~getElementType~toString "09"X child~getNode~getText "09"X "Offset: " child~getNode~getTextOffset "09"X "Length: " child~getNode~getTextLength
+		 if child~getChildren~items = 0 then do
+			 childNode = child~getNode
+			 itm = childNode~getTextLength
+			 idx = childNode~getElementType~toString
+			 .instructionLengthMap~put(itm, idx)
+		 end
+     else
+        call walkTheAST level+1, child
+  end
+	*/

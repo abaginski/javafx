@@ -44,11 +44,10 @@
         if \aseik.plugin | \aseik.adapter then do
             /* in case the jars are not present we need to download them */
             /* let's ask the user if he wants that (free space, internet connection) */
-            downloadSize = 16061
             alert = .fx.Alert~new(.fx.Alert.Type~confirmation)   -- create a confirmation alert
             alert~setTitle("Download dependencies")
             alert~setHeaderText(.nil)
-            alert~setContentText("Syntax Highlighting for ooRexx needs to be downloaded from the Web in order to use it." .endOfLine || "Download size:" downloadSize "KB" .endOfLine || "Do you wish to start the Download now?")
+            alert~setContentText("Syntax Highlighting for ooRexx needs to be downloaded from the Web in order to use it." .endOfLine || "Download size: 18 MB" .endOfLine || "Do you wish to start the Download now?")
             pressedButton = alert~showAndWait                    -- show the confirmation dialog
             if pressedButton~get~toString = .fx.ButtonType~OK~toString then do
                 .local~Gui = .GuiUpdater~new(caller) ~~prepare
@@ -82,7 +81,7 @@
     filename =  filespec("Name", downloadURL)
     destinationPath = destinationDirectory || filename
     outputStream = .bsf~new("java.io.BufferedOutputStream", .bsf~new("java.io.FileOutputStream", destinationPath))
-    bufferSize = 4086*2
+    bufferSize = 4096
     buffer = bsf.createJavaArray("byte.class", bufferSize)
     .Gui~updateLabel("Downloading ...")
     readBytes = inputStream~read(buffer)
@@ -100,11 +99,13 @@
 ::class GuiUpdater
 ::attribute progress
 ::attribute text
+::attribute lastUpdated
 ::method init
-  expose checkbox progress text
+  expose checkbox progress text lastUpdated
   use arg checkbox
   progress = 0.0
   text = ""
+  lastUpdated = .dateTime~new
 
 ::method prepare
   expose progressBar textLabel checkbox okButton
@@ -124,12 +125,17 @@
   .Platform~runLater(bsfCreateRexxProxy(self,userData,.java.lang.Runnable))
 
 ::method incrementProgressBy
-  expose progressBar progress
+  expose progressBar progress lastUpdated
   use strict arg increment
-  .local~downloadProgress += increment            -- progress should not exceed 100%
-  userData = .directory~new
-  userData~progress = .downloadProgress
-  .Platform~runLater(bsfCreateRexxProxy(self,userData,.java.lang.Runnable))
+  .local~downloadProgress += increment
+  now = .dateTime~new
+  diff = lastUpdated - now
+  if diff~seconds > 0 then do
+      lastUpdated = now
+      userData = .directory~new
+      userData~progress = .downloadProgress
+      .Platform~runLater(bsfCreateRexxProxy(self,userData,.java.lang.Runnable))
+  end
 
 ::method updateLabel
   expose textLabel text
@@ -144,17 +150,19 @@
   .Platform~runLater(bsfCreateRexxProxy(self,userData,.java.lang.Runnable))
 
 ::method run
-  expose progressBar progress textLabel text okButton
+  expose progressBar progress textLabel text okButton lastUpdated
   use arg slotDir
   userData = slotDir~userData
   select
     when userData~hasEntry("TEXT") then
         textLabel~setText(userData~text)
-    when userData~hasEntry("PROGRESS") then
+    when userData~hasEntry("PROGRESS") then do
         progressBar~setProgress(userData~progress)
+    end
     when userData~hasEntry("FINALIZE") then do
       checkbox = .bsf~new("javafx.scene.control.CheckBox") ~~setPrefWidth(175.0)
       checkbox~selected = .true
+      checkbox~disable = .true
       .my.app~preferences["enablePlugin"] = .true
       .my.app~preferences~save(.prefPath)
       progressBar~getParent~getChildren~~remove(3,4) ~~add(checkbox) -- remove the progressbar and add the checkbox to the parent panel

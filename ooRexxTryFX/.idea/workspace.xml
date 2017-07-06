@@ -73,8 +73,18 @@
       <file leaf-file-name="preferencesController.rxj" pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/resources/fxml/preferencesController.rxj">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="702">
-              <caret line="85" column="57" lean-forward="false" selection-start-line="85" selection-start-column="57" selection-end-line="85" selection-end-column="57" />
+            <state relative-caret-position="673">
+              <caret line="49" column="154" lean-forward="false" selection-start-line="49" selection-start-column="154" selection-end-line="49" selection-end-column="154" />
+              <folding />
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file leaf-file-name="test.rxj" pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/test.rxj">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="265">
+              <caret line="5" column="20" lean-forward="false" selection-start-line="5" selection-start-column="20" selection-end-line="5" selection-end-column="20" />
               <folding />
             </state>
           </provider>
@@ -186,7 +196,6 @@
         <option value="$PROJECT_DIR$/ooRexx/FXRexxEngine.rxj" />
         <option value="$PROJECT_DIR$/../ikonli/ikonli.rxj" />
         <option value="$PROJECT_DIR$/../ikonli/fxml/ikonli.fxml" />
-        <option value="$PROJECT_DIR$/test.rxj" />
         <option value="$PROJECT_DIR$/ooRexx/TabManager.rxj" />
         <option value="$PROJECT_DIR$/resources/fxml/ooRexxTryFXController.rxj" />
         <option value="$PROJECT_DIR$/ooRexx/FileTreeManager.rxj" />
@@ -197,6 +206,7 @@
         <option value="$PROJECT_DIR$/resources/fxml/preferences.fxml" />
         <option value="$PROJECT_DIR$/ooRexx/SyntaxHighlighter.rxj" />
         <option value="$PROJECT_DIR$/../UnzipUtil.rxj" />
+        <option value="$PROJECT_DIR$/test.rxj" />
         <option value="$PROJECT_DIR$/resources/fxml/preferencesController.rxj" />
       </list>
     </option>
@@ -752,12 +762,12 @@
       <updated>1493542584500</updated>
       <workItem from="1498985449248" duration="54000" />
       <workItem from="1498985538373" duration="7977000" />
-      <workItem from="1499004941158" duration="36318000" />
+      <workItem from="1499004941158" duration="41052000" />
     </task>
     <servers />
   </component>
   <component name="TimeTrackingManager">
-    <option name="totallyTimeSpent" value="44349000" />
+    <option name="totallyTimeSpent" value="49083000" />
   </component>
   <component name="TodoView">
     <todo-panel id="selected-file">
@@ -1000,7 +1010,6 @@
     <entry file="file://$PROJECT_DIR$/backupRxjFile103340.rxj" />
     <entry file="file://$PROJECT_DIR$/../ikonli/fxml/staff.fxml" />
     <entry file="file://$PROJECT_DIR$/../ikonli/staff.rxj" />
-    <entry file="file://$PROJECT_DIR$/test.rxj" />
     <entry file="file://$PROJECT_DIR$/../ikonli/ikonli.rxj">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="738">
@@ -1152,10 +1161,18 @@
         </state>
       </provider>
     </entry>
+    <entry file="file://$PROJECT_DIR$/test.rxj">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="265">
+          <caret line="5" column="20" lean-forward="false" selection-start-line="5" selection-start-column="20" selection-end-line="5" selection-end-column="20" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
     <entry file="file://$PROJECT_DIR$/resources/fxml/preferencesController.rxj">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="702">
-          <caret line="85" column="57" lean-forward="false" selection-start-line="85" selection-start-column="57" selection-end-line="85" selection-end-column="57" />
+        <state relative-caret-position="673">
+          <caret line="49" column="154" lean-forward="false" selection-start-line="49" selection-start-column="154" selection-end-line="49" selection-end-column="154" />
           <folding />
         </state>
       </provider>

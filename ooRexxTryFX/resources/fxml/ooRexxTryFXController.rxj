@@ -57,7 +57,6 @@
     timeEnd = .dateTime~new
     elapsed = timeStart - timeEnd
     .StatusBarManager~setTempMessage("Execution time" elapsed~seconds "seconds")
-    SysFileDelete(tmpFilepath)
   end
   else if et~error then do
     options = .stringTable~new
@@ -69,6 +68,7 @@
     call sysSleep .3      -- wait 1/3 of a second before checking for completion again
     call redo
   end
+  SysFileDelete(tmpFilepath)
 
 /* --------------------------------------------------------------------------------------------------- */
 
@@ -290,45 +290,8 @@ syntax:
 	.my.app~keepCapitalizationInDirKey = .false			-- turn this off again to prevent errors when loading a new fxml file and accessing its objects through .my.app Directive
 
 
-::class UserInput public
-::attribute mode
-::attribute initText
 
-::method init
-  expose mode initText
-  use arg mode, initText
-  mode = (mode <> "MODE")~?(mode, "line")       -- if there is no arg(1), mode will be set to "MODE"
-  if mode~upper = "L" then
-     mode = "line"
-  else if mode~upper = "C" then
-     mode = "char"
-  initText = (initText <> "INITTEXT")~?(initText, "")
 
-::method getUserInput
-  expose mode initText enterPressed
-  --say pp(.Platform~isFxApplicationThread)
-  inputControl = .my.app~ooRexxTryFX.fxml~Input
-  inputControl~setVisible(.true)
-  inputControl~setText(initText)
-  enterPressed = .false
-  inputControl~setOnKeyPressed(bsfCreateRexxProxy(self,,"javafx.event.EventHandler"))
-  inputControl~requestFocus
-  guard on when enterPressed
-  inputControl~setVisible(.false)               -- hide the input text field
-  inputControl~getParent~requestFocus
---  .StatusBarManager~setMessage("Done")
-  return inputControl~getText
-
-::method handle
-  expose enterPressed
-  use arg keyEvent
-  signal on syntax
-  if keyEvent~getCode~equals(.keyCode~ENTER) then
-      enterPressed = .true
-  else return
-  syntax: return
-
-  
-  
 
 ::requires "rgf_util2.rex"
+::requires "ooRexx/FXRexxEngine.rxj" -- needed for the class ".UserInput"

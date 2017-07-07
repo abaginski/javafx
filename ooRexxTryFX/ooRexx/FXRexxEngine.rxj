@@ -15,6 +15,8 @@
 
 ::requires "BSF.CLS"    -- get Java support
 ::requires "rgf_util2.rex"
+--::requires "resources/fxml/ooRexxTryFXController.rxj"
+
 
 ::class fxRexxEngine public
 ::attribute latestFXRexxEngine class  -- for storing the latest created rexxEngine
@@ -204,7 +206,9 @@
   expose fxTextInputControl enterPressed
   use arg start=1, count=1
 
-  string = getUserInput()               -- defined in the controller
+  userInput = .userInput~new("line", "")
+  string = userInput~getUserInput         -- defined in the controller
+--  string = getUserInput()               -- defined in the controller
   /*
   if start=1 | length=.nil then return string
   if length=.nil then return string~substr(start)
@@ -213,6 +217,61 @@
   say "REXXin>"string
   return string
 
+
+
+::class UserInput public
+::attribute mode
+::attribute initText
+
+::method init
+  expose mode initText
+  use arg mode, initText
+  mode = (mode <> "MODE")~?(mode, "line")       -- if there is no arg(1), mode will be set to "MODE"
+  if mode~upper = "L" then
+     mode = "line"
+  else if mode~upper = "C" then
+     mode = "char"
+  initText = (initText <> "INITTEXT")~?(initText, "")
+
+::method getUserInput
+  expose mode initText enterPressed
+  inputControl = .my.app~ooRexxTryFX.fxml~Input
+  userData = .directory~new
+  userData~when = "before"
+  userData~inputControl = inputControl
+  userData~initText = initText
+  .Platform~runLater(bsfCreateRexxProxy(self,userData,.java.lang.Runnable))
+  enterPressed = .false
+  inputControl~setOnKeyPressed(bsfCreateRexxProxy(self,,"javafx.event.EventHandler"))
+  guard on when enterPressed
+  userData = .directory~new
+  userData~when = "after"
+  userData~inputControl = inputControl
+  .Platform~runLater(bsfCreateRexxProxy(self,userData,.java.lang.Runnable))
+--  .StatusBarManager~setMessage("Done")
+  return inputControl~getText
+
+::method run
+  use arg slotDir
+  userData = slotDir~userData
+  if userData~when = "before" then do
+    userData~inputControl~setVisible(.true)
+    userData~inputControl~setText(userData~initText)
+    userData~inputControl~requestFocus
+  end
+  else do
+    userData~inputControl~setVisible(.false)               -- hide the input text field
+    userData~inputControl~getParent~requestFocus
+  end
+
+::method handle
+  expose enterPressed
+  use arg keyEvent
+  signal on syntax
+  if keyEvent~getCode~equals(.keyCode~ENTER) then
+      enterPressed = .true
+  else return
+  syntax: return
 
 
 

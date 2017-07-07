@@ -142,8 +142,14 @@
   TabIndex = SelectionModel~getSelectedIndex
   return TabIndex
 
-
-
+/**
+ ** this method is called when arguments are passed to the main application. After opening new files as tabs we need to eliminate the first inital tab with no content
+ ** therefore we will focus on the first tab and call the `closeTab` method on it, which is already implemented
+ **/
+::method closeInitTab
+  expose TabPane allTabs
+  TabPane~getSelectionModel~select(allTabs[1])
+  self~closeTab
 
 
 

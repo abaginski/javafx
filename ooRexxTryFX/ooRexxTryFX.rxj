@@ -8,12 +8,14 @@ loop i=1 to .SysCArgs~items
   .argumentList[i]=.SysCArgs[i]
 end
 */
+say arg(1)
 
 if v < "REXX-ooRexx_5" then do
   say "[error] ooRexxTryFX requires ooRexx Version 5"
   exit
 end
 .environment~setEntry("my.app", .stringTable~new)
+.environment~appDirectory = filespec("Location", .s)   -- determine path to this Rexx program
 .environment~java.lang.Runnable = bsf.import("java.lang.Runnable")
 .environment~java.lang.Thread = bsf.import("java.lang.Thread")
 .environment~Executor = bsf.import("java.util.concurrent.Executors")~newSingleThreadExecutor
@@ -30,19 +32,18 @@ end
 .my.app~preferences = .properties~load(.prefPath) /* load the entries of the file "preferences.conf" into a directive */
 .my.app~isPluginActive   = .my.app~preferences["isPluginActive"]
 .my.app~codeAreaFontSize = .my.app~preferences["codeAreaFontSize"]    /* save the font size in an environmental variable outside the config file */
-if .my.app~preferences["showConsole"] & \(.SysCArgs[1] = "20170706_uniqueString_doNotForgetToOpenTheConsole") then do
-    /* restart the app with a new first argument which tells the executable to show the console */
-    "rexx ooRexxTryFX.rxj 20170706_uniqueString_doNotForgetToOpenTheConsole" arg(1)
-    exit
+/*if .my.app~preferences["showConsole"] & \(.SysCArgs[1] = "20170706_uniqueString_doNotForgetToOpenTheConsole") then do
+  /* restart the app with a new first argument which tells the executable to show the console */
+  'start "" "' || .environment~appDirectory || 'run_ooRexxTryFX.exe" 20170706_uniqueString_doNotForgetToOpenTheConsole' arg(1)
+  exit
 end
-
+*/
 .styles~OUTPUT     = "-fx-fill:" .my.app~preferences["outputColor"]"; -fx-font-family: monospace; "
 .styles~INPUT      = "-fx-fill:" .my.app~preferences["inputColor"]"; -fx-font-family: sans-serif; -fx-font-style: italic; -fx-background-color: #1d1d1d;"
 .styles~ERROR      = "-fx-fill:" .my.app~preferences["errorColor"]"; -fx-font-family: monospace; "
 .styles~TRACEOUTPUT= "-fx-fill:" .my.app~preferences["traceColor"]"; -fx-font-family: monospace; "
 .styles~DEBUGINPUT = "-fx-fill: #4286f4; -fx-font-family: sans-serif; -fx-font-style: italic; -fx-background-color: #1d1d1d;"
 
-.environment~appDirectory = filespec("Location", .s)   -- determine path to this Rexx program
 jfile = .bsf~new("java.io.File",.appDirectory)
 urlAppDir = jfile~toUri~toUrl
 clzUrls = bsf.createJavaArray("java.net.URL", 3)        -- create a java array with space for 3 items
@@ -154,7 +155,8 @@ syntax:
     if SysIsFile(argument) then do
       userData = .directory~new
       userData~argument = argument
-      .Platform~runLater(bsfCreateRexxProxy(.FileOpener~new,userData,.java.lang.Runnable))
+      --.Platform~runLater(bsfCreateRexxProxy(.FileOpener~new,userData,.java.lang.Runnable))
+      .openFile~new( argument )~~handle         -- use the slotDir argument to retrieve the file to be opened
     end
   end
 

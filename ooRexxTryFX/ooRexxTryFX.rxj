@@ -3,10 +3,11 @@ parse version v .
 
 .environment~setEntry("WindowsNT", (.os = "WindowsNT")~?(.true, .false))
 .environment~setEntry("seperator", (.WindowsNT)~?("\", "/"))
-.local~setEntry("argumentList", .array~new)        -- save the argument list in the local variable to make it accessible
-loop i=1 to arg()
-  .argumentList[i]=arg(i)
+/*.local~setEntry("argumentList", .array~new)        -- save the argument list in the local variable to make it accessible
+loop i=1 to .SysCArgs~items
+  .argumentList[i]=.SysCArgs[i]
 end
+*/
 
 if v < "REXX-ooRexx_5" then do
   say "[error] ooRexxTryFX requires ooRexx Version 5"
@@ -29,6 +30,11 @@ end
 .my.app~preferences = .properties~load(.prefPath) /* load the entries of the file "preferences.conf" into a directive */
 .my.app~isPluginActive   = .my.app~preferences["isPluginActive"]
 .my.app~codeAreaFontSize = .my.app~preferences["codeAreaFontSize"]    /* save the font size in an environmental variable outside the config file */
+if .my.app~preferences["showConsole"] & \(.SysCArgs[1] = "20170706_uniqueString_doNotForgetToOpenTheConsole") then do
+    /* restart the app with a new first argument which tells the executable to show the console */
+    "rexx ooRexxTryFX.rxj 20170706_uniqueString_doNotForgetToOpenTheConsole" arg(1)
+    exit
+end
 
 .styles~OUTPUT     = "-fx-fill:" .my.app~preferences["outputColor"]"; -fx-font-family: monospace; "
 .styles~INPUT      = "-fx-fill:" .my.app~preferences["inputColor"]"; -fx-font-family: sans-serif; -fx-font-style: italic; -fx-background-color: #1d1d1d;"
@@ -143,9 +149,13 @@ syntax:
   primaryStage~show                          -- show the stage (and thereby our scene
 
   /* loop over the argument list to retrieve filepaths and open them */
-  loop argument over .argumentList
-    if SysIsFile(argument) then
-      .openFile~new(argument)~~handle
+  loop argument over .SysCArgs
+    say argument
+    if SysIsFile(argument) then do
+      userData = .directory~new
+      userData~argument = argument
+      .Platform~runLater(bsfCreateRexxProxy(.FileOpener~new,userData,.java.lang.Runnable))
+    end
   end
 
   say
@@ -157,7 +167,7 @@ syntax:
    /* load filetree status */
    if .my.app~preferences["expandedFileTreePaths"]~length > 2 then do           -- the integer 2 is random: there is no filepath with 0 or 1 chars to be expanded and it eliminates all zero-meaning properties like [] or 0
       .environment~StatusBarManager~setMessage("Loading File Tree ...")
-      .Platform~runLater(bsfCreateRexxProxy(.Thread~new,,.java.lang.Runnable))
+      .Platform~runLater(bsfCreateRexxProxy(.FileTreeOpener~new,,.java.lang.Runnable))
    end
    else
       .my.app~preloaderStage~close       -- close the preloader screen
@@ -180,8 +190,14 @@ syntax:
 	  .OpenFile~new(file~getPath)~~handle
   end
 
-::class Thread private
-/* this thread is called by Platform.runLater to update the gui thread when it is ready */
+
+::class FileOpener
+::method run
+  .openFile~new( arg(1)~userData~argument )~~handle         -- use the slotDir argument to retrieve the file to be opened
+
+
+::class FileTreeOpener
+/* this class is called by Platform.runLater to update the gui thread when it is ready */
 ::method run
   paths = .my.app~preferences["expandedFileTreePaths"]~makeArray(";")
   loop path over paths

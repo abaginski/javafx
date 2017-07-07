@@ -1,0 +1,4 @@
+say .SysCArgs~items "Argument(e)"
+do i=1 to .sysCArgs~items
+    say "arg("i"):" .SysCArgs[i]
+end

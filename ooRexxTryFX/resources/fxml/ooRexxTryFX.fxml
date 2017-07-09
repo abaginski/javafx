@@ -16,6 +16,7 @@
 <?import javafx.scene.layout.VBox?>
 <?import org.fxmisc.flowless.VirtualizedScrollPane?>
 <?import org.fxmisc.richtext.InlineCssTextArea?>
+<?import org.fxmisc.richtext.CodeArea?>
 <?import org.kordamp.ikonli.javafx.FontIcon?>
 <?import org.kordamp.ikonli.javafx.StackedFontIcon?>
 
@@ -148,7 +149,7 @@
         </Menu>
       </menus>
     </MenuBar>
-      <SplitPane fx:id="hSplitPane" dividerPositions="0.8" maxHeight="1.7976931348623157E308" VBox.vgrow="ALWAYS">
+      <SplitPane styleClass="toor" fx:id="hSplitPane" dividerPositions="0.8" maxHeight="1.7976931348623157E308" VBox.vgrow="ALWAYS">
         <items>
           <AnchorPane>
                <children>
@@ -165,6 +166,8 @@
                      <children>
                          <VirtualizedScrollPane AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
                              <content> <!-- since "content" is a @namedArg annotation in the Java source code, we can create instances in fxml even though there is no no-args constructor -->
+                                 <!--<InlineCssTextArea fx:id="Output" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0" />
+                                 -->
                                  <InlineCssTextArea fx:id="Output" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0" />
                              </content>
                          </VirtualizedScrollPane>
@@ -183,7 +186,7 @@
             </AnchorPane>
         </items>
       </SplitPane>
-        <HBox fx:id="StatusBar" VBox.vgrow="NEVER" spacing="5">
+        <HBox fx:id="StatusBar" styleClass="statusBar" VBox.vgrow="NEVER" spacing="5">
             <padding><Insets top="5" right="10" bottom="5" left="5"/></padding>
             <children>
                 <Label fx:id="status" layoutX="12.0" layoutY="1.0" text="Ready">

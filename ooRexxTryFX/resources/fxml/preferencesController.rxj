@@ -1,24 +1,25 @@
 ::routine savePreferences public	
 	/* save the preferences in the preferences properties object */
 	loop with index inputName item inputField over .my.app~preferences.fxml
-		correspondingPropertyValue = .my.app~preferences[inputName]
-		select
-			when inputField~string~contains("TextField") then
-				correspondingPropertyValue = inputField~text
-			when inputField~string~contains("CheckBox") then
-				correspondingPropertyValue = inputField~isSelected
-			when inputField~string~contains("ChoiceBox") | -
-			     inputField~string~contains("ColorPicker") then
-				correspondingPropertyValue = inputField~value
-			otherwise nop
-		end
+		if .my.app~preferences[inputName] <> .nil then
+      select
+        when inputField~string~contains("TextField") then
+          .my.app~preferences[inputName] = inputField~text
+        when inputField~string~contains("CheckBox") then
+          .my.app~preferences[inputName] = inputField~isSelected
+        when inputField~string~contains("ChoiceBox") then
+          .my.app~preferences[inputName] = inputField~value
+        when inputField~string~contains("ColorPicker")  then
+          .my.app~preferences[inputName] = inputField~getValue~toString
+        otherwise nop
+      end
 	end
 	.my.app~preferences~save(.prefPath)				-- persistantly save the preferences
 	/* now ask the user if he wishes to apply the changes now */
 	alert = .fx.Alert~new(.fx.Alert.Type~confirmation)   -- create a confirmation alert
 	alert~setTitle("Apply")
 	alert~setHeaderText(.nil)
-	alert~setContentText("Some of these changes need a restart of ooRexxTryFX in order to be applied." .endOfLine || "Do you wish to restart now?")
+	alert~setContentText("Some of these changes need a restart of ooRexxTryFX in order to be applied." .endOfLine || "All known documents will be automatically saved." .endOfLine || "Do you wish to restart now?")
 	call closePreferences
 	pressedButton = alert~showAndWait                    -- show the confirmation dialog
 	if pressedButton~get~toString = .fx.ButtonType~OK~toString then do -- close the app only if "OK" was clicked
@@ -51,8 +52,10 @@
             pressedButton = alert~showAndWait                    -- show the confirmation dialog
             if pressedButton~get~toString = .fx.ButtonType~OK~toString then do
                 .local~Gui = .GuiUpdater~new(caller) ~~prepare
-                downloadURLs = "http://wi.wu.ac.at/rgf/rexx/downloads/ooRexx_IntelliJ_Plugin/20170408/ooRexxPlugin4IntelliJ.jar", -
-                               "http://wi.wu.ac.at/rgf/rexx/downloads/ooRexx_IntelliJ_Plugin/20170408/ooRexxStandaloneAdapter.jar"
+                baseDir = "http://wi.wu.ac.at/rgf/rexx/downloads/ooRexx_IntelliJ_Plugin/"
+                version = getLatestVersion(baseDir)
+                downloadURLs = baseDir || version || "/ooRexxPlugin4IntelliJ.jar", -
+                               baseDir || version || "/ooRexxStandaloneAdapter.jar"
                 downloadHelper = bsfCreateRexxProxy(.DownloadHelper~new(downloadURLs),,.java.lang.Runnable)
                 .java.lang.Thread~new(downloadHelper)~bsf.dispatch("start")
             end
@@ -60,6 +63,18 @@
                 caller~selected = .false            -- uncheck the checkbox for now
         end
     end
+
+::routine getLatestVersion
+  use arg baseDir
+  html = .bsf~new("java.util.Scanner", .bsf~new("java.net.URL", baseDir)~openStream, "UTF-8")~useDelimiter("\\A")~next
+  Pattern = bsf.import("java.util.regex.Pattern")
+  Matcher = Pattern~compile('href="(?<v>\d+)"')~matcher(html)
+  versions = .array~new
+  do while Matcher~find
+    versions~append(Matcher~group("v"))
+  end
+  return versions~sort~at(versions~items)      -- return the highest found version number
+
 
 /* this class acts as a Thread and performs the task of downloading and unzipping with help of UnzipUtility */
 ::class DownloadHelper
@@ -71,7 +86,7 @@
 ::method run
   expose downloadURLs
   totalURLs = downloadURLs~items
-  .Gui~updateLabel("Preparing to Download ...")
+  .Gui~updateLabel("preparing to download ...")
   destinationDirectory = .appDirectory || "java/"
   loop downloadURL over downloadURLs
     url = .bsf~new("java.net.URL", downloadURL)
@@ -83,7 +98,7 @@
     outputStream = .bsf~new("java.io.BufferedOutputStream", .bsf~new("java.io.FileOutputStream", destinationPath))
     bufferSize = 4096
     buffer = bsf.createJavaArray("byte.class", bufferSize)
-    .Gui~updateLabel("Downloading ...")
+    .Gui~updateLabel("downloading ...")
     readBytes = inputStream~read(buffer)
     increment = (bufferSize / filesize) / totalURLs
     loop while readBytes <> -1

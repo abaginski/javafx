@@ -24,7 +24,7 @@ end
 .environment~setEntry("styles", .stringTable~new)
 /* load preferences */
 .my.app~preferences = .properties~load(.prefPath) /* load the entries of the file "preferences.conf" into a directive */
-.my.app~isPluginActive   = .my.app~preferences["isPluginActive"]
+.my.app~isPluginActive   = .my.app~preferences["enablePlugin"]
 .my.app~codeAreaFontSize = .my.app~preferences["codeAreaFontSize"]    /* save the font size in an environmental variable outside the config file */
 .styles~OUTPUT     = "-fx-fill:" .my.app~preferences["outputColor"]"; -fx-font-family: monospace; "
 .styles~INPUT      = "-fx-fill:" .my.app~preferences["inputColor"]"; -fx-font-family: sans-serif; -fx-font-style: italic; -fx-background-color: #1d1d1d;"
@@ -103,7 +103,7 @@ syntax:
    -- create a scene from the FXML DOM and assign it to the primaryStage
   .my.app~mainScene = .bsf~new("javafx.scene.Scene", mainSceneFXML)     -- create a scene for our document
   .my.app~mainScene~getStylesheets~~add("resources/stylesheets/ooRexxTryFX.css") -
-                                  ~~add("resources/stylesheets/SyntaxHighlighter.css")
+                                  ~~add("resources/stylesheets/theme_" || .my.app~preferences["theme"] || ".css")
   .my.app~mainScene   ~setOnDragOver(bsfCreateRexxProxy(self,,"javafx.event.EventHandler"))
   .my.app~mainScene~setOnDragDropped(bsfCreateRexxProxy(self,,"javafx.event.EventHandler"))
   .my.app~ooRexxTryFX.fxml~Input ~setVisible(.false)                     -- hide the input area, which is used for "pull" operations

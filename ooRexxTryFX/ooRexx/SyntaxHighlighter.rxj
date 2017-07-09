@@ -11,13 +11,15 @@
 
 ::method accept
   use arg StyleSpans
+  /*userData = .directory~new
+  userData~StyleSpans = StyleSpans
+  .Platform~runLater(bsfCreateRexxProxy(.StyleSpansApplier~new,userData,.java.lang.Runnable))*/
   codeArea = .TabManager~getInputArea
-	codeArea~setStyleSpans(0, StyleSpans)		-- apply the styleSpans built in the "call" method below
+  --if StyleSpans~length = codeArea~getText~length then
+  codeArea~setStyleSpans(0, StyleSpans)		-- apply the styleSpans built in the "call" method below
   Tab = .TabManager~getCurrentTab
-  if Tab~getGraphic = .nil then do
+  if Tab~getGraphic = .nil then
      Tab~setGraphic(.bsf~new("javafx.scene.image.ImageView", "resources/images/icon_savefile_15.png"))
-  end
-	
 
 ::method test           /* although that's a very stupid name for a method, it's legit: called by "filter()" method in the TabManager Class */
   use arg ch
@@ -34,28 +36,23 @@
 ::method call
 	code = .TabManager~getInputArea~getText
 	spansBuilder = .bsf~new("org.fxmisc.richtext.model.StyleSpansBuilder")
-	--shame 
-	/*tmpStream = .stream~new("tmp")
-	tmpStream~open("write replace")
-	loop codeLine over code
-		tmpStream~lineOut(codeLine)
-	end
-	tmpStream~lineIn
-	tmpStream~close*/
-	--shame end 
-	file = .bsf~new("java.io.File", "tmp")
-	psiFile = .ooRexxParser~parse(file)
-	root = psiFile~getNode~getPsi
-	lastLen = 0
-	.local~instructionLengthMap = .stringTable~new
+	FileElement = .ooRexxParser~parse(code)
+	.local~tree = FileElement~getLighterAST
+  root = .tree~getRoot
+	.local~instructionLengthMap = .array~new
 	call walkTheAST 0, root
-	loop with index styleClass item len over .instructionLengthMap
-		say pp(styleClass len)
-		spansBuilder~add(.Collections~singleton(styleClass), len)
-		lastLen = len
+	blacklist = "/n", "WHITE_SPACE"         -- those items will not get styled
+ 	loop map over .instructionLengthMap
+		styleClass = map[1]~lower
+		length = map[2]
+		if blacklist~hasItem(styleClass) then
+	    spansBuilder~add(.Collections~emptyList, length)
+    else do
+		  spansBuilder~add(.Collections~singleton(styleClass), length)
+	    --say len pp(styleClass)
+	  end
 	end
-	spansBuilder~add(.Collections~emptyList, code~length - lastLen) /* todo: len instead of lastLen?*/		-- fill the last
-	return spansBuilder~create			
+	return spansBuilder~create
 
 	
 /* called by java.util.Function */
@@ -71,56 +68,51 @@
 ::method unknown
   say "[information] unhandled call {"arg(1)"}"
   
-  
-  ::requires bsf.cls
-	
-	
+
+/*
+::class StyleSpansApplier
+::method run
+  use arg slotDir
+  StyleSpans = slotDir~userData~StyleSpans
+
+*/
+
+
 ::routine walkTheAST
   use arg level, root
-
- --    say copies(" ", level+1) pp2(child~getNode~getText) "09"X child~getNode~getElementType~toString "09"X "Offset: "                          child~getNode~getTextOffset "09"X "Length: " child~getNode~getTextLength
-
-
-  DO child over root~getChildren
-    IF .clzKeyword~isInstance(child) THEN
-        DO
-        children=child~getChildren
-
-        END
-
-
-    IF child~getChildren~items=0 THEN do
-        SAY pp(child~getNode~getText) "09"X child~getNode~getElementType~toString "09"X "Offset: " child~getNode~getTextOffset "09"X "length: " child~getNode~getTextLength
-			 itm = child~getNode~getTextLength
-			 idx = child~getNode~getElementType~toString
-			 .instructionLengthMap~put(itm, idx)
-		end
-     if child~getChildren~items>0 then
-        call walkTheAST level+1, child
-  END
-	/*
-::routine walkTheAST
-  use arg level, root
-  do child over root~getChildren
-     if .clzDirective~isInstance(child) then
-     do
-         children=child~getChildren
-         if .clzDirectiveMethod~isInstance(children[2]) then
-         do
-           --say "--------------"
-           --say "Method start"
-           --say "--------------"
-         end
-     end
-		 
-     say copies(" ", level+1) child~getNode~getElementType~toString "09"X child~getNode~getText "09"X "Offset: " child~getNode~getTextOffset "09"X "Length: " child~getNode~getTextLength
-		 if child~getChildren~items = 0 then do
-			 childNode = child~getNode
-			 itm = childNode~getTextLength
-			 idx = childNode~getElementType~toString
-			 .instructionLengthMap~put(itm, idx)
-		 end
-     else
-        call walkTheAST level+1, child
+  children = .tree~getChildren(root)
+  loop child over children
+    grandchildren = .tree~getChildren(child)
+    /* information gathering */
+    type = child~getTokenType~toString
+    start = child~getStartOffset
+    end = child~getEndOffset
+    length = end - start
+    --say " "~copies(level) || type || ":" start "-" end
+    if grandchildren~size > 0 then
+      call walkTheAST level+1, child
+    else
+      if length > 0 then do
+        -- say type || start "-" end
+        .instructionLengthMap~append(.array~of(makeString(type), length))
+        --say "~"~copies(40)
+      end
   end
-	*/
+
+/**
+ ** this routine returns "POSIX" if the input string consists of only special punctuation characters, or the input string itself
+ **/
+::routine makeString
+  use arg type
+  select case type
+    when ":" then
+      return "DIRECTIVE"
+    when ".false" then
+      return "false"
+    when ".true" then
+      return "true"
+    otherwise
+      return .string~punct~makeArray("")~hasitem(type)~?("POSIX", type)
+  end
+
+::requires "BSF.CLS"        -- get Java Support

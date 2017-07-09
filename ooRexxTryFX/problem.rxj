@@ -1,0 +1,103 @@
+signal on syntax
+call bsf.import "org.oorexx.ide.standalone.OoRexxStandaloneParser", "Parser"
+call bsf.import "org.oorexx.ide.lang.psi.OoRexxDirective", "clzDirective"
+call bsf.import "org.oorexx.ide.lang.psi.OoRexxDirectiveMethod", "clzDirectiveMethod"
+call bsf.import "org.oorexx.ide.lang.psi.OoRexxKeywordInstruction", "clzKeyword"
+trace i
+do i=1 to 10 by 2
+say i
+end
+1/0
+
+lf = "0a"x
+code = "trace i" || lf || -
+"do i=1 to 10 by 2" || lf || -
+"say i" || lf || -
+"end" || lf || -
+"::routine test"lf-
+"say arg(1)"
+FileElement = .Parser~parse(code)
+.local~tree = Fileelement~getLighterAST
+root = .tree~getRoot
+gesLen = 0
+say pp(code)
+.local~instructionLengthMap = .array~new
+call walkTheAST3 0, root
+
+say "="~copies(55)
+loop itm over .instructionLengthMap
+    len = itm[1]
+    styleClass = itm[2]
+    say pp("styleClass:" styleClass || ", len:" len)
+    gesLen += len
+end
+say "------------------"
+say pp("Length of all styles:" gesLen)
+say pp("Length of code:" code~length)
+
+exit
+
+syntax:
+  co = condition("object")
+  say ppCondition2(co)
+  exit -1
+
+
+
+::requires "rgf_util2.rex"
+::routine walkTheAST2
+  use arg level, root
+  loop child over .tree~getChildren(root)
+    grandchildren = .tree~getChildren(child)
+    /* information gathering */
+    type = child~getTokenType~toString
+    start = child~getStartOffset
+    end = child~getEndOffset
+    length = end - start
+    tooGeneric = "INSTRUCTION", "KEYWORD_INSTRUCTION"
+    say " "~copies(level) || type || ":" start "-" end
+    if tooGeneric~hasItem(type) & grandchildren~size > 0 then
+     call walkTheAST2 level+1, child
+    else
+      if length > 0 then do
+        .instructionLengthMap~append(.array~of(length, type))
+        say "~"~copies(40)
+      end
+  end
+
+::routine walkTheAST3
+  use arg level, root
+  loop child over .tree~getChildren(root)
+    grandchildren = .tree~getChildren(child)
+    /* information gathering */
+    type = child~getTokenType~toString
+    start = child~getStartOffset
+    end = child~getEndOffset
+    length = end - start
+    --say " "~copies(level) || type || ":" start "-" end
+    if grandchildren~size > 0 then
+     call walkTheAST3 level+1, child
+    else
+      if length > 0 then do
+        .instructionLengthMap~append(.array~of(length, makeString(type)))
+        --say "~"~copies(40)
+      end
+  end
+
+/**
+ ** this routine returns "POSIX" if the input string consists of only special punctuation characters, or the input string itself
+ **/
+::routine makeString
+  use arg type
+  return .string~punct~makeArray("")~hasitem(type)~?("POSIX", type)
+
+  /*
+  select case type
+    when "(" then
+      return "PARENTHESIS"
+    when ")" then
+      return "PARENTHESIS"
+    otherwise
+      return type
+	*/
+::requires "BSF.CLS"

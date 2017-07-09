@@ -22,13 +22,12 @@
   TabPane~getSelectionModel~select(Tab)
   allTabs~insert(Tab)
 
-  codeArea = .bsf~new("org.fxmisc.richtext.CodeArea", "trace i".endOfLine"do i=1 to 10 by 2".endOfLine"say i".endOfLine"end".endOfLine"1/0") -- "trace i; do i=1 to 55; say 55/i; end;") -- trace ?R; pull v; say v") --SAY ((12+4)*5+4)/0 -- "trace i; parse pull tmp; say tmp"
+  codeArea = .bsf~new("org.fxmisc.richtext.CodeArea") -- "trace i; do i=1 to 55; say 55/i; end;") -- trace ?R; pull v; say v") --SAY ((12+4)*5+4)/0 -- "trace i; parse pull tmp; say tmp"
   virtualizedScrollPane = .bsf~new("org.fxmisc.flowless.VirtualizedScrollPane", codeArea)
   anchorPane = .bsf~new("javafx.scene.layout.AnchorPane")       -- this anchorPane allows the codeArea to stretch
   anchorPane~~setBottomAnchor(codeArea,0)~~setRightAnchor(codeArea,0)~~setTopAnchor(codeArea,0)~~setLeftAnchor(codeArea,0)
   Tab~setContent( virtualizedScrollPane  ) -- attach the fxml document to the current pane
   Tab~setOnCloseRequest( bsfCreateRexxProxy(.RexxEventHandler~new,,"javafx.event.EventHandler") )
-
 
   codeArea~setStyle("-fx-font-size:" .my.app~preferences["codeAreaFontSize"] || "pt")
   codeArea~setWrapText(.my.app~preferences["autoLineBreak"])
@@ -38,19 +37,31 @@
   codeArea~addEventFilter(scrollEvent~SCROLL, rp)
   LineNumberFactory = bsf.import("org.fxmisc.richtext.LineNumberFactory")
   codeArea~setParagraphGraphicFactory(LineNumberFactory~get(codeArea))    -- add line numbers to each row
-
 	if .my.app~isPluginActive then do		-- apply syntax highlighting if the classes are provided
 		predicate = bsfCreateRexxProxy(.SyntaxHighlighter~new,,"java.util.function.Predicate")
 		consumer = bsfCreateRexxProxy(.SyntaxHighlighter~new,,"java.util.function.Consumer")
 		supplier = bsfCreateRexxProxy(.SyntaxHighlighter~new,,"java.util.function.Supplier")
 		function = bsfCreateRexxProxy(.SyntaxHighlighter~new,,"java.util.function.Function")
 		eventStream = codeArea~richChanges~filter(predicate)            -- keep track of all changes
-		Duration = bsf.import("java.time.Duration")
-		taskStream = eventStream~successionEnds(Duration~ofMillis(500)) ~supplyTask(supplier)				--compute highlighting
+		call bsf.import("java.time.Duration"), "Duration"
+		taskStream = eventStream~successionEnds(.Duration~ofMillis(500)) ~supplyTask(supplier)				--compute highlighting
 		awaitingEventStream = taskStream~awaitLatest(codeArea~richChanges)
 		eventStream = awaitingEventStream~filterMap(function)
 		eventStream~subscribe(consumer)											--apply highlighting
 	end
+	--codeArea~replaceText("trace i".endOfLine"do i=1 to 10 by 2".endOfLine"say i".endOfLine"end".endOfLine"1/0")
+
+	/* todo: better solution would be reactive programming using wellbehaved:
+	import static javafx.scene.input.KeyCode.TAB;
+  import static org.fxmisc.wellbehaved.event.EventPattern.keyPressed;
+
+  import org.fxmisc.wellbehaved.event.EventHandlerHelper;
+
+  EventHandler<? super KeyEvent> tabHandler = EventHandlerHelper
+          .on(keyPressed(TAB)).act(event -> codeArea.replaceSelection("    "))
+          .create();
+  EventHandlerHelper.install(codeArea.onKeyPressedProperty(), tabHandler);
+  */
   rp = bsfCreateRexxProxy(self,,"javafx.event.EventHandler")
   codeArea~setOnKeyPressed(rp)
   return Tab

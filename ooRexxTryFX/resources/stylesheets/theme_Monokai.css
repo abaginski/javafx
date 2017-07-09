@@ -1,0 +1,128 @@
+.toor {
+  -fx-base: #272822;
+  -fx-fill: white;
+}
+
+.virtualized-scroll-pane {
+  -fx-stroke: #47493E;
+}
+
+/*.paragraph-box*/
+.paragraph-box:has-caret {
+    -fx-background-color: #47493E;
+}
+
+.caret {
+   -fx-stroke: white;
+}
+
+.paragraph-box {
+	-fx-font-family: "Consolas", monospace;
+  -fx-background-color: #272822;
+}
+
+
+.code-area, .styled-text-area {
+  -fx-background-color: #272822;
+  -fx-fill: white;
+}
+
+.toor .ikonli-font-icon {
+  -fx-fill:white;
+}
+
+/* [Syntax Highlighting] */
+
+.do,
+.say,
+.end,
+.to,
+.by,
+.trace,
+.loop,
+.while,
+.if,
+.then,
+.else,
+.return {
+  -fx-fill: #FA1E6F;
+}
+
+.posix {
+  -fx-fill: white;
+}
+
+.string_literal {
+  -fx-fill: #E6DC6D;
+}
+.integer_literal,
+.true,
+.nil,
+.false
+{
+  -fx-fill: #A878F7;
+}
+
+.identifier{
+  -fx-fill: white;
+}
+
+.func_identifier{
+  -fx-fill: #F29101;
+}
+
+.env_identifier
+{
+   -fx-fill: #A0DE07;
+}
+
+.directive,
+.use,
+.arg,
+.routine,
+.method,
+.class,
+.attribute,
+.requires,
+.expose,
+.public,
+.self
+{
+  -fx-fill: #5AC9DF;
+}
+
+.eol_comment,
+.block_comment,
+.doc_comment {
+  -fx-fill: #909393;
+}
+
+
+.lineno {
+  -fx-background-color: #47493E;
+  -fx-border-style: hidden solid solid hidden;
+  -fx-border-color: #252620;
+}
+
+.tree-view {
+  -fx-background-color: #47493E;
+}
+.tree-cell{
+  -fx-background-color: #47493E;
+  -fx-text-fill: white;
+}
+.tree-cell:selected{
+  -fx-background-color: #272822;
+}
+.tree-cell:hover{
+  -fx-background-color: #333;
+}
+
+.statusBar {
+  -fx-background-color: #272822;
+  -fx-border-style:solid hidden hidden hidden;
+  -fx-border-color:#C0C0C0;
+}
+.statusBar .label {
+  -fx-text-fill:white;
+}

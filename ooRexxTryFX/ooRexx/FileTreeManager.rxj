@@ -171,5 +171,5 @@
     return expandedList
 
 
-::requires bsf.cls
+::requires "BSF.CLS"
 ::requires "ooRexx/RexxEventHandler.rxj"

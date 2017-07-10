@@ -21,11 +21,12 @@ set dependencies=richtextfx-0.7-M5-custom ikonli-openiconic-pack-1.9.0 ikonli-oc
 rem add each dependency to the classpath via the addToPath function
 for %%a in (%dependencies%) do call :addToPath %%a
 rem start ooRexxTryFX with all of its arguments
-rexx %cd%\ooRexxTryFX.rxj%args%
+@echo on
+rexx ooRexxTryFX.rxj%args%
 goto :eof
 
 :addToPath
-set CLASSPATH=%cd%\%1.jar;%CLASSPATH%
+set CLASSPATH=%cd%\java\%1.jar;%CLASSPATH%
 goto :eof
 
 :concat

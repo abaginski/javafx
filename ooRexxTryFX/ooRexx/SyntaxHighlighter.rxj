@@ -38,19 +38,16 @@
 	spansBuilder = .bsf~new("org.fxmisc.richtext.model.StyleSpansBuilder")
 	FileElement = .ooRexxParser~parse(code)
 	.local~tree = FileElement~getLighterAST
-  root = .tree~getRoot
 	.local~instructionLengthMap = .array~new
-	call walkTheAST 0, root
+	call walkTheAST .tree~getRoot
 	blacklist = "/n", "WHITE_SPACE"         -- those items will not get styled
  	loop map over .instructionLengthMap
 		styleClass = map[1]~lower
 		length = map[2]
 		if blacklist~hasItem(styleClass) then
-	    spansBuilder~add(.Collections~emptyList, length)
-    else do
+	        spansBuilder~add(.Collections~emptyList, length)
+        else
 		  spansBuilder~add(.Collections~singleton(styleClass), length)
-	    --say len pp(styleClass)
-	  end
 	end
 	return spansBuilder~create
 
@@ -79,7 +76,7 @@
 
 
 ::routine walkTheAST
-  use arg level, root
+  use arg root, level=0
   children = .tree~getChildren(root)
   loop child over children
     grandchildren = .tree~getChildren(child)
@@ -88,9 +85,9 @@
     start = child~getStartOffset
     end = child~getEndOffset
     length = end - start
-    --say " "~copies(level) || type || ":" start "-" end
+    say " "~copies(level) || type || ":" start "-" end
     if grandchildren~size > 0 then
-      call walkTheAST level+1, child
+      call walkTheAST child, level+1
     else
       if length > 0 then do
         -- say type || start "-" end

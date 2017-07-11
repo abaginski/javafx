@@ -63,7 +63,7 @@
   EventHandlerHelper.install(codeArea.onKeyPressedProperty(), tabHandler);
   */
   rp = bsfCreateRexxProxy(self,,"javafx.event.EventHandler")
-  codeArea~setOnKeyPressed(rp)
+  --codeArea~setOnKeyPressed(rp)
   return Tab
   
 ::method unknown

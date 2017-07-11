@@ -70,7 +70,7 @@
   Pattern = bsf.import("java.util.regex.Pattern")
   Matcher = Pattern~compile('href="(?<v>\d+)"')~matcher(html)
   versions = .array~new
-  do while Matcher~find
+  loop while Matcher~find
     versions~append(Matcher~group("v"))
   end
   return versions~sort~at(versions~items)      -- return the highest found version number
@@ -146,10 +146,10 @@
   now = .dateTime~new
   diff = lastUpdated - now
   if diff~seconds > 0 then do
-      lastUpdated = now
-      userData = .directory~new
-      userData~progress = .downloadProgress
-      .Platform~runLater(bsfCreateRexxProxy(self,userData,.java.lang.Runnable))
+    lastUpdated = now
+    userData = .directory~new
+    userData~progress = .downloadProgress
+    .Platform~runLater(bsfCreateRexxProxy(self,userData,.java.lang.Runnable))
   end
 
 ::method updateLabel

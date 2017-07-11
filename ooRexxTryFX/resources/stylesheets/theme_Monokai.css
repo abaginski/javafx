@@ -17,7 +17,7 @@
 }
 
 .paragraph-box {
-	-fx-font-family: "Consolas", monospace;
+  -fx-font-family: "Consolas", monospace;
   -fx-background-color: #272822;
 }
 
@@ -32,76 +32,97 @@
 }
 
 /* [Syntax Highlighting] */
-
-.do,
-.say,
-.end,
-.to,
-.by,
-.trace,
-.loop,
-.while,
-.if,
-.then,
-.else,
-.return {
-  -fx-fill: #FA1E6F;
-}
-
-.posix {
+.code-area .text {
   -fx-fill: white;
 }
 
-.string_literal {
+.code-area .do,
+.code-area .say,
+.code-area .end,
+.code-area .to,
+.code-area .by,
+.code-area .trace,
+.code-area .loop,
+.code-area .while,
+.code-area .if,
+.code-area .then,
+.code-area .else,
+.code-area .return,
+.code-area .over,
+.code-area .call
+{
+  -fx-fill: #FA1E6F;
+}
+
+/*
+.code-area .posix {
+  -fx-fill: white;
+}
+*/
+
+.code-area .bif {
+    -fx-font-weight: bold;
+}
+.code-area .string_literal {
   -fx-fill: #E6DC6D;
 }
-.integer_literal,
-.true,
-.nil,
-.false
+.code-area .integer_literal,
+.code-area .true,
+.code-area .nil,
+.code-area .false
 {
   -fx-fill: #A878F7;
 }
 
-.identifier{
+/*
+.code-area .identifier{
   -fx-fill: white;
 }
-
-.func_identifier{
+*/
+.code-area .func_identifier{
   -fx-fill: #F29101;
 }
 
-.env_identifier
+.code-area .env_identifier
 {
    -fx-fill: #A0DE07;
 }
 
-.directive,
-.use,
-.arg,
-.routine,
-.method,
-.class,
-.attribute,
-.requires,
-.expose,
-.public,
-.self
+.code-area .directive,
+.code-area .use,
+.code-area .arg,
+.code-area .routine,
+.code-area .method,
+.code-area .class,
+.code-area .attribute,
+.code-area .requires,
+.code-area .expose,
+.code-area .public,
+.code-area .self,
+.code-area .parse
 {
   -fx-fill: #5AC9DF;
 }
 
-.eol_comment,
-.block_comment,
-.doc_comment {
+.code-area .eol_comment,
+.code-area .block_comment,
+.code-area .doc_comment {
   -fx-fill: #909393;
 }
 
 
-.lineno {
+.code-area .lineno {
   -fx-background-color: #47493E;
   -fx-border-style: hidden solid solid hidden;
   -fx-border-color: #252620;
+}
+
+.code-area .lineno .text {
+  -fx-fill: #C0C0C0;
+}
+
+.tree-cell .arrow  {
+    -fx-text-fill: #C0C0C0;
 }
 
 .tree-view {
@@ -111,12 +132,11 @@
   -fx-background-color: #47493E;
   -fx-text-fill: white;
 }
-.tree-cell:selected{
+
+.tree-cell:hover{
   -fx-background-color: #272822;
 }
-.tree-cell:hover{
-  -fx-background-color: #333;
-}
+
 
 .statusBar {
   -fx-background-color: #272822;

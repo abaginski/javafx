@@ -43,7 +43,7 @@
 		supplier = bsfCreateRexxProxy(.SyntaxHighlighter~new,,"java.util.function.Supplier")
 		function = bsfCreateRexxProxy(.SyntaxHighlighter~new,,"java.util.function.Function")
 		eventStream = codeArea~richChanges~filter(predicate)            -- keep track of all changes
-		call bsf.import("java.time.Duration"), "Duration"
+		call bsf.import "java.time.Duration", "Duration"
 		taskStream = eventStream~successionEnds(.Duration~ofMillis(500)) ~supplyTask(supplier)				--compute highlighting
 		awaitingEventStream = taskStream~awaitLatest(codeArea~richChanges)
 		eventStream = awaitingEventStream~filterMap(function)

@@ -51,19 +51,8 @@
 	end
 	--codeArea~replaceText("trace i".endOfLine"do i=1 to 10 by 2".endOfLine"say i".endOfLine"end".endOfLine"1/0")
 
-	/* todo: better solution would be reactive programming using wellbehaved:
-	import static javafx.scene.input.KeyCode.TAB;
-  import static org.fxmisc.wellbehaved.event.EventPattern.keyPressed;
-
-  import org.fxmisc.wellbehaved.event.EventHandlerHelper;
-
-  EventHandler<? super KeyEvent> tabHandler = EventHandlerHelper
-          .on(keyPressed(TAB)).act(event -> codeArea.replaceSelection("    "))
-          .create();
-  EventHandlerHelper.install(codeArea.onKeyPressedProperty(), tabHandler);
-  */
   rp = bsfCreateRexxProxy(self,,"javafx.event.EventHandler")
-  --codeArea~setOnKeyPressed(rp)
+  codeArea~setOnKeyPressed(rp)
   return Tab
   
 ::method unknown

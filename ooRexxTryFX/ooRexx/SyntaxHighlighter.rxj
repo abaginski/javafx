@@ -2,15 +2,16 @@
 ::method init /* moving those imports into the init method will load them after the splash screen and that's good, because the user will then know, that he is waiting for something instead of looking at an empty screen */
   call bsf.import "java.util.Optional"   , "Optional"
   call bsf.import "java.util.Collections", "Collections"
-  if .my.app~isPluginActive then do
-    .local~clzDirective       = .my.app~appClzLdr~loadClass("org.oorexx.ide.lang.psi.OoRexxDirective")
+  if .my.app~isPluginActive then
+    /*.local~clzDirective       = .my.app~appClzLdr~loadClass("org.oorexx.ide.lang.psi.OoRexxDirective")
     .local~clzDirectiveMethod = .my.app~appClzLdr~loadClass("org.oorexx.ide.lang.psi.OoRexxDirectiveMethod")
-    .local~clzKeyword         = .my.app~appClzLdr~loadClass("org.oorexx.ide.lang.psi.OoRexxKeywordInstruction")
+    .local~clzKeyword         = .my.app~appClzLdr~loadClass("org.oorexx.ide.lang.psi.OoRexxKeywordInstruction")*/
     .local~ooRexxParser       = .my.app~appClzLdr~loadClass("org.oorexx.ide.standalone.OoRexxStandaloneParser")
-  end
+
 
 ::method accept
   use arg StyleSpans
+  say "accept" .Platform~isFxApplicationThread
   /*userData = .directory~new
   userData~StyleSpans = StyleSpans
   .Platform~runLater(bsfCreateRexxProxy(.StyleSpansApplier~new,userData,.java.lang.Runnable))*/
@@ -23,10 +24,14 @@
 
 ::method test           /* although that's a very stupid name for a method, it's legit: called by "filter()" method in the TabManager Class */
   use arg ch
+  say "test" .Platform~isFxApplicationThread
   return \ch~getInserted~equals(ch~getRemoved)
   
   
 ::method get
+  expose code
+  say "get" .Platform~isFxApplicationThread
+  code = .TabManager~getInputArea~getText
   task = bsfCreateRexxProxy(self,,"javafx.concurrent.Task")     -- execute the task in this class
   .Executor~execute(task)
   return task
@@ -34,7 +39,8 @@
 	
 /* called by the supplyTask method - Supplier Interface in the TabManager class */
 ::method call
-	code = .TabManager~getInputArea~getText
+    expose code
+    say "call" .Platform~isFxApplicationThread
 	spansBuilder = .bsf~new("org.fxmisc.richtext.model.StyleSpansBuilder")
 	FileElement = .ooRexxParser~parse(code)
 	.local~tree = FileElement~getLighterAST
@@ -65,7 +71,30 @@
 ::method unknown
   say "[information] unhandled call {"arg(1)"}"
   
-
+/*
+::method walkTheAST
+  expose instructionLengthMap
+  use arg root, level=0
+  say "walkTheAST" .Platform~isFxApplicationThread
+  children = .tree~getChildren(root)
+  loop child over children
+    grandchildren = .tree~getChildren(child)
+    /* information gathering */
+    type = child~getTokenType~toString
+    start = child~getStartOffset
+    end = child~getEndOffset
+    length = end - start
+    --say " "~copies(level) || type || ":" start "-" end
+    if grandchildren~size > 0 then
+      self~walkTheAST(child, level+1)
+    else
+      if length > 0 then do
+        -- say type || start "-" end
+        instructionLengthMap~append(.array~of(makeString(type), length))
+        --say "~"~copies(40)
+      end
+  end
+*/
 /*
 ::class StyleSpansApplier
 ::method run
@@ -77,6 +106,7 @@
 
 ::routine walkTheAST
   use arg root, level=0
+  say "walkTheAST" .Platform~isFxApplicationThread
   children = .tree~getChildren(root)
   loop child over children
     grandchildren = .tree~getChildren(child)
@@ -85,7 +115,7 @@
     start = child~getStartOffset
     end = child~getEndOffset
     length = end - start
-    say " "~copies(level) || type || ":" start "-" end
+    --say " "~copies(level) || type || ":" start "-" end
     if grandchildren~size > 0 then
       call walkTheAST child, level+1
     else

@@ -37,39 +37,50 @@
   codeArea~addEventFilter(scrollEvent~SCROLL, rp)
   LineNumberFactory = bsf.import("org.fxmisc.richtext.LineNumberFactory")
   codeArea~setParagraphGraphicFactory(LineNumberFactory~get(codeArea))    -- add line numbers to each row
-	if .my.app~isPluginActive then do		-- apply syntax highlighting if the classes are provided
-		/*predicate = bsfCreateRexxProxy(.SyntaxHighlighter~new,,"java.util.function.Predicate")
-		consumer = bsfCreateRexxProxy(.SyntaxHighlighter~new,,"java.util.function.Consumer")
-		supplier = bsfCreateRexxProxy(.SyntaxHighlighter~new,,"java.util.function.Supplier")
-		function = bsfCreateRexxProxy(.SyntaxHighlighter~new,,"java.util.function.Function")*/
-		rexxHandler=.SyntaxHighlighter~new   -- Rexx-Objekt anlegen
+    if .my.app~isPluginActive then do		-- apply syntax highlighting if the classes are provided
+        /*predicate = bsfCreateRexxProxy(.SyntaxHighlighter~new,,"java.util.function.Predicate")
+        consumer = bsfCreateRexxProxy(.SyntaxHighlighter~new,,"java.util.function.Consumer")
+        supplier = bsfCreateRexxProxy(.SyntaxHighlighter~new,,"java.util.function.Supplier")
+        function = bsfCreateRexxProxy(.SyntaxHighlighter~new,,"java.util.function.Function")*/
+
+        rexxHandler=.SyntaxHighlighter~new   -- Rexx-Objekt anlegen
         jRexxHandler=bsfCreateRexxProxy(rexxHandler, , "java.util.function.Predicate", "java.util.function.Consumer", -
                            "java.util.function.Supplier", "java.util.function.Function")
-	    eventStream = codeArea~plainTextChanges~filter(jRexxHandler)            -- keep track of all changes
-		call bsf.import "java.time.Duration", "Duration"
-		taskStream = eventStream~successionEnds(.Duration~ofMillis(500)) ~supplyTask(jRexxHandler)				--compute highlighting
-		awaitingEventStream = taskStream~awaitLatest(codeArea~richChanges)
-		eventStream = awaitingEventStream~filterMap(jRexxHandler)
-		eventStream~subscribe(jRexxHandler)											--apply highlighting
-	end
+        /*eventStream = codeArea~plainTextChanges~filter(jRexxHandler)            -- keep track of all changes
+        taskStream = eventStream~successionEnds(bsf.import("java.time.Duration")~ofMillis(500)) ~supplyTask(jRexxHandler)				--compute highlighting
+        awaitingEventStream = taskStream~awaitLatest(codeArea~plainTextChanges)
+        eventStream = awaitingEventStream~filterMap(jRexxHandler)
+        eventStream~subscribe(jRexxHandler)											--apply highlighting
+        */
+        codeArea~plainTextChanges -
+                ~filter(jRexxHandler) -
+                ~successionEnds(bsf.import("java.time.Duration")~ofMillis(500)) -
+                ~supplyTask(jRexxHandler) -				--compute highlighting
+                ~awaitLatest(codeArea~plainTextChanges) -
+                ~filterMap(jRexxHandler) -
+                ~subscribe(jRexxHandler)                -- apply highlighting
+    end
   -- codeArea~replaceText("trace i".endOfLine"do i=1 to 10 by 2".endOfLine"say i".endOfLine"end".endOfLine"1/0")
-
-  rp = bsfCreateRexxProxy(self,,"javafx.event.EventHandler")
-  codeArea~setOnKeyPressed(rp)
+  codeArea~requestFocus
+  if .my.app~preferences["indentUsingSpaces"] then do
+    rp = bsfCreateRexxProxy(self,,"javafx.event.EventHandler")
+    codeArea~setOnKeyPressed(rp)
+  end
   return Tab
-  
+
+
 ::method unknown
-	say ">unknown method:"arg() arg(1)
-	
+    say ">unknown method:"arg() arg(1)
+
 ::method handle
   use arg event
-	 /* as of 2017-04-18 there is a unwanted feature in the javafx control "TextFlow" which hardcodes the width of a tab that of 8 whitespaces, see https://stackoverflow.com/questions/27585668/setting-the-tab-spacing-size-visualization-for-a-javafx-textarea and https://bugs.openjdk.java.net/browse/JDK-8130738
-  so that's why we need to convert every tab to some spaces manually.. */
+     /* as of 2017-04-18 there is an unwanted feature in the javafx control "TextFlow" which hardcodes the width of a tab that of 8 whitespaces, see https://stackoverflow.com/questions/27585668/setting-the-tab-spacing-size-visualization-for-a-javafx-textarea and https://bugs.openjdk.java.net/browse/JDK-8130738
+  so that's why we need to convert every tab to a number of spaces manually.. */
   if event~getText == "	" then do
-	codeArea = self~getInputArea
+    codeArea = self~getInputArea
     TabInSpaces = .my.app~preferences["TabInSpaces"]
-	codeArea~deletePreviousChar				-- remove the tab character
-	codeArea~replaceSelection(" "~copies(TabInSpaces))
+    codeArea~deletePreviousChar				-- remove the tab character
+    codeArea~replaceSelection(" "~copies(TabInSpaces))
   end
   
 ::method closeTab
@@ -78,7 +89,8 @@
   Tab = self~getCurrentTab               -- get a reference to that Tab
   Tabs~remove(Tab)                       -- remove the tab from the tab pane
   index = allTabs~index(Tab)
-  allTabs~delete(index)                  -- remove the tab from our directory
+  allTabs~delete(index)
+            -- remove the tab from our directory
   tabCounter -= 1                        -- decrement tab counter
   if Tabs~size = 0 then do
     /* if the last tab was closed, open a new blank one */

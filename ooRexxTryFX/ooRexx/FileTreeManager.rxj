@@ -125,7 +125,6 @@
   loop component over path
     pathComponents~append(component)
   end
-
   loopAgain:
   loop child over parent~getChildren
     if pathComponents~items > 0 then do

@@ -15,12 +15,38 @@ syntax:
 ::method start    -- will be invoked by the "launch" method
   expose progressIndicator
   use arg stage -- we get the primary stage to use for our UI
-  progressIndicator = .bsf~new("javafx.scene.control.ProgressIndicator", 0.0)
+  progressIndicator = .bsf~new("javafx.scene.control.ProgressBar", 0.0)
   root = .bsf~new("javafx.scene.layout.StackPane")
   root~getChildren~add(progressIndicator)
   scene = .bsf~new("javafx.scene.Scene", root, 200, 200)
   stage~~setScene(scene) ~~show
-  self~animateProgress(0,1)
+  downloadURLs = "https://download.filezilla-project.org/client/FileZilla_3.26.2_win64-setup_bundled2.exe", -
+                 "https://storage.googleapis.com/golang/go1.8.3.src.tar.gz", -
+                 "https://download.filezilla-project.org/client/FileZilla_3.26.2_win64-setup_bundled2.exe"
+  loop downloadURL over downloadURLs
+      url = .bsf~new("java.net.URL", downloadURL)
+      urlConnection = url~openConnection
+      fileSize = urlConnection~getContentLength
+      inputStream = urlConnection~getInputStream
+      filename =  filespec("Name", downloadURL)
+      outputStream = .bsf~new("java.io.BufferedOutputStream", .bsf~new("java.io.FileOutputStream", filename))
+      bufferSize = 2048
+      buffer = bsf.createJavaArray("byte.class", bufferSize)
+      readBytes = inputStream~read(buffer)
+      increment = (bufferSize / filesize) / downloadURLs~items
+      lastProgress = 0
+      loop while readBytes <> -1
+        outputStream~write(buffer, 0, readBytes)
+        readBytes = inputStream~read(buffer)
+        /* animate progress now */
+        newProgress = lastProgress+increment
+        self~animateProgress(lastProgress, newProgress)
+        say "lastProgress+increment" lastProgress"+"increment "="lastProgress+increment
+        say progressIndicator~getProgress
+        lastProgress = newProgress
+      end
+      outputStream~close
+  end
 
 ::method animateProgress
   expose progressIndicator
@@ -33,6 +59,7 @@ syntax:
   progressIndicator~progressProperty~bind(jtask~progressProperty)
   .bsf~new("java.lang.Thread",jtask)~bsf.dispatch("start")          -- start the Task
 
+
 /* The "javafx.concurrent.Task" allows to interface with JavaFX objects in a background
 *  thread such that updates get carried out on the JavaFX application thread.
 */
@@ -44,11 +71,10 @@ syntax:
 ::method call     -- implementation of the abstract method
   expose start end range   -- progress bar
   use arg slotDir
-  step = 0.000001
+  step = 0.01
   do i=start+step to end~format(1,2) by step  -- increase by 5% steps
      slotDir~javaObject~updateProgress(i,range)
-     --say "new value" i
-     --call SysSleep 0.075      -- sleep 0.075 seconds before increasing again
+     call SysSleep 0.075      -- sleep 0.075 seconds before increasing again
   end
   return .true
   

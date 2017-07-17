@@ -163,7 +163,7 @@
                       </items>
                   </ChoiceBox>
               </children>
-</HBox>
+            </HBox>
             <HBox layoutX="10.0" layoutY="122.0">
                <children>
                   <Pane maxHeight="30.0" HBox.hgrow="ALWAYS" />
@@ -214,6 +214,7 @@
                </children>
             </HBox>
             <Separator prefWidth="200.0" />
+          <!--
             <HBox layoutX="10.0" layoutY="234.0">
                <children>
                   <Pane HBox.hgrow="ALWAYS" />
@@ -274,6 +275,7 @@
                   <ColorPicker editable="true" fx:id="outputColor" maxWidth="175.0" prefWidth="175.0" promptText="choose" />
               </children>
           </HBox>
+          -->
           <HBox layoutX="10.0" layoutY="122.0">
               <children>
                   <Pane maxHeight="30.0" HBox.hgrow="ALWAYS" />

@@ -1,29 +1,25 @@
-/* nice blue #4286f4 */
-.keyword {
-    -fx-fill: purple;
-    -fx-font-weight: bold;
+/* [output area colors] */
+.error {
+    -fx-fill: #fc3232;
+    -fx-font-family: sans-serif;
 }
-.semicolon {
-    -fx-font-weight: bold;
+.input {
+    -fx-fill: #f0c0c0c;
+    -fx-background-color: #1d1d1d;
+    -fx-font-family: sans-serif;
+    -fx-font-style: italic;
 }
-.paren {
-    -fx-fill: firebrick;
-    -fx-font-weight: bold;
+.output {
+    -fx-fill: #333333;
 }
-.bracket {
-    -fx-fill: darkgreen;
-    -fx-font-weight: bold;
+.traceoutput {
+    -fx-fill: #4286f4;
 }
-.brace {
-    -fx-fill: teal;
-    -fx-font-weight: bold;
-}
-.string {
-    -fx-fill: blue;
-}
-
-.comment {
-	-fx-fill: cadetblue;
+.debuginput {
+    -fx-fill: #4286f4;
+    -fx-background-color: #1d1d1d;
+    -fx-font-family: sans-serif;
+    -fx-font-style: italic;
 }
 
 /*.paragraph-box*/

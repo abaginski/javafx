@@ -242,7 +242,7 @@
   userData~initText = initText
   .Platform~runLater(bsfCreateRexxProxy(self,userData,.java.lang.Runnable))
   enterPressed = .false
-  inputControl~setOnKeyPressed(bsfCreateRexxProxy(self,,"javafx.event.EventHandler"))
+  inputControl~setOnKeyPressed(bsfCreateRexxProxy(self,,.javafx.event.EventHandler))
   guard on when enterPressed
   userData = .directory~new
   userData~when = "after"
@@ -359,7 +359,7 @@
            data=monitorData~data           -- char mode, do NOT append anything!
 
         fxTextArea~appendText(data)  -- append data
-        fxTextArea~setStyle(max(fxTextArea~getLength-data~length-1, 0), fxTextArea~getLength, .styles[monitorData~name])
+        fxTextArea~setStyleClass(max(fxTextArea~getLength-data~length-1, 0), fxTextArea~getLength, monitorData~name~lower)
      end
      else   -- .input or .debugInput
      do

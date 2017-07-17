@@ -31,6 +31,30 @@
   -fx-fill:white;
 }
 
+/* [output area colors] */
+.error {
+    -fx-fill: #fc3232;
+    -fx-font-family: sans-serif;
+}
+.input {
+    -fx-fill: #f0c0c0;
+    -fx-background-color: #1d1d1d;
+    -fx-font-family: sans-serif;
+    -fx-font-style: italic;
+}
+.output {
+    -fx-fill: white;
+}
+.traceoutput {
+    -fx-fill: #4286f4;
+}
+.debuginput {
+    -fx-fill: #4286f4;
+    -fx-background-color: #1d1d1d;
+    -fx-font-family: sans-serif;
+    -fx-font-style: italic;
+}
+
 /* [Syntax Highlighting] */
 .code-area .text {
   -fx-fill: white;
@@ -38,6 +62,8 @@
 
 .code-area .do,
 .code-area .say,
+.code-area .pull,
+.code-area .drop,
 .code-area .end,
 .code-area .to,
 .code-area .by,
@@ -90,6 +116,7 @@
 
 .code-area .directive,
 .code-area .use,
+.code-area .strict,
 .code-area .arg,
 .code-area .routine,
 .code-area .method,

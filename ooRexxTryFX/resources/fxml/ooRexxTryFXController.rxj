@@ -43,11 +43,9 @@
        fxRexxEngine = .FXRexxEngine~new(tgtInput, tgtOutput, tgtOutput, tgtInput, tgtOutput)
        .local~fx.RexxEngine = fxRexxEngine     -- diese soll die Default-RexxEngine sein (.fx.RexxEngine)
     end
--- rgf: why executing on a separate thread?
+    say "going to start program"
     et = .ExecuteThread~new(fxRexxEngine~rexxEngine, Code, args)
-    .local~et = et
-    runnable = bsfCreateRexxProxy(et,,.java.lang.Runnable)
-    .java.lang.Thread~new(runnable) ~~bsf.dispatch("start")              -- Run code in separate thread
+    .Executor~execute(bsfCreateRexxProxy(et,,.javafx.concurrent.Task)) --~~bsf.dispatch("start")              -- Run code in separate thread
     say "Rexx program started," .dateTime~new", et~busy="pp(et~busy) "et~done="pp(et~done)
     say "Rexx program may have ended already," .dateTime~new", et~busy="pp(et~busy) "et~done="pp(et~done)
     say "---"
@@ -68,26 +66,26 @@
     call sysSleep .3      -- wait 1/3 of a second before checking for completion again
     call redo
   end
-  SysFileDelete(tmpFilepath)
+  call SysFileDelete tmpFilepath
 
 /* --------------------------------------------------------------------------------------------------- */
 
 
--- rgf: jetzt ein drittes
 ::class ExecuteThread
 ::attribute res               -- attribute will receive the return value from the Rexx program; fetch it after "done" got .true
 ::attribute busy              -- indicates whether Rexx program is executing on separate thread
 ::attribute done              -- indicate that Rexx script ran
 ::attribute error
 ::method init
-   expose rexxEngine Code args busy done
+   expose rexxEngine Code args busy done error
    use strict arg rexxEngine, Code, args=.nil
    res=.nil                   -- set res attribute explicitly to .nil
    done=.false                -- indicate that Rexx program was not run/is not finished
    busy=.false                -- indicate Rexx program not running (yet)
+   error=.false
 
-::method run
-   expose rexxEngine Code args res busy done
+::method call
+   expose rexxEngine Code args res busy done error
    busy = .true                 -- indicate Rexx program is running
    signal on syntax
    /* create args vector */
@@ -103,13 +101,17 @@
    say self", method" pp(.context~name)", received Rexx result:" pp(res)
    return
 
-
-syntax:
-   co = condition("object")
-   errorMsg = ppCondition2(co)
-   .et~error = .true
-   .Platform~runLater(bsfCreateRexxProxy(.errorPrinter~new(errorMsg),,.java.lang.Runnable))
-   exit -1
+    syntax:
+       co = condition("object")
+       --errorMsg = ppCondition2(co)
+       errorMsg = co~errorText || .endOfLine
+       loop with index idx item line over co~message~makeArray
+         if idx > 1 then        -- do not include the first line to the printed error message, because it always references an error occurred in bsf4ooRexx */
+           errorMsg ||= line .endOfLine
+       end
+       error = .true
+       .Platform~runLater(bsfCreateRexxProxy(.errorPrinter~new(errorMsg),,.java.lang.Runnable))
+       exit -1
 
 
 ::class errorPrinter
@@ -122,7 +124,7 @@ syntax:
   from = fxTextArea~getLength
   fxTextArea~appendText(errorMsg)
   to = min(from + errorMsg~length, fxTextArea~getLength)
-  fxTextArea~setStyle(from, to, .styles["ERROR"])
+  fxTextArea~setStyleClass(from, to, "error")
 
 /* --------------------------------------------------------------------------------------------------- */
 

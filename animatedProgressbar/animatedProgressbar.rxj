@@ -152,10 +152,10 @@ syntax:
   expose start end range   -- progress bar
   use arg slotDir
 
-  step = 0.01
+  step = 0.000001
   do i=start+step to end~format(1,2) by step  -- increase by 5% steps
      slotDir~javaObject~updateProgress(i,range)
-     call SysSleep 0.0075      -- sleep 0.075 seconds before increasing again
+     --call SysSleep 0.0075      -- sleep 0.075 seconds before increasing again
   end
   return .true
 

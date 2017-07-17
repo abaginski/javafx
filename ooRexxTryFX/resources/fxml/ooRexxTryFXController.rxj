@@ -271,9 +271,6 @@
 	bsf4oorexxImage = .bsf~new("javafx.scene.image.Image","resources/images/bsf4oorexx_032.png")
   stage~getIcons~add(bsf4oorexxImage)         -- set application icon
 	/* now, load default values to the input fields inside the preferences stage */
-	--.my.app~preferences.fxml~inputPrefHeight~setText(.my.app~preferences["height"])
-	--.my.app~preferences.fxml~inputPrefWidth~setText(.my.app~preferences["width"])
-	
 	loop with index inputName item inputField over .my.app~preferences.fxml
 		correspondingPropertyValue = .my.app~preferences[inputName]
 		select
@@ -292,8 +289,26 @@
 	.my.app~keepCapitalizationInDirKey = .false			-- turn this off again to prevent errors when loading a new fxml file and accessing its objects through .my.app Directive
 
 
+::routine showAbout public
+  use arg slotDir
+  parse version "REXX-"v .
+  alert = .fx.Alert~new(.fx.Alert.Type~information)
+  alert~setTitle("About ooRexxTryFX")
+  alert~setHeaderText("ooRexxTryFX Version" .my.app~preferences["Version"])
+  content = "ooRexx Version:" v .endOfLine
+  content ||= "bsf4ooRexx Version:" .bsf4rexx~version .endOfLine
+  System = bsf.import("java.lang.System")
+  content ||= "Java Version:" System~getProperty("java.version") || "," System~getProperty("sun.arch.data.model") || "-bit" .endOfLine
+  content ||= "Syntax Highlighting Version:" .my.app~preferences["syntaxHighlightingVersion"] .endOfLine
+  content ||= "Date of creation: July 2017" .endOfLine
+  content ||= "Author: Adrian Baginski <abaginski@live.de>"
+  alert~setContentText(content)
+  alert~showAndWait
 
 
+::routine openThemeCSS public
+  use arg slotDir
+  -- todo:
 
 ::requires "rgf_util2.rex"
 ::requires "ooRexx/FXRexxEngine.rxj" -- needed for the class ".UserInput"

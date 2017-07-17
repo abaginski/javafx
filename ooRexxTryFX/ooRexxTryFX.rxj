@@ -174,8 +174,7 @@ syntax:
   end
 
 ::method stop
-  .Executor~shutdownNow
-
+  .Executor~shutdown
 
 
 ::class FileOpener

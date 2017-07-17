@@ -54,6 +54,8 @@
                 .local~Gui = .GuiUpdater~new(caller) ~~prepare
                 baseDir = "http://wi.wu.ac.at/rgf/rexx/downloads/ooRexx_IntelliJ_Plugin/"
                 version = getLatestVersion(baseDir)
+                .my.app~preferences["syntaxHighlightingVersion"] = version
+                .my.app~preferences~save
                 downloadURLs = baseDir || version || "/ooRexxPlugin4IntelliJ.jar", -
                                baseDir || version || "/ooRexxStandaloneAdapter.jar"
                 downloadHelper = bsfCreateRexxProxy(.DownloadHelper~new(downloadURLs),,.java.lang.Runnable)

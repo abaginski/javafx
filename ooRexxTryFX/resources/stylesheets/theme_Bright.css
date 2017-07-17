@@ -1,0 +1,109 @@
+/* [output area colors] */
+.error {
+    -fx-fill: #fc3232;
+    -fx-font-family: sans-serif;
+}
+.input {
+    -fx-fill: #f0c0c0;
+    -fx-background-color: #1d1d1d;
+    -fx-font-family: sans-serif;
+    -fx-font-style: italic;
+}
+.output {
+    -fx-fill: #333333;
+}
+.traceoutput {
+    -fx-fill: #4286f4;
+}
+.debuginput {
+    -fx-fill: #4286f4;
+    -fx-background-color: #1d1d1d;
+    -fx-font-family: sans-serif;
+    -fx-font-style: italic;
+}
+
+/*.paragraph-box*/
+.paragraph-box:has-caret {
+    -fx-background-color: #eee;
+}
+
+
+
+/* [Syntax Highlighting] */
+
+.code-area .do,
+.code-area .say,
+.code-area .pull,
+.code-area .drop,
+.code-area .end,
+.code-area .to,
+.code-area .by,
+.code-area .trace,
+.code-area .loop,
+.code-area .while,
+.code-area .if,
+.code-area .then,
+.code-area .else,
+.code-area .return,
+.code-area .over,
+.code-area .call
+{
+  -fx-fill: #2060a0;
+}
+
+/*
+.code-area .posix {
+  -fx-fill: white;
+}
+*/
+
+.code-area .bif {
+    -fx-font-weight: bold;
+}
+.code-area .string_literal {
+  -fx-fill: #c03030;
+}
+.code-area .integer_literal,
+.code-area .true,
+.code-area .nil,
+.code-area .false
+{
+  -fx-fill: #0080b0;
+}
+
+/*
+.code-area .identifier{
+  -fx-fill: white;
+}
+*/
+.code-area .func_identifier{
+  -fx-fill: #2d905e;
+}
+
+.code-area .env_identifier
+{
+   -fx-fill: #800000;
+}
+
+.code-area .directive,
+.code-area .use,
+.code-area .strict,
+.code-area .arg,
+.code-area .routine,
+.code-area .method,
+.code-area .class,
+.code-area .attribute,
+.code-area .requires,
+.code-area .expose,
+.code-area .public,
+.code-area .self,
+.code-area .parse
+{
+  -fx-fill: #00a000;
+}
+
+
+.statusBar {
+  -fx-border-style:solid hidden hidden hidden;
+  -fx-border-color:#333;
+}

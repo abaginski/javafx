@@ -62,26 +62,39 @@
     end
   -- codeArea~replaceText("trace i".endOfLine"do i=1 to 10 by 2".endOfLine"say i".endOfLine"end".endOfLine"1/0")
   codeArea~requestFocus
-  if .my.app~preferences["indentUsingSpaces"] then do
-    rp = bsfCreateRexxProxy(self,,"javafx.event.EventHandler")
-    codeArea~setOnKeyPressed(rp)
-  end
+  rp = bsfCreateRexxProxy(self,,"javafx.event.EventHandler")
+  codeArea~setOnKeyPressed(rp)
   return Tab
 
 
 ::method unknown
+    say self~class
     say ">unknown method:"arg() arg(1)
 
 ::method handle
   use arg event
      /* as of 2017-04-18 there is an unwanted feature in the javafx control "TextFlow" which hardcodes the width of a tab that of 8 whitespaces, see https://stackoverflow.com/questions/27585668/setting-the-tab-spacing-size-visualization-for-a-javafx-textarea and https://bugs.openjdk.java.net/browse/JDK-8130738
   so that's why we need to convert every tab to a number of spaces manually.. */
-  if event~getText == "	" then do
-    codeArea = self~getInputArea
+  keyCode = event~getCode
+  codeArea = event~getTarget
+  if keyCode~equals(.KeyCode~TAB) & .my.app~preferences["indentUsingSpaces"] then do
     TabInSpaces = .my.app~preferences["TabInSpaces"]
     codeArea~deletePreviousChar				-- remove the tab character
     codeArea~replaceSelection(" "~copies(TabInSpaces))
   end
+  else if keyCode~equals(.KeyCode~ENTER) then do            /* propagate the indentation to the next line */
+    if codeArea~getCurrentParagraph > 0 then do
+      prevLine = codeArea~getParagraph(codeArea~getCurrentParagraph-1)          -- the line does not include the linefeed character
+      if prevLine~length > 0 then do
+          loop i=0 to prevLine~length-1
+            if prevLine~charAt(i) \= " " then
+              return
+          end
+          codeArea~replaceSelection(" "~copies(i))
+      end
+    end
+  end
+
   
 ::method closeTab
   expose allTabs TabPane tabCounter

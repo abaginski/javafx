@@ -89,6 +89,8 @@
           <items>
             <MenuItem mnemonicParsing="false" text="Select All" />
             <MenuItem mnemonicParsing="false" text="Unselect All" />
+            <SeparatorMenuItem />
+            <MenuItem mnemonicParsing="false" text="Edit current stylesheet" onAction="call openThemeCSS arg(arg())" />
           </items>
         </Menu>
         <Menu mnemonicParsing="false" text="View">
@@ -140,7 +142,7 @@
             </Menu>
         <Menu mnemonicParsing="false" text="Help">
           <items>
-            <MenuItem mnemonicParsing="false" text="About ooRexxTryFX">
+            <MenuItem mnemonicParsing="false" text="About ooRexxTryFX" onAction="call showAbout arg(arg())">
                 <graphic>
                     <FontIcon iconLiteral="oi-code" iconSize="15" />
                 </graphic>
@@ -180,8 +182,7 @@
             </AnchorPane>
           <AnchorPane prefWidth="300.0">
                <children>
-                      <TreeView fx:id="FileTree" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
-                      </TreeView>
+                      <TreeView fx:id="FileTree" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0"></TreeView>
                </children>
             </AnchorPane>
         </items>

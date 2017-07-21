@@ -1,5 +1,5 @@
 call bsf.import "org.oorexx.ide.standalone.OoRexxStandaloneParser", "ooRexxParser"
-code = "trace i" || .endOfLine || -
+code = "say .true .false; trace i" || .endOfLine || -
 "do i=1 to 10 by 2" || .endOfLine || -
 "test(i)" || .endOfLine || -
 "end" || .endOfLine || -

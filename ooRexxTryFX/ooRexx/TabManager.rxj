@@ -37,33 +37,29 @@
   codeArea~addEventFilter(scrollEvent~SCROLL, rp)
   LineNumberFactory = bsf.import("org.fxmisc.richtext.LineNumberFactory")
   codeArea~setParagraphGraphicFactory(LineNumberFactory~get(codeArea))    -- add line numbers to each row
-    if .my.app~isPluginActive then do		-- apply syntax highlighting if the classes are provided
-        /*predicate = bsfCreateRexxProxy(.SyntaxHighlighter~new,,"java.util.function.Predicate")
-        consumer = bsfCreateRexxProxy(.SyntaxHighlighter~new,,"java.util.function.Consumer")
-        supplier = bsfCreateRexxProxy(.SyntaxHighlighter~new,,"java.util.function.Supplier")
-        function = bsfCreateRexxProxy(.SyntaxHighlighter~new,,"java.util.function.Function")*/
+  if .my.app~isPluginActive then do		-- apply syntax highlighting if the classes are provided
+    rexxHandler=.SyntaxHighlighter~new   -- Rexx-Objekt anlegen
+    jRexxHandler=bsfCreateRexxProxy(rexxHandler, , "java.util.function.Predicate", -
+                                                   "java.util.function.Consumer", -
+                                                   "java.util.function.Supplier", -
+                                                   "java.util.function.Function")
+    codeArea~plainTextChanges -                     -- follow plain text changes as a java8 Stream
+            ~filter(jRexxHandler) -
+            ~successionEnds(bsf.import("java.time.Duration")~ofMillis(10)) -
+            ~supplyTask(jRexxHandler) -				-- compute highlighting with a javafx Task in a seperate Thread
+            ~awaitLatest(codeArea~plainTextChanges) -
+            ~filterMap(jRexxHandler) -
+            ~subscribe(jRexxHandler)                -- apply highlighting
+  end
+  -- for testing:
+  codeArea~replaceText("trace i".endOfLine"do i=1 to 10 by 2".endOfLine"say i".endOfLine"end".endOfLine"1/0")
+  codeArea~getUndoManager~forgetHistory
 
-        rexxHandler=.SyntaxHighlighter~new   -- Rexx-Objekt anlegen
-        jRexxHandler=bsfCreateRexxProxy(rexxHandler, , "java.util.function.Predicate", "java.util.function.Consumer", -
-                           "java.util.function.Supplier", "java.util.function.Function")
-        /*eventStream = codeArea~plainTextChanges~filter(jRexxHandler)            -- keep track of all changes
-        taskStream = eventStream~successionEnds(bsf.import("java.time.Duration")~ofMillis(500)) ~supplyTask(jRexxHandler)				--compute highlighting
-        awaitingEventStream = taskStream~awaitLatest(codeArea~plainTextChanges)
-        eventStream = awaitingEventStream~filterMap(jRexxHandler)
-        eventStream~subscribe(jRexxHandler)											--apply highlighting
-        */
-        codeArea~plainTextChanges -
-                ~filter(jRexxHandler) -
-                ~successionEnds(bsf.import("java.time.Duration")~ofMillis(500)) -
-                ~supplyTask(jRexxHandler) -				--compute highlighting
-                ~awaitLatest(codeArea~plainTextChanges) -
-                ~filterMap(jRexxHandler) -
-                ~subscribe(jRexxHandler)                -- apply highlighting
-    end
-  -- codeArea~replaceText("trace i".endOfLine"do i=1 to 10 by 2".endOfLine"say i".endOfLine"end".endOfLine"1/0")
+  codeArea~setOnKeyTyped(bsfCreateRexxProxy(self,,.javafx.event.EventHandler))
+  codeArea~setOnKeyPressed(bsfCreateRexxProxy(self,,.javafx.event.EventHandler))
+  .my.app~ooRexxTryFX.fxml~undoMenuItem~disableProperty~~unbind ~~bind(codeArea~undoAvailableProperty~not)    -- "not" inverts a boolean property
+  .my.app~ooRexxTryFX.fxml~redoMenuItem~disableProperty~~unbind ~~bind(codeArea~redoAvailableProperty~not)
   codeArea~requestFocus
-  rp = bsfCreateRexxProxy(self,,"javafx.event.EventHandler")
-  codeArea~setOnKeyPressed(rp)
   return Tab
 
 
@@ -76,6 +72,7 @@
      /* as of 2017-04-18 there is an unwanted feature in the javafx control "TextFlow" which hardcodes the width of a tab that of 8 whitespaces, see https://stackoverflow.com/questions/27585668/setting-the-tab-spacing-size-visualization-for-a-javafx-textarea and https://bugs.openjdk.java.net/browse/JDK-8130738
   so that's why we need to convert every tab to a number of spaces manually.. */
   keyCode = event~getCode
+  keyText = event~getCharacter
   codeArea = event~getTarget
   if keyCode~equals(.KeyCode~TAB) & .my.app~preferences["indentUsingSpaces"] then do
     TabInSpaces = .my.app~preferences["TabInSpaces"]
@@ -94,16 +91,36 @@
       end
     end
   end
+  else if keyText = '"' then
+    call autoComplete keyText
+  else if keyText = "'" then
+    call autoComplete keyText
+  else if keyText = '(' then
+    call autoComplete keyText, ')'
+  else if keyText = '[' then
+    call autoComplete keyText, ']'
+  else if keyText = '{' then
+    call autoComplete keyText, '}'
+  return
 
-  
+  autoComplete: procedure expose codeArea
+    use arg openChar, closeChar
+    closeChar = (closeChar<>"CLOSECHAR")~?(closeChar, openChar)     -- use openChar as closeChar if not set
+    openPos = codeArea~getCaretPosition
+    closePos = openPos + 1
+    if closePos <= codeArea~getLength then                         -- prevent indexOutOfBounds exception
+       nextChar = codeArea~getText(openPos, closePos)
+    if nextChar <> closeChar then
+       codeArea~~insertText(openPos, closeChar) ~~moveTo(openPos) -- moves the caret between openChar and closeChar
+
+
 ::method closeTab
   expose allTabs TabPane tabCounter
   Tabs = TabPane~getTabs                 -- of type ObservableList<Tab>
   Tab = self~getCurrentTab               -- get a reference to that Tab
   Tabs~remove(Tab)                       -- remove the tab from the tab pane
   index = allTabs~index(Tab)
-  allTabs~delete(index)
-            -- remove the tab from our directory
+  allTabs~delete(index)                  -- remove the tab from our directory
   tabCounter -= 1                        -- decrement tab counter
   if Tabs~size = 0 then do
     /* if the last tab was closed, open a new blank one */
@@ -175,18 +192,25 @@
  ** therefore we will focus on the first tab and call the `closeTab` method on it, which is already implemented
  **/
 ::method closeInitTab
-  expose TabPane allTabs
-  TabPane~getSelectionModel~select(allTabs[1])
+  expose TabPane --allTabs
+  TabPane~getSelectionModel~selectFirst--select(allTabs[1])
   self~closeTab
 
 
 
 
-::class ChangeListener
+::class ChangeListener /* this class monitors tab changes */
 ::method changed
   use arg property, oldValue, newValue
-  if newValue <> .nil then
+  if newValue <> .nil then do
     .my.app~primaryStage~setTitle(pp(newValue~getText) "| ooRexxTryFX")
+    virtualizedScrollPane = newValue~getContent
+    if virtualizedScrollPane <> .nil then do      -- it's nil when creating a new tab (this method gets invoked before creating child nodes, e.g. the code area does not exist yet
+      codeArea = virtualizedScrollPane~getContent
+      .my.app~ooRexxTryFX.fxml~undoMenuItem~disableProperty~~unbind ~~bind(codeArea~undoAvailableProperty~not)
+      .my.app~ooRexxTryFX.fxml~redoMenuItem~disableProperty~~unbind ~~bind(codeArea~redoAvailableProperty~not)
+    end
+  end
 
 
 ::requires "BSF.CLS"    -- get Java Support

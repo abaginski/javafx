@@ -1,4 +1,0 @@
-do i = 1 to 100
-  say "haha"
-  say i
-end

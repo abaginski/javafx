@@ -2,200 +2,54 @@
 ::method init /* moving those imports into the init method will load them after the splash screen and that's good, because the user will then know, that he is waiting for something instead of looking at an empty screen */
   call bsf.import "java.util.Optional"   , "Optional"
   call bsf.import "java.util.Collections", "Collections"
-  if .my.app~isPluginActive then
-    .local~ooRexxParser       = .my.app~appClzLdr~loadClass("org.oorexx.ide.standalone.OoRexxStandaloneParser")
 
 ::method test           /* called by "filter()" method in the TabManager Class */
   use arg ch
-  say "test:" .Platform~isFxApplicationThread
-  say "task available:" .local~hasEntry("task")
-    if .local~hasEntry("task") then do
-      if .task~isRunning then do
-        .task~cancel
-        say "task is running, cancelling"
-      end
-      else do
-        say "task not running, already cancelled"
-        return .false
-      end
-    end
   return \ch~getInserted~equals(ch~getRemoved)
-  
-  
+
 ::method get
   expose code
-  say "get" .Platform~isFxApplicationThread
   code = .TabManager~getInputArea~getText
-  userData = .directory~new
-  userData~code = code
-  .local~task = bsfCreateRexxProxy(.computeHighlightingAsync~new,userData,.javafx.concurrent.Task)     -- execute the task in this class
+  .local~task = bsfCreateRexxProxy(self,,.javafx.concurrent.Task)     -- execute the task in this class
   .Executor~execute(.task)
-  say "executing task"
   return .task
 
-
+/* called by the supplyTask method - Supplier Interface - Task Class in the TabManager class */
+::method call
+  expose code
+  Highlighter = .my.app~appClzLdr~loadClass("org.ooRexxTryFX.Highlighter")
+  return Highlighter~computeHighlighting(code)
 	
-/* called by java.util.Function */
+/* called by java.util.Function (filterMap Method), prevents NullPointerExceptions */
 ::method apply
-	use arg res
-	say "apply" .Platform~isFxApplicationThread
-	if res~isSuccess then
-		return .Optional~of(res~get)
-	else do
-		res~getFailure~printStackTrace
-		return .Optional~empty
-	end
+  use arg res
+  if res~isSuccess then return .Optional~of(res~get)
+  else                  return .Optional~empty
 
+/* called by the subscribe Method to apply the changes if there are any */
 ::method accept
   use arg StyleSpans
-  say "accept" .Platform~isFxApplicationThread
-  /*userData = .directory~new
-  userData~StyleSpans = StyleSpans
-  .Platform~runLater(bsfCreateRexxProxy(.StyleSpansApplier~new,userData,.java.lang.Runnable))*/
   codeArea = .TabManager~getInputArea
-  if StyleSpans~length = codeArea~getText~length then
-    codeArea~setStyleSpans(0, StyleSpans)		-- apply the styleSpans built in the "call" method below
-  .local~removeEntry("task")
+  userData = .directory~new
+  userData~spans = styleSpans
+  userData~codeArea = codeArea
+  .Platform~runLater(bsfCreateRexxProxy(.styleSpansApplier~new,userData,.java.lang.Runnable))
   Tab = .TabManager~getCurrentTab
-  if Tab~getGraphic = .nil then
-     Tab~setGraphic(.bsf~new("javafx.scene.image.ImageView", "resources/images/icon_savefile_15.png"))
-
+  if Tab~getGraphic = .nil & codeArea~getUndoManager~isUndoAvailable then -- only show the save icon if new content is available
+    Tab~setGraphic(.bsf~new("javafx.scene.image.ImageView", "resources/images/icon_savefile_15.png"))
 
 
 ::method unknown
-  say "[information] unhandled call {"arg(1)"}"
+  say "[information] unhandled call {"arg(1)"} in class" self~class
 
-
-
-::class computeHighlightingASync
-::method unknown
-    say "[][][]" arg(1)
-/* called by the supplyTask method - Supplier Interface in the TabManager class */
-::method call unguarded
-    use arg slotDir
-    code = slotDir~userData~code
-    jObj = slotDir~javaObject
-    say "call" .Platform~isFxApplicationThread
-	spansBuilder = .bsf~new("org.fxmisc.richtext.model.StyleSpansBuilder")
-	FileElement = .ooRexxParser~parse(code)
-	tree = FileElement~getLighterAST
-	.local~instructionLengthMap = .array~new
-	say "before ast"
-	self~walkTheAST(tree, tree~getRoot, 0, jObj)
-	say "after ast"
-	--if result = -1 then
-	  --  return .nil
-	blacklist = "/n", "WHITE_SPACE"         -- those items will not get styled
-	say .instructionLengthMap~items "items in map"
- 	loop map over .instructionLengthMap
- 	    say "loop over" map[1]
-		styleClass = map[1]~lower
-		length = map[2]
-		if blacklist~hasItem(styleClass) then
-	        spansBuilder~add(.Collections~emptyList, length)
-        else
-		  spansBuilder~add(.Collections~singleton(styleClass), length)
-	end
-	return spansBuilder~create
-
-
-::method walkTheAST unguarded
-  use arg tree, root, level=0, jObj
-  say "task is cancelled" jObj~isCancelled
-  if jObj~isCancelled then do
-    exit
-  end
-  say " "~copies(level) || "walkTheAST" .Platform~isFxApplicationThread
-  children = tree~getChildren(root)
-  loop child over children
-    if jObj~isCancelled then do
-      say "shutting down"
-      exit
-    end
-    say " "~copies(level) || "--walkTheAST child"
-    grandchildren = tree~getChildren(child)
-    /* information gathering */
-    type = child~getTokenType~toString
-    start = child~getStartOffset
-    end = child~getEndOffset
-    length = end - start
-    --say " "~copies(level) || type || ":" start "-" end
-    if grandchildren~size > 0 then
-      self~walkTheAST(tree, child, level+1, jObj)
-    else
-      if length > 0 then do
-        -- say type || start "-" end
-        .instructionLengthMap~append(.array~of(makeString(type), length))
-        --say "~"~copies(40)
-      end
-    say " "~copies(level) || "--walkTheAST child end"
-  end
-  say " "~copies(level) || "walkTheAST finished"
-
-
-
-::method succeeded
-  slotDir = arg(arg())
-  slotDir~javaObject~succeeded_forwardToSuper
-  say "finished"
-
-
-
-/*
-
-
-
-::routine walkTheAST
-  use arg tree, root, level=0
-  say "walkTheAST" .Platform~isFxApplicationThread
-  if .local~cancelTask = .true then do
-    exit
-  end
-  children = tree~getChildren(root)
-  loop child over children
-    grandchildren = tree~getChildren(child)
-    /* information gathering */
-    type = child~getTokenType~toString
-    start = child~getStartOffset
-    end = child~getEndOffset
-    length = end - start
-    --say " "~copies(level) || type || ":" start "-" end
-    if grandchildren~size > 0 then
-      call walkTheAST tree, child, level+1
-    else
-      if length > 0 then do
-        -- say type || start "-" end
-        .instructionLengthMap~append(.array~of(makeString(type), length))
-        --say "~"~copies(40)
-      end
-  end
-*/
-
-/**
- ** this routine returns "POSIX" if the input string consists of only special punctuation characters, or the input string itself
- **/
-::routine makeString
-  use arg type
-  select case type
-    when ":" then
-      return "DIRECTIVE"
-    when ".false" then
-      return "false"
-    when ".true" then
-      return "true"
-    otherwise
-      return .string~punct~makeArray("")~hasitem(type)~?("POSIX", type)
-  end
+::class styleSpansApplier
+::method run
+  use arg slotDir
+  userData = slotDir~userData
+  StyleSpans = userData~spans
+  codeArea = userData~codeArea
+  if StyleSpans~length = codeArea~getText~length then
+    codeArea~setStyleSpans(0, StyleSpans)		-- apply the StyleSpans built in the "call" method
 
 ::requires "BSF.CLS"        -- get Java Support
 ::requires "rgf_util2.rex"
-
-
-::class SyntaxHighlighter2 public
-::method handle
-use arg event
-code = .TabManager~getInputArea~getText
-userData = .directory~new
-userData~code = code
-.local~task = bsfCreateRexxProxy(.ComputeHighlightingASync~new,userData,.javafx.concurrent.Task)     -- execute the task in this class
-.Executor~execute(.task)

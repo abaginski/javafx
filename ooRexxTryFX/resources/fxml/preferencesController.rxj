@@ -52,7 +52,7 @@
             pressedButton = alert~showAndWait                    -- show the confirmation dialog
             if pressedButton~get~toString = .fx.ButtonType~OK~toString then do
                 .local~Gui = .GuiUpdater~new(caller) ~~prepare
-                baseDir = "http://wi.wu.ac.at/rgf/rexx/downloads/ooRexx_IntelliJ_Plugin/"
+                baseDir = .my.app~preferences["baseDir"]
                 version = getLatestVersion(baseDir)
                 .my.app~preferences["syntaxHighlightingVersion"] = version
                 .my.app~preferences~save

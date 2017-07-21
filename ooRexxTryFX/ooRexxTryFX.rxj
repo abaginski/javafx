@@ -10,14 +10,6 @@ if v < "REXX-ooRexx_5" then do
 end
 .environment~setEntry("my.app", .stringTable~new)
 .environment~appDirectory = filespec("Location", .s)   -- determine path to this Rexx program
-
-call (.appDirectory || "ooRexx" || .seperator || "TabManager.rxj")
-call (.appDirectory || "ooRexx" || .seperator || "OpenRecentMenuManager.rxj")
-call (.appDirectory || "ooRexx" || .seperator || "FileTreeManager.rxj")
-call (.appDirectory || "ooRexx" || .seperator || "RexxEventHandler.rxj")
-call (.appDirectory || "ooRexx" || .seperator || "StatusBarManager.rxj")
-call (.appDirectory || "ooRexx" || .seperator || "FileManager.rxj")
-
 .environment~java.lang.Runnable = bsf.import("java.lang.Runnable")
 .environment~java.lang.Thread = bsf.import("java.lang.Thread")
 .environment~javafx.concurrent.Task = bsf.import("javafx.concurrent.Task")
@@ -63,6 +55,13 @@ syntax:
   say ppCondition2(co)
   exit -1
 
+
+::requires "ooRexx/TabManager.rxj"
+::requires "ooRexx/OpenRecentMenuManager.rxj"
+::requires "ooRexx/FileTreeManager.rxj"
+::requires "ooRexx/RexxEventHandler.rxj"
+::requires "ooRexx/StatusBarManager.rxj"
+::requires "ooRexx/FileManager.rxj"
 
 
 ::class preloaderHandler
@@ -121,11 +120,12 @@ syntax:
   /* add event listeners to save user preferences on-the-fly */
   divider = .my.app~ooRexxTryFX.fxml~hSplitPane~getDividers~get(0)
   divider~setPosition(.my.app~preferences["hSplitPaneDiverPosition"])
-  divider~positionProperty      ~addListener(bsfCreateRexxProxy(.ChangeListener~new,,"javafx.beans.value.ChangeListener"))
-  primaryStage~heightProperty   ~addListener(bsfCreateRexxProxy(.ChangeListener~new,,"javafx.beans.value.ChangeListener"))
-  primaryStage~widthProperty    ~addListener(bsfCreateRexxProxy(.ChangeListener~new,,"javafx.beans.value.ChangeListener"))
-  primaryStage~maximizedProperty~addListener(bsfCreateRexxProxy(.ChangeListener~new,,"javafx.beans.value.ChangeListener"))
-  primaryStage~setOnCloseRequest(bsfCreateRexxProxy(.closeAppHandler~new,,"javafx.event.EventHandler"))
+  jChangeListener = bsfCreateRexxProxy(.ChangeListener~new,,"javafx.beans.value.ChangeListener")
+  divider~positionProperty      ~addListener(jChangeListener)
+  primaryStage~heightProperty   ~addListener(jChangeListener)
+  primaryStage~widthProperty    ~addListener(jChangeListener)
+  primaryStage~maximizedProperty~addListener(jChangeListener)
+  primaryStage~setOnCloseRequest(bsfCreateRexxProxy(.closeAppHandler~new,,.javafx.event.EventHandler))
 
   /* loop over the argument list to retrieve filepaths and open them */
   loop argument over .SysCArgs

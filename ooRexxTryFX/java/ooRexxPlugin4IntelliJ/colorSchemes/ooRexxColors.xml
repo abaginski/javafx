@@ -1,0 +1,35 @@
+<?xml version='1.0'?>
+<list>
+    <option name="OOREXX_SELF">
+        <value>
+            <option name="FOREGROUND" value="993399"/>
+            <option name="FONT_TYPE" value="2"/>
+        </value>
+    </option>
+    <option name="OOREXX_IDENTIFIER">
+        <value>
+            <option name="FOREGROUND" value="000000"/>
+            <option name="FONT_TYPE" value="2"/>
+        </value>
+    </option>
+
+    <option name="OOREXX_OPERATOR">
+        <value>
+            <option name="FOREGROUND" value="cc3300"/>
+
+        </value>
+    </option>
+    <option name="OOREXX_BUILT_IN">
+        <value>
+            <option name="FOREGROUND" value="000080"/>
+            <option name="FONT_TYPE" value="3"/>
+        </value>
+    </option>
+
+    <option name="OOREXX_ENVIRONMENT">
+        <value>
+            <option name="FOREGROUND" value="000080"/>
+            <option name="FONT_TYPE" value="2"/>
+        </value>
+    </option>
+</list>

@@ -196,8 +196,9 @@
         Tab = .TabManager~newTab                                                  -- always open the file in a new tab
         filepath = file~toString                                            -- cast the "File" obj to a "String", thereby extracting the filepath
         loadedCode = .FileManager~openFile(filepath)
-        .TabManager~getInputArea~replaceText(loadedCode)
-        Tab~setGraphic(.nil)                  -- remove the save Icon from the Tab, because there is no new content
+        codeArea = .TabManager~getInputArea
+        codeArea~replaceText(loadedCode)
+        codeArea~getUndoManager~forgetHistory
         .TabManager~saveFilepath(filepath)
         tooltip = .bsf~new("javafx.scene.control.Tooltip", filepath)
         .TabManager~getCurrentTab~~setText( filespec("name", filepath) ) ~~setTooltip(tooltip)     -- set a tooltip and text to the tab
@@ -309,6 +310,14 @@
 ::routine openThemeCSS public
   use arg slotDir
   -- todo:
+
+
+::routine undo public
+  .TabManager~getInputArea~undo
+
+::routine redo public
+  .TabManager~getInputArea~redo
+
 
 ::requires "rgf_util2.rex"
 ::requires "ooRexx/FXRexxEngine.rxj" -- needed for the class ".UserInput"

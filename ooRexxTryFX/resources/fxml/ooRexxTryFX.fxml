@@ -87,6 +87,9 @@
         </Menu>
         <Menu mnemonicParsing="false" text="Edit">
           <items>
+            <MenuItem mnemonicParsing="false" text="Undo" fx:id="undoMenuItem" onAction="call undo" />
+            <MenuItem mnemonicParsing="false" text="Redo" fx:id="redoMenuItem" onAction="call redo" />
+            <SeparatorMenuItem />
             <MenuItem mnemonicParsing="false" text="Select All" />
             <MenuItem mnemonicParsing="false" text="Unselect All" />
             <SeparatorMenuItem />

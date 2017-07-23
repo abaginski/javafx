@@ -24,9 +24,9 @@
       /* Image(java.lang.String url, double requestedWidth, double requestedHeight, boolean preserveRatio, boolean smooth) */
       statusIcon~setImage(.bsf~new("javafx.scene.image.Image", "resources/images/success.png", 17.0, 17.0, 1, 1))
     when "ERROR" then
-      statusIcon~setImage(.bsf~new("javafx.scene.image.Image", "resources/images/error.png", 17.0, 17.0, 1, 1))
+      statusIcon~setImage(.bsf~new("org.kordamp.ikonli.javafx.FontIcon", "oct-alert"))
     when "INFO" then
-      statusIcon~setImage(.bsf~new("javafx.scene.image.Image", "resources/images/info.png", 17.0, 17.0, 1, 1))
+      statusIcon~setImage(.bsf~new("org.kordamp.ikonli.javafx.FontIcon", "oct-light-bulb"))
     when "LOADING" then
       statusIcon~setImage(.bsf~new("javafx.scene.image.Image", "resources/images/ajax-loader.gif", 17.0, 17.0, 1, 1))
     otherwise

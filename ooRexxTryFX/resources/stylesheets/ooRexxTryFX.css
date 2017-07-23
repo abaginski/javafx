@@ -21,6 +21,15 @@
    -fx-padding: 1 1;
 }
 
-.code-area:has-caret {
-  -fx-background-color: #e3e8ef;
+.buttonSearchClose, .buttonSearchUp, .buttonSearchDown {
+    -fx-background-color: transparent;
+    -fx-background-insets: 0;
+}
+
+.searchBoxLabel {
+    -fx-padding: 0 2 0 7;
+}
+
+.searchField:failed {
+  -fx-background-color: lightcoral;
 }

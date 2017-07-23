@@ -255,12 +255,14 @@
   use arg slotDir
   userData = slotDir~userData
   if userData~when = "before" then do
-    userData~inputControl~setVisible(.true)
-    userData~inputControl~setText(userData~initText)
+    userData~inputControl~visible = .true
+    userData~inputControl~managed = .true
+    userData~inputControl~text = userData~initText
     userData~inputControl~requestFocus
   end
   else do
-    userData~inputControl~setVisible(.false)               -- hide the input text field
+    userData~inputControl~visible = .false               -- hide the input text field
+    userData~inputControl~managed = .false
     userData~inputControl~getParent~requestFocus
   end
 

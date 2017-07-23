@@ -14,6 +14,9 @@
 <?import javafx.scene.image.ImageView?>
 <?import javafx.scene.layout.AnchorPane?>
 <?import javafx.scene.layout.VBox?>
+<?import javafx.scene.control.ToolBar?>
+<?import javafx.scene.control.Button?>
+<?import org.controlsfx.control.textfield.CustomTextField?>
 <?import org.fxmisc.flowless.VirtualizedScrollPane?>
 <?import org.fxmisc.richtext.StyleClassedTextArea?>
 <?import org.fxmisc.richtext.CodeArea?>
@@ -87,8 +90,16 @@
         </Menu>
         <Menu mnemonicParsing="false" text="Edit">
           <items>
-            <MenuItem mnemonicParsing="false" text="Undo" fx:id="undoMenuItem" onAction="call undo" />
-            <MenuItem mnemonicParsing="false" text="Redo" fx:id="redoMenuItem" onAction="call redo" />
+            <MenuItem mnemonicParsing="false" text="Undo" fx:id="undoMenuItem" onAction="call undo">
+                    <graphic>
+                        <FontIcon iconLiteral="oi-action-undo"/>
+                    </graphic>
+            </MenuItem>
+            <MenuItem mnemonicParsing="false" text="Redo" fx:id="redoMenuItem" onAction="call redo">
+                <graphic>
+                    <FontIcon iconLiteral="oi-action-redo" />
+                </graphic>
+            </MenuItem>
             <SeparatorMenuItem />
             <MenuItem mnemonicParsing="false" text="Select All" />
             <MenuItem mnemonicParsing="false" text="Unselect All" />
@@ -130,17 +141,23 @@
                           </GridPane>
                       </graphic>
                   </MenuItem>
-                   <SeparatorMenuItem />
-                   <MenuItem accelerator="F5" mnemonicParsing="false" onAction="                   slotDir = arg(arg());                   userData = .directory~new;                   userData~useCurrentFile = .true;                   slotDir~userData = userData;                   call loadFile slotDir;                   " text="Reload">
-                          <graphic>
-                              <FontIcon iconLiteral="oct-sync" iconSize="15" />
-                          </graphic>
+                  <SeparatorMenuItem />
+                  <MenuItem accelerator="F5" mnemonicParsing="false" onAction="
+                                  slotDir = arg(arg());
+                                  userData = .directory~new;
+                                  userData~useCurrentFile = .true;
+                                  slotDir~userData = userData;
+                                  call loadFile slotDir;" text="Reload">
+                       <graphic>
+                           <FontIcon iconLiteral="oi-reload" iconSize="15" />
+                       </graphic>
                   </MenuItem>
-                   <MenuItem accelerator="Shortcut+F" mnemonicParsing="false" text="Search">
+                  <MenuItem accelerator="Shortcut+F" mnemonicParsing="false" text="Search" onAction=".Platform~runLater(bsfCreateRexxProxy(.showSearchBar~new,,.java.lang.Runnable))">
                        <graphic>
                            <FontIcon iconLiteral="oct-search" iconSize="15" />
                        </graphic>
-                   </MenuItem>
+                  </MenuItem>
+                  <MenuItem accelerator="Shortcut+H" mnemonicParsing="false" text="Search and replace" onAction="call showReplaceBar" />
                </items>
             </Menu>
         <Menu mnemonicParsing="false" text="Help">
@@ -158,13 +175,14 @@
         <items>
           <AnchorPane>
                <children>
-            <SplitPane fx:id="SplitPane" dividerPositions="0.8272727272727273" maxHeight="1.7976931348623157E308" orientation="VERTICAL" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
+
+            <SplitPane fx:id="SplitPane" dividerPositions="1" orientation="VERTICAL" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
               <items>
                 <AnchorPane>
                      <children>
                         <TabPane fx:id="TabPane" minHeight="29.0" prefHeight="389.0" tabClosingPolicy="ALL_TABS" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
 
-                  </TabPane>
+                        </TabPane>
                      </children>
                   </AnchorPane>
                 <AnchorPane prefHeight="265.0">
@@ -173,10 +191,10 @@
                              <content> <!-- since "content" is a @namedArg annotation in the Java source code, we can create instances in fxml even though there is no no-args constructor -->
                                  <!--<InlineCssTextArea fx:id="Output" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0" />
                                  -->
-                                 <StyleClassedTextArea fx:id="Output" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0" />
+                                 <StyleClassedTextArea fx:id="Output" editable="false" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0" />
                              </content>
                          </VirtualizedScrollPane>
-                         <TextField fx:id="Input" prefHeight="37.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" />
+                         <TextField fx:id="Input" prefHeight="37.0"  visible="false" managed="false" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" />
                      </children>
                   </AnchorPane>
                 </items>
@@ -190,6 +208,36 @@
             </AnchorPane>
         </items>
       </SplitPane>
+
+      <ToolBar fx:id="searchBar" visible="false" managed="false">
+          <items>
+              <Button fx:id="buttonCloseSearch" styleClass="buttonSearchClose" onAction="call closeSearchBar">
+                  <graphic>
+                      <FontIcon iconLiteral="oct-x" />
+                  </graphic>
+              </Button>
+              <CustomTextField fx:id="fieldSearch" styleClass="searchField">
+                  <left>
+                      <Label styleClass="searchBoxLabel">
+                          <graphic>
+                              <FontIcon iconLiteral="oct-search" styleClass="searchBoxLabelIcon" />
+                          </graphic>
+                      </Label>
+                  </left>
+              </CustomTextField>
+              <Button fx:id="buttonSearchUp" styleClass="buttonSearchUp" onAction="call doHighlightPrev">
+                  <graphic>
+                      <FontIcon iconLiteral="oi-chevron-top" />
+                  </graphic>
+              </Button>
+              <Button fx:id="buttonSearchDown" styleClass="buttonSearchDown" onAction="call doHighlightNext">
+                  <graphic>
+                      <FontIcon iconLiteral="oi-chevron-bottom" />
+                  </graphic>
+              </Button>
+              <Label fx:id="labelMatches" />
+          </items>
+      </ToolBar>
         <HBox fx:id="StatusBar" styleClass="statusBar" VBox.vgrow="NEVER" spacing="5">
             <padding><Insets top="5" right="10" bottom="5" left="5"/></padding>
             <children>

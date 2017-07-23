@@ -10,6 +10,7 @@ if v < "REXX-ooRexx_5" then do
 end
 .environment~setEntry("my.app", .stringTable~new)
 .environment~appDirectory = filespec("Location", .s)   -- determine path to this Rexx program
+"cd" .appDirectory
 .environment~java.lang.Runnable = bsf.import("java.lang.Runnable")
 .environment~java.lang.Thread = bsf.import("java.lang.Thread")
 .environment~javafx.concurrent.Task = bsf.import("javafx.concurrent.Task")
@@ -91,6 +92,7 @@ syntax:
   mainSceneFXMLUrl = .my.app~appClzLdr~findResource("resources/fxml/ooRexxTryFX.fxml")
   mainSceneFXML    = .my.app~fxmlLoader~load( mainSceneFXMLUrl )   -- load the fxml document
   .environment~TabManager            = .TabManager~new                  -- create a new TabManager from "resources/TabManager.rxj"
+  .environment~TabManagerInstance    = .environment~TabManager
   .environment~OpenRecentMenuManager = .OpenRecentMenuManager~new       -- call the responsible class to fill the "OpenRecent" Menu with items
   .environment~FileTreeManager       = .FileTreeManager~new
   .environment~StatusBarManager      = .StatusBarManager~new
@@ -101,10 +103,10 @@ syntax:
   .my.app~mainScene = .bsf~new("javafx.scene.Scene", mainSceneFXML)     -- create a scene for our document
   .my.app~mainScene~getStylesheets~~add("resources/stylesheets/ooRexxTryFX.css") -
                                   ~~add("resources/stylesheets/theme_" || .my.app~preferences["theme"] || ".css")
-  .my.app~mainScene   ~setOnDragOver(bsfCreateRexxProxy(self,,"javafx.event.EventHandler"))
-  .my.app~mainScene~setOnDragDropped(bsfCreateRexxProxy(self,,"javafx.event.EventHandler"))
-  .my.app~ooRexxTryFX.fxml~Input ~setVisible(.false)                     -- hide the input area, which is used for "pull" operations
-  .my.app~ooRexxTryFX.fxml~Output~setEditable(.false)                   -- do not allow to change the output area
+  .my.app~mainScene   ~setOnDragOver(bsfCreateRexxProxy(self,,.javafx.event.EventHandler))
+  .my.app~mainScene~setOnDragDropped(bsfCreateRexxProxy(self,,.javafx.event.EventHandler))
+  -- .my.app~ooRexxTryFX.fxml~Input~~setVisible(.false) ~~setManaged(.false)                     -- hide the input area, which is used for "pull" operations
+  -- .my.app~ooRexxTryFX.fxml~Output~setEditable(.false)                   -- do not allow to change the output area
   .my.app~ooRexxTryFX.fxml~Output~setStyle("-fx-font-size:" .my.app~preferences["outputAreaFontSize"] || "pt")
 	EventStream = .my.app~ooRexxTryFX.fxml~Output~totalHeightEstimateProperty~changes
   EventStream~subscribe(bsfCreateRexxProxy(.Subscriber~new,,"java.util.function.Consumer"))

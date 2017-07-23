@@ -8,7 +8,7 @@
 }
 
 /*.paragraph-box*/
-.paragraph-box:has-caret {
+.code-area .paragraph-box:has-caret {
     -fx-background-color: #47493E;
 }
 
@@ -170,6 +170,19 @@
   -fx-border-style:solid hidden hidden hidden;
   -fx-border-color:#C0C0C0;
 }
-.statusBar .label {
+.statusBar .label, #labelMatches {
   -fx-text-fill:white;
+}
+
+
+#searchBar {
+  -fx-background-color: #47493E;
+}
+
+#searchBar .buttonSearchClose .ikonli-font-icon,
+#searchBar .buttonSearchUp .ikonli-font-icon,
+#searchBar .buttonSearchDown .ikonli-font-icon
+ {
+  -fx-icon-color: white;
+  -fx-cursor: pointer;
 }

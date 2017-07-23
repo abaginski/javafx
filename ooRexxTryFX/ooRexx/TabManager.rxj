@@ -5,6 +5,7 @@
 ::method init
 /* variable initialisation */
   expose allTabs TabPane alreadySavedFilepaths tabCounter savedArgs
+  call bsf.import "org.fxmisc.richtext.model.NavigationActions$SelectionPolicy", "NavigationActions.SelectionPolicy"
   tabCounter = 0
   TabPane = .my.app~ooRexxTryFX.fxml~TabPane
   TabPane~getSelectionModel~selectedItemProperty~addListener(bsfCreateRexxProxy(.ChangeListener~new,,"javafx.beans.value.ChangeListener"))
@@ -27,7 +28,7 @@
   anchorPane = .bsf~new("javafx.scene.layout.AnchorPane")       -- this anchorPane allows the codeArea to stretch
   anchorPane~~setBottomAnchor(codeArea,0)~~setRightAnchor(codeArea,0)~~setTopAnchor(codeArea,0)~~setLeftAnchor(codeArea,0)
   Tab~setContent( virtualizedScrollPane  ) -- attach the fxml document to the current pane
-  Tab~setOnCloseRequest( bsfCreateRexxProxy(.RexxEventHandler~new,,"javafx.event.EventHandler") )
+  Tab~setOnCloseRequest( bsfCreateRexxProxy(.RexxEventHandler~new,,.javafx.event.EventHandler) )
 
   codeArea~setStyle("-fx-font-size:" .my.app~preferences["codeAreaFontSize"] || "pt")
   codeArea~setWrapText(.my.app~preferences["autoLineBreak"])
@@ -55,11 +56,13 @@
   codeArea~replaceText("trace i".endOfLine"do i=1 to 10 by 2".endOfLine"say i".endOfLine"end".endOfLine"1/0")
   codeArea~getUndoManager~forgetHistory
 
-  codeArea~setOnKeyTyped(bsfCreateRexxProxy(self,,.javafx.event.EventHandler))
-  codeArea~setOnKeyPressed(bsfCreateRexxProxy(self,,.javafx.event.EventHandler))
+  codeArea~~setOnKeyTyped(bsfCreateRexxProxy(self,,.javafx.event.EventHandler)) -
+          ~~setOnKeyPressed(bsfCreateRexxProxy(self,,.javafx.event.EventHandler))
   .my.app~ooRexxTryFX.fxml~undoMenuItem~disableProperty~~unbind ~~bind(codeArea~undoAvailableProperty~not)    -- "not" inverts a boolean property
   .my.app~ooRexxTryFX.fxml~redoMenuItem~disableProperty~~unbind ~~bind(codeArea~redoAvailableProperty~not)
-  codeArea~requestFocus
+  userData = .directory~new
+  userData~node = codeArea
+  .Platform~runLater(bsfCreateRexxProxy(.focusRequestExecutor~new,userData,.java.lang.Runnable))
   return Tab
 
 
@@ -101,6 +104,36 @@
     call autoComplete keyText, ']'
   else if keyText = '{' then
     call autoComplete keyText, '}'
+  else if keyCode~equals(.KeyCode~D) & event~isShortcutDown then do
+    /* ctrl+d: duplicate line(s) */
+    selection = codeArea~getSelection
+    --codeArea~selectRange(selection~end, selection~getStart)
+    codeArea~displaceCaret(selection~getStart)
+    firstLineOfSelection = codeArea~getCurrentParagraph
+    paras = .set~new
+    currentParagraph = firstLineOfSelection
+    if selection~length = 0 then
+      paras~put(codeArea~getParagraph(firstLineOfSelection))
+    else do
+      selectedText = codeArea~getSelectedText
+      loop line over selectedText
+        paragraph = codeArea~getParagraph(currentParagraph)
+        paras~put(paragraph)
+        currentParagraph += 1
+      end
+    end
+    loop para over paras
+      say "adding" para~getText "to" currentParagraph
+      --.Platform~runLater(self,,.java.lang.Runnable)
+      say codeArea~getParagraphs~size currentParagraph
+      --if codeArea~getParagraphs~size = currentParagraph then
+       -- codeArea~appendText(para~getText)
+      --else
+      codeArea~insertText(currentParagraph, 0, .endOfLine || para~getText)
+      currentParagraph += 1
+      --codeArea~previousChar(.NavigationActions.SelectionPolicy~clear)
+    end
+  end
   return
 
   autoComplete: procedure expose codeArea
@@ -211,6 +244,12 @@
       .my.app~ooRexxTryFX.fxml~redoMenuItem~disableProperty~~unbind ~~bind(codeArea~redoAvailableProperty~not)
     end
   end
+
+
+::class focusRequestExecutor public
+::method run
+  use arg slotDir
+  slotDir~userData~node~requestFocus
 
 
 ::requires "BSF.CLS"    -- get Java Support

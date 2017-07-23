@@ -15,8 +15,14 @@
 <?import javafx.scene.layout.AnchorPane?>
 <?import javafx.scene.layout.VBox?>
 <?import org.fxmisc.flowless.VirtualizedScrollPane?>
-<?import org.fxmisc.richtext.InlineCssTextArea?>
+<?import org.fxmisc.richtext.StyleClassedTextArea?>
+<?import org.fxmisc.richtext.CodeArea?>
+<?import org.kordamp.ikonli.javafx.FontIcon?>
+<?import org.kordamp.ikonli.javafx.StackedFontIcon?>
 
+
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.GridPane?>
 <VBox maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="800.0" prefWidth="1300.0" xmlns="http://javafx.com/javafx/8.0.111" xmlns:fx="http://javafx.com/fxml/1">
   <fx:script source="ooRexxTryFXController.rxj" />
   <children>
@@ -40,7 +46,11 @@
             </MenuItem>
             <Menu fx:id="openRecentMenu" mnemonicParsing="false" text="Open Recent" />
             <SeparatorMenuItem mnemonicParsing="false" />
-            <MenuItem accelerator="Shortcut+W" mnemonicParsing="false" onAction="             .TabManager~closeTab;              /* invoke the method 'closeTab' from the TabManager */             " text="Close" />
+            <MenuItem accelerator="Shortcut+W" mnemonicParsing="false" onAction="             .TabManager~closeTab;              /* invoke the method 'closeTab' from the TabManager */             " text="Close" >
+                    <graphic>
+                        <FontIcon iconLiteral="oi-circle-x" iconSize="15"/>
+                    </graphic>
+            </MenuItem>
             <MenuItem accelerator="Shortcut+Shift+W" mnemonicParsing="false" onAction="             call closeAllTabs;             " text="Close All" />
             <SeparatorMenuItem mnemonicParsing="false" />
             <MenuItem accelerator="Shortcut+S" onAction="call saveFile arg(arg())" text="_Save">
@@ -65,51 +75,86 @@
                 </graphic>
             </MenuItem>
             <SeparatorMenuItem mnemonicParsing="false" />
-            <MenuItem mnemonicParsing="false" text="Preferences…"/>
-              <!--
+            <MenuItem mnemonicParsing="false" text="Preferences…" onAction="call openPreferences">
                     <graphic>
-                            <FontIcon iconLiteral="" iconSize="20" />
+                            <FontIcon iconLiteral="oct-tools" iconSize="15" />
                     </graphic>
             </MenuItem>
-            -->
+
             <SeparatorMenuItem mnemonicParsing="false" />
             <MenuItem accelerator="Shortcut+Q" onAction="call closeApp;" text="_Quit" />
           </items>
         </Menu>
         <Menu mnemonicParsing="false" text="Edit">
           <items>
+            <MenuItem mnemonicParsing="false" text="Undo" fx:id="undoMenuItem" onAction="call undo" />
+            <MenuItem mnemonicParsing="false" text="Redo" fx:id="redoMenuItem" onAction="call redo" />
+            <SeparatorMenuItem />
             <MenuItem mnemonicParsing="false" text="Select All" />
             <MenuItem mnemonicParsing="false" text="Unselect All" />
+            <SeparatorMenuItem />
+            <MenuItem mnemonicParsing="false" text="Edit current stylesheet" onAction="call openThemeCSS arg(arg())" />
           </items>
         </Menu>
         <Menu mnemonicParsing="false" text="View">
           <items>
               <MenuItem accelerator="Shortcut+Plus" mnemonicParsing="false" onAction="call zoom in;" text="Zoom In">
                   <graphic>
-                      <!--<FontIcon iconLiteral="oi-zoom-in" iconSize="20" />-->
+                      <FontIcon iconLiteral="oi-zoom-in" iconSize="15" />
                   </graphic>
               </MenuItem>
-            <MenuItem accelerator="Shortcut+Minus" mnemonicParsing="false" onAction="call zoom out;" text="Zoom Out" />
+            <MenuItem accelerator="Shortcut+Minus" mnemonicParsing="false" onAction="call zoom out;" text="Zoom Out">
+                <graphic>
+                    <FontIcon iconLiteral="oi-zoom-out" iconSize="15" />
+                </graphic>
+            </MenuItem>
             <SeparatorMenuItem />
           </items>
         </Menu>
             <Menu mnemonicParsing="false" text="Application">
                <items>
-                  <MenuItem accelerator="Shortcut+Enter" mnemonicParsing="false" onAction="call runApp arg(arg());" text="Run Application" />
+                  <MenuItem accelerator="Shortcut+Enter" mnemonicParsing="false" onAction="call runApp arg(arg());" text="Run Application">
+                          <graphic>
+                              <FontIcon iconLiteral="oi-media-play" iconSize="15" />
+                          </graphic>
+                  </MenuItem>
                   <MenuItem mnemonicParsing="false" text="Run with Arguments" onAction="slotDir = arg(arg());
                   slotDir~runWithArgs = .true;
-                  call runApp slotDir" />
-                  <MenuItem accelerator="F5" mnemonicParsing="false" onAction="                   slotDir = arg(arg());                   userData = .directory~new;                   userData~useCurrentFile = .true;                   slotDir~userData = userData;                   call loadFile slotDir;                   " text="Reload" />
+                  call runApp slotDir">
+                      <graphic>
+                          <GridPane><!-- prefHeight="60.0" prefWidth="200.0">-->
+                              <StackedFontIcon>
+                                  <FontIcon iconLiteral="oi-media-play" />
+                                  <FontIcon iconLiteral="oct-ellipsis" StackedFontIcon.iconSize="0.5" />
+                              </StackedFontIcon>
+                          </GridPane>
+                      </graphic>
+                  </MenuItem>
+                   <SeparatorMenuItem />
+                   <MenuItem accelerator="F5" mnemonicParsing="false" onAction="                   slotDir = arg(arg());                   userData = .directory~new;                   userData~useCurrentFile = .true;                   slotDir~userData = userData;                   call loadFile slotDir;                   " text="Reload">
+                          <graphic>
+                              <FontIcon iconLiteral="oct-sync" iconSize="15" />
+                          </graphic>
+                  </MenuItem>
+                   <MenuItem accelerator="Shortcut+F" mnemonicParsing="false" text="Search">
+                       <graphic>
+                           <FontIcon iconLiteral="oct-search" iconSize="15" />
+                       </graphic>
+                   </MenuItem>
                </items>
             </Menu>
         <Menu mnemonicParsing="false" text="Help">
           <items>
-            <MenuItem mnemonicParsing="false" text="About ooRexxTryFX" />
+            <MenuItem mnemonicParsing="false" text="About ooRexxTryFX" onAction="call showAbout arg(arg())">
+                <graphic>
+                    <FontIcon iconLiteral="oi-code" iconSize="15" />
+                </graphic>
+            </MenuItem>
           </items>
         </Menu>
       </menus>
     </MenuBar>
-      <SplitPane fx:id="hSplitPane" dividerPositions="0.8" maxHeight="1.7976931348623157E308" VBox.vgrow="ALWAYS">
+      <SplitPane styleClass="toor" fx:id="hSplitPane" dividerPositions="0.8" maxHeight="1.7976931348623157E308" VBox.vgrow="ALWAYS">
         <items>
           <AnchorPane>
                <children>
@@ -126,33 +171,38 @@
                      <children>
                          <VirtualizedScrollPane AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
                              <content> <!-- since "content" is a @namedArg annotation in the Java source code, we can create instances in fxml even though there is no no-args constructor -->
-                                 <InlineCssTextArea fx:id="Output" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0" />
+                                 <!--<InlineCssTextArea fx:id="Output" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0" />
+                                 -->
+                                 <StyleClassedTextArea fx:id="Output" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0" />
                              </content>
                          </VirtualizedScrollPane>
                          <TextField fx:id="Input" prefHeight="37.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" />
                      </children>
                   </AnchorPane>
-              </items>
+                </items>
             </SplitPane>
                </children>
             </AnchorPane>
           <AnchorPane prefWidth="300.0">
                <children>
-                      <TreeView fx:id="FileTree" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
-                      </TreeView>
+                      <TreeView fx:id="FileTree" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0"></TreeView>
                </children>
             </AnchorPane>
         </items>
       </SplitPane>
-        <AnchorPane fx:id="StatusBar" VBox.vgrow="NEVER">
-				<children>
-            <Label fx:id="status" layoutX="12.0" layoutY="1.0" text="Ready">
-               <padding>
-                  <Insets bottom="2.0" />
-               </padding>
-            </Label>
-				</children>
-			   </AnchorPane>
+        <HBox fx:id="StatusBar" styleClass="statusBar" VBox.vgrow="NEVER" spacing="5">
+            <padding><Insets top="5" right="10" bottom="5" left="5"/></padding>
+            <children>
+                <Label fx:id="status" layoutX="12.0" layoutY="1.0" text="Ready">
+                    <padding>
+                        <Insets bottom="2.0" />
+                    </padding>
+                </Label>
+                <ImageView fx:id="statusIcon">
+
+                </ImageView>
+            </children>
+        </HBox>
   </children>
     <!-- comment: Rexx program that stores all fx:id objects in .local~rootLayout.fxml directory -->
   <fx:script source="put_FXID_objects_into.my.app.rex" />

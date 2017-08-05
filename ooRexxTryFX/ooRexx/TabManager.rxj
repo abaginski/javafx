@@ -1,4 +1,4 @@
-::class TabManager public
+::class TabManagerClass public
 ::attribute allTabs                             -- the controller routine "closeAllTabs" uses this attribute
 ::attribute alreadySavedFilepaths
 ::attribute savedArgs
@@ -6,6 +6,7 @@
 /* variable initialisation */
   expose allTabs TabPane alreadySavedFilepaths tabCounter savedArgs
   call bsf.import "org.fxmisc.richtext.model.NavigationActions$SelectionPolicy", "NavigationActions.SelectionPolicy"
+  call bsf.import "org.fxmisc.richtext.model.TwoDimensional$Bias", "TwoDimensional.Bias"
   tabCounter = 0
   TabPane = .my.app~ooRexxTryFX.fxml~TabPane
   TabPane~getSelectionModel~selectedItemProperty~addListener(bsfCreateRexxProxy(.ChangeListener~new,,"javafx.beans.value.ChangeListener"))
@@ -46,7 +47,7 @@
                                                    "java.util.function.Function")
     codeArea~plainTextChanges -                     -- follow plain text changes as a java8 Stream
             ~filter(jRexxHandler) -
-            ~successionEnds(bsf.import("java.time.Duration")~ofMillis(10)) -
+            ~successionEnds(bsf.import("java.time.Duration")~ofMillis(100)) -
             ~supplyTask(jRexxHandler) -				-- compute highlighting with a javafx Task in a seperate Thread
             ~awaitLatest(codeArea~plainTextChanges) -
             ~filterMap(jRexxHandler) -
@@ -88,15 +89,14 @@
       if prevLine~length > 0 then do
           loop i=0 to prevLine~length-1
             if prevLine~charAt(i) \= " " then
-              return
+              leave
           end
-          codeArea~replaceSelection(" "~copies(i))
+          if i > 0 then
+            codeArea~replaceSelection(" "~copies(i))
       end
     end
   end
-  else if keyText = '"' then
-    call autoComplete keyText
-  else if keyText = "'" then
+  else if keyText = '"' && keyText = "'" then
     call autoComplete keyText
   else if keyText = '(' then
     call autoComplete keyText, ')'
@@ -107,32 +107,65 @@
   else if keyCode~equals(.KeyCode~D) & event~isShortcutDown then do
     /* ctrl+d: duplicate line(s) */
     selection = codeArea~getSelection
-    --codeArea~selectRange(selection~end, selection~getStart)
     codeArea~displaceCaret(selection~getStart)
     firstLineOfSelection = codeArea~getCurrentParagraph
-    paras = .set~new
+    endOfSelection = selection~getEnd
+    insertedText = .endOfLine
     currentParagraph = firstLineOfSelection
+    selectedText = codeArea~getSelectedText
+    numSelectedLines = selectedText~countStr("0a"x)
     if selection~length = 0 then
-      paras~put(codeArea~getParagraph(firstLineOfSelection))
-    else do
-      selectedText = codeArea~getSelectedText
-      loop line over selectedText
-        paragraph = codeArea~getParagraph(currentParagraph)
-        paras~put(paragraph)
+      codeArea~selectParagraph
+    selectedText = codeArea~getSelectedText
+    i = 0
+    loop line over selectedText
+      paragraph = codeArea~getParagraph(currentParagraph)
+      insertedText ||= paragraph~getText
+      if i <> numSelectedLines then do
+        insertedText ||= .endOfLine
         currentParagraph += 1
       end
+      i += 1
     end
-    loop para over paras
-      say "adding" para~getText "to" currentParagraph
-      --.Platform~runLater(self,,.java.lang.Runnable)
-      say codeArea~getParagraphs~size currentParagraph
-      --if codeArea~getParagraphs~size = currentParagraph then
-       -- codeArea~appendText(para~getText)
-      --else
-      codeArea~insertText(currentParagraph, 0, .endOfLine || para~getText)
-      currentParagraph += 1
-      --codeArea~previousChar(.NavigationActions.SelectionPolicy~clear)
+    codeArea~insertText(currentParagraph, codeArea~getParagraph(currentParagraph)~length, insertedText)
+  end
+  else if keyCode~equals(.KeyCode~number_sign) & event~isShortcutDown then do
+    /* ctrl+# for commenting lines */
+    selection = codeArea~getSelection
+    codeArea~displaceCaret(selection~getStart)
+    firstLineOfSelection = codeArea~getCurrentParagraph
+    endOfSelection = selection~getEnd
+    currentParagraph = firstLineOfSelection
+    selectedText = codeArea~getSelectedText
+    numSelectedLines = selectedText~countStr("0a"x)
+    if selection~length = 0 then
+      codeArea~selectParagraph
+    selectedText = codeArea~getSelectedText
+    i = 0
+    loop line over selectedText
+      paragraph = codeArea~getParagraph(currentParagraph)
+      leadingSpaces = 0
+      minuses = 0
+      invert = .false
+      loop ch over paragraph~getText~makeArray("")
+        if ch = " " then
+          leadingSpaces += 1
+        else if ch = "-" then
+          minuses += 1
+        if minuses = 2 then do
+          invert = .true
+          leave
+        end
+      end
+
+      paragraph~setText(" "~copies(leadingSpaces) || "--" paragraph~getText)
+
+      if i <> numSelectedLines then do
+        currentParagraph += 1
+      end
+      i += 1
     end
+    codeArea~replaceSelection(currentParagraph, codeArea~getParagraph(currentParagraph)~length, insertedText)
   end
   return
 
@@ -142,9 +175,11 @@
     openPos = codeArea~getCaretPosition
     closePos = openPos + 1
     if closePos <= codeArea~getLength then                         -- prevent indexOutOfBounds exception
-       nextChar = codeArea~getText(openPos, closePos)
-    if nextChar <> closeChar then
-       codeArea~~insertText(openPos, closeChar) ~~moveTo(openPos) -- moves the caret between openChar and closeChar
+      nextChar = codeArea~getText(openPos, closePos)
+    if nextChar = closeChar then
+      codeArea~deleteNextChar
+    else if .string~space~makeArray(" ")~hasItem(nextChar) then
+      codeArea~~insertText(openPos, closeChar) ~~moveTo(openPos) -- moves the caret between openChar and closeChar
 
 
 ::method closeTab

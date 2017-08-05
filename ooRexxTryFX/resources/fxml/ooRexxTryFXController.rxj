@@ -5,8 +5,8 @@
     args = .nil
     /* first of all, save the code in a backup file */
     scriptContext = slotDir~scriptContext         -- todo: necessary?
-    Code = .environment~TabManager~getInputArea~getText
-    tmpFilepath = .environment~TabManager~alreadySavedFile
+    Code = .TabManager~getInputArea~getText
+    tmpFilepath = .TabManager~alreadySavedFile
     if \SysIsFile(tmpFilePath) then
        tmpFilepath = Directory() || .seperator || "backupRxjFile" || time()~changeStr(":","") || ".rxj"
     else      -- valid filepath
@@ -23,10 +23,10 @@
     --tgtInput~setText("")
     if slotDir~runWithArgs = .true then do
       .StatusBarManager~setMessage("waiting for arguments", "LOADING")
-      savedArgs = .environment~TabManager~getSavedArgs
+      savedArgs = .TabManager~getSavedArgs
       userInput = .userInput~new("line", savedArgs)
       args = userInput~getUserInput
-      .environment~TabManager~saveArgs(args)
+      .TabManager~saveArgs(args)
     end
     .StatusBarManager~setMessage("Running ...", "LOADING")
     timeStart = .dateTime~new
@@ -125,7 +125,7 @@
 
 ::routine saveFile public
     use arg slotDir
-    filepath = .environment~TabManager~alreadySavedFile
+    filepath = .TabManager~alreadySavedFile
     select
       when SysIsFileDirectory(filepath) then do     -- in case "Create new file" was clicked
         slotDir~dirPath = filepath || "newfile.rxj"
@@ -144,10 +144,10 @@
   use arg slotDir, skipDialog = .false    -- fetch the slotDir argument (BSF4ooRexx adds this as the last argument at the Java side)
   scriptContext = slotDir~scriptContext   -- get the entry "SCRIPTCONTEXT"
 
-  Code = .environment~TabManager~getInputArea~getText
+  Code = .TabManager~getInputArea~getText
   alreadySavedFile = slotDir~dirPath
   if \SysFileExists(alreadySavedFile) then
-    alreadySavedFile = .environment~TabManager~alreadySavedFile
+    alreadySavedFile = .TabManager~alreadySavedFile
 
   if \skipDialog then
     file = .FileManager~saveDialog(alreadySavedFile)             -- show the save dialog
@@ -157,7 +157,7 @@
   if file \= .nil then do
     filepath = file~toString
     .FileManager~saveFile(filepath, Code)
-    .environment~TabManager~saveFilepath(filepath)                                     -- save the file to eventually skip the dialog next time
+    .TabManager~saveFilepath(filepath)                                     -- save the file to eventually skip the dialog next time
     .OpenRecentMenuManager~updateMenu(filepath)
     options = .stringTable~new
     options~type = "SUCCESS"
@@ -172,7 +172,7 @@
     if slotDir~userData <> .nil then do
       userData = slotDir~userData
       if userData~useCurrentFile <> .nil then do                       -- called by "Application" -> "Reload"
-        savedFilepath = .environment~TabManager~alreadySavedFile
+        savedFilepath = .TabManager~alreadySavedFile
         if savedFilepath = .nil then do
           .StatusBarManager~setMessage("Reloading not possible", "ERROR")
           return                                 -- leave the method, reloading not possible
@@ -185,18 +185,18 @@
       end
     end
     else                                                               -- need to open a filechooser dialog
-      file = .FileManager~openDialog(.environment~TabManager~alreadySavedFile)
+      file = .FileManager~openDialog(.TabManager~alreadySavedFile)
 
     if file \= .nil then do
-        Tab = .environment~TabManager~newTab                                                  -- always open the file in a new tab
+        Tab = .TabManager~newTab                                                  -- always open the file in a new tab
         filepath = file~toString                                            -- cast the "File" obj to a "String", thereby extracting the filepath
         loadedCode = .FileManager~openFile(filepath)
-        codeArea = .environment~TabManager~getInputArea
+        codeArea = .TabManager~getInputArea
         codeArea~replaceText(loadedCode)
         codeArea~getUndoManager~forgetHistory
-        .environment~TabManager~saveFilepath(filepath)
+        .TabManager~saveFilepath(filepath)
         tooltip = .bsf~new("javafx.scene.control.Tooltip", filepath)
-        .environment~TabManager~getCurrentTab~~setText( filespec("name", filepath) ) ~~setTooltip(tooltip)     -- set a tooltip and text to the tab
+        .TabManager~getCurrentTab~~setText( filespec("name", filepath) ) ~~setTooltip(tooltip)     -- set a tooltip and text to the tab
         .OpenRecentMenuManager~updateMenu(filepath)
         options = .stringTable~new
         options~type = "SUCCESS"
@@ -207,14 +207,14 @@
 
 /* --------------------------------------------------------------------------------------------------- */
 ::routine closeAllTabs public
-  loop i=1 to .environment~TabManager~allTabs~size
-    .environment~TabManager~closeTab
+  loop i=1 to .TabManager~allTabs~size
+    .TabManager~closeTab
   end
 
 /** this routine will save all tabs which have a known filepath, so they were opened or saved before */
 ::routine saveAll public
-  allTabs = .environment~TabManager~allTabs
-  alreadySavedFilepaths = .environment~TabManager~alreadySavedFilepaths
+  allTabs = .TabManager~allTabs
+  alreadySavedFilepaths = .TabManager~alreadySavedFilepaths
   saveCounter = 0
 	savedFilepaths = .array~new			-- needed for the return value for preferencesController :: savePreferences routine
   loop with index idx item tab over allTabs
@@ -240,8 +240,8 @@
   end
   .my.app~preferences~~setProperty("codeAreaFontSize", .my.app~codeAreaFontSize)~~save(.prefPath)
   /* this font size will apply for all new opened files but not for the already opened ones, hence we need to update them too */
-  loop Tab over .environment~TabManager~allTabs
-   codeArea = .environment~TabManager~getInputArea(Tab)
+  loop Tab over .TabManager~allTabs
+   codeArea = .TabManager~getInputArea(Tab)
    codeArea~setStyle("-fx-font-size:" .my.app~codeAreaFontSize || "pt")
   end
 
@@ -335,7 +335,7 @@
 
 ::routine closeSearchBar public
   .my.app~ooRexxTryFX.fxml~searchBar~~setManaged(.false) ~~setVisible(.false)
-  .environment~TabManager~getInputArea~requestFocus
+  .TabManager~getInputArea~requestFocus
 
 ::routine showReplaceBar public
   call showSearchBar
@@ -344,7 +344,7 @@
 ::routine doSearch
   use arg searchText
   if searchText = "" then exit
-  codeArea = .environment~TabManager~getInputArea
+  codeArea = .TabManager~getInputArea
   code = codeArea~getText
   lastPos = 0
   .local~lastSearchedText = searchText
@@ -372,8 +372,11 @@
     .local~currentIndex = .allPos~items
   from = .allPos[.currentIndex] - 1       -- 0 based for java's IndexRange class
   to = from + .lastSearchedText~length
-  .environment~TabManager~getInputArea~selectRange(from, to)
-  .my.app~ooRexxTryFX.fxml~labelMatches~text = .currentIndex "out of" .allPos~items "matches"
+  codeArea = .TabManager~getInputArea
+  codeArea~~selectRange(from, to) -
+          ~~displaceCaret(from) -         -- move the view to the line number of the caret
+          ~~requestFollowCaret
+  .my.app~ooRexxTryFX.fxml~labelMatches~text = .currentIndex "of" .allPos~items "matches"
   --userData = .directory~new
   --userData~from = from
   --userData~to = to
@@ -391,7 +394,7 @@
 ::method run
   use arg slotDir
   userData = slotDir~userData
-  .environment~TabManager~getInputArea~selectRange(userData~from, userData~to)
+  .TabManager~getInputArea~selectRange(userData~from, userData~to)
   .my.app~ooRexxTryFX.fxml~labelMatches~text = .currentIndex "out of" .allPos~items "matches"
 
 

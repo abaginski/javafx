@@ -12,6 +12,8 @@
     -fx-background-color: #47493E;
 }
 
+
+
 .caret {
    -fx-stroke: white;
 }
@@ -59,6 +61,10 @@
 .code-area .text {
   -fx-fill: white;
 }
+.code-area {
+  -fx-highlight-fill: #9d550f;
+}
+
 
 .code-area .do,
 .code-area .say,

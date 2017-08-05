@@ -17,7 +17,7 @@ rem show the console if the porperty is set to .true aka 1
 rem extd is a function provided by the bat to exe converter
 if %result%==1 %extd% /showself
 
-set dependencies=richtextfx-0.7-M5-custom ikonli-openiconic-pack-1.9.0 ikonli-octicons-pack-1.9.0 ikonli-javafx-1.9.0 ikonli-core-1.9.0
+set dependencies=richtextfx-0.7-M5-custom ikonli-openiconic-pack-1.9.0 ikonli-octicons-pack-1.9.0 ikonli-javafx-1.9.0 ikonli-core-1.9.0 controlsfx-8.40.12.jar
 rem add each dependency to the classpath via the addToPath function
 for %%a in (%dependencies%) do call :addToPath %%a
 rem start ooRexxTryFX with all of its arguments

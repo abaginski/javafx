@@ -91,8 +91,7 @@ syntax:
    -- use application's URLClassloader to find the resource (returns a URL)
   mainSceneFXMLUrl = .my.app~appClzLdr~findResource("resources/fxml/ooRexxTryFX.fxml")
   mainSceneFXML    = .my.app~fxmlLoader~load( mainSceneFXMLUrl )   -- load the fxml document
-  .environment~TabManager            = .TabManager~new                  -- create a new TabManager from "resources/TabManager.rxj"
-  .environment~TabManagerInstance    = .environment~TabManager
+  .environment~TabManager            = .TabManagerClass~new                  -- create a new TabManager instance from "resources/TabManager.rxj"
   .environment~OpenRecentMenuManager = .OpenRecentMenuManager~new       -- call the responsible class to fill the "OpenRecent" Menu with items
   .environment~FileTreeManager       = .FileTreeManager~new
   .environment~StatusBarManager      = .StatusBarManager~new

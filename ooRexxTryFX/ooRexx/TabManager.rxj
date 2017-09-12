@@ -40,7 +40,9 @@
   LineNumberFactory = bsf.import("org.fxmisc.richtext.LineNumberFactory")
   codeArea~setParagraphGraphicFactory(LineNumberFactory~get(codeArea))    -- add line numbers to each row
   if .my.app~isPluginActive then do		-- apply syntax highlighting if the classes are provided
-    rexxHandler=.SyntaxHighlighter~new   -- Rexx-Objekt anlegen
+    .bsf~new("org.ooRexxTryFX.Highlighter", codeArea)
+	/* disabled, because unstable:
+	rexxHandler=.SyntaxHighlighter~new   -- Rexx-Objekt anlegen
     jRexxHandler=bsfCreateRexxProxy(rexxHandler, , "java.util.function.Predicate", -
                                                    "java.util.function.Consumer", -
                                                    "java.util.function.Supplier", -
@@ -52,6 +54,7 @@
             ~awaitLatest(codeArea~plainTextChanges) -
             ~filterMap(jRexxHandler) -
             ~subscribe(jRexxHandler)                -- apply highlighting
+	*/
   end
   -- for testing:
   codeArea~replaceText("trace i".endOfLine"do i=1 to 10 by 2".endOfLine"say i".endOfLine"end".endOfLine"1/0")

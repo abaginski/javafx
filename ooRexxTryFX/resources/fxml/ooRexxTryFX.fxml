@@ -22,10 +22,9 @@
 <?import org.fxmisc.richtext.CodeArea?>
 <?import org.kordamp.ikonli.javafx.FontIcon?>
 <?import org.kordamp.ikonli.javafx.StackedFontIcon?>
-
-
 <?import javafx.scene.layout.HBox?>
 <?import javafx.scene.layout.GridPane?>
+
 <VBox maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="800.0" prefWidth="1300.0" xmlns="http://javafx.com/javafx/8.0.111" xmlns:fx="http://javafx.com/fxml/1">
   <fx:script source="ooRexxTryFXController.rxj" />
   <children>
@@ -103,8 +102,10 @@
             <SeparatorMenuItem />
             <MenuItem mnemonicParsing="false" text="Select All" />
             <MenuItem mnemonicParsing="false" text="Unselect All" />
-            <SeparatorMenuItem />
-            <MenuItem mnemonicParsing="false" text="Edit current stylesheet" onAction="call openThemeCSS arg(arg())" />
+            <!--
+              <SeparatorMenuItem />
+                <MenuItem mnemonicParsing="false" text="Edit current stylesheet" onAction="call openThemeCSS arg(arg())" />
+            -->
           </items>
         </Menu>
         <Menu mnemonicParsing="false" text="View">
@@ -133,10 +134,12 @@
                   slotDir~runWithArgs = .true;
                   call runApp slotDir">
                       <graphic>
-                          <GridPane><!-- prefHeight="60.0" prefWidth="200.0">-->
+                          <GridPane>
                               <StackedFontIcon>
                                   <FontIcon iconLiteral="oi-media-play" />
-                                  <FontIcon iconLiteral="oct-ellipsis" StackedFontIcon.iconSize="0.5" />
+                                  <StackedFontIcon layoutY="5.0" styleClass="secondIcon">
+									<FontIcon iconLiteral="oct-ellipsis"  />
+								  </StackedFontIcon>
                               </StackedFontIcon>
                           </GridPane>
                       </graphic>
@@ -171,7 +174,7 @@
         </Menu>
       </menus>
     </MenuBar>
-      <SplitPane styleClass="toor" fx:id="hSplitPane" dividerPositions="0.8" maxHeight="1.7976931348623157E308" VBox.vgrow="ALWAYS">
+      <SplitPane styleClass="toor" fx:id="hSplitPane" VBox.vgrow="ALWAYS">
         <items>
           <AnchorPane>
                <children>
@@ -201,7 +204,7 @@
             </SplitPane>
                </children>
             </AnchorPane>
-          <AnchorPane prefWidth="300.0">
+          <AnchorPane fx:id="FileTreePane">
                <children>
                       <TreeView fx:id="FileTree" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0"></TreeView>
                </children>

@@ -1,6 +1,13 @@
 parse source .environment~os . .environment~s
 parse version v .
 
+/* add all jars from the java directory to the classpath to make use of the provided classes */
+appDirectory = filespec("Location", absoluteFilepath)   -- determine path to this Rexx program
+javaFolder   = appDirectory || "java" || .file~separator
+call addJarsFromDirToClasspath javaFolder
+/* exit this program if the return value of the latest routine call returned "true" */
+if result = .true then exit
+
 .environment~setEntry("WindowsNT", (.os = "WindowsNT")~?(.true, .false))
 .environment~setEntry("seperator", (.WindowsNT)~?("\", "/"))
 
@@ -32,8 +39,8 @@ end
 clzUrls = bsf.createJavaArray("java.net.URL", 3)        -- create a java array with space for 3 items
 clzUrls[1] = .bsf~new("java.io.File", .appDirectory)~toURI~toURL                    -- url to base directory
 if .my.app~isPluginActive then do
-  clzUrls[2] = .bsf~new("java.io.File", .appDirectory || "java" || .seperator || "ooRexxPlugin4IntelliJ.jar")~toURI~toURL
-  clzUrls[3] = .bsf~new("java.io.File", .appDirectory || "java" || .seperator || "ooRexxStandaloneAdapter.jar")~toURI~toURL
+  clzUrls[2] = .bsf~new("java.io.File", .appDirectory || "java" || .file~separator || "ooRexxPlugin4IntelliJ.jar")~toURI~toURL
+  clzUrls[3] = .bsf~new("java.io.File", .appDirectory || "java" || .file~separator || "ooRexxStandaloneAdapter.jar")~toURI~toURL
 end
 .my.app~appClzLdr = .bsf~new("java.net.URLClassLoader", clzUrls) -- load the FXMLLoader class, save it for multiple usages
 
@@ -102,12 +109,12 @@ syntax:
   .my.app~mainScene = .bsf~new("javafx.scene.Scene", mainSceneFXML)     -- create a scene for our document
   .my.app~mainScene~getStylesheets~~add("resources/stylesheets/ooRexxTryFX.css") -
                                   ~~add("resources/stylesheets/theme_" || .my.app~preferences["theme"] || ".css")
-  .my.app~mainScene   ~setOnDragOver(bsfCreateRexxProxy(self,,.javafx.event.EventHandler))
+  .my.app~mainScene~setOnDragOver(bsfCreateRexxProxy(self,,.javafx.event.EventHandler))
   .my.app~mainScene~setOnDragDropped(bsfCreateRexxProxy(self,,.javafx.event.EventHandler))
   -- .my.app~ooRexxTryFX.fxml~Input~~setVisible(.false) ~~setManaged(.false)                     -- hide the input area, which is used for "pull" operations
   -- .my.app~ooRexxTryFX.fxml~Output~setEditable(.false)                   -- do not allow to change the output area
   .my.app~ooRexxTryFX.fxml~Output~setStyle("-fx-font-size:" .my.app~preferences["outputAreaFontSize"] || "pt")
-	EventStream = .my.app~ooRexxTryFX.fxml~Output~totalHeightEstimateProperty~changes
+  EventStream = .my.app~ooRexxTryFX.fxml~Output~totalHeightEstimateProperty~changes
   EventStream~subscribe(bsfCreateRexxProxy(.Subscriber~new,,"java.util.function.Consumer"))
   primaryStage~setScene(.my.app~mainScene)   -- set the stage to our scene
   primaryStage~setTitle("[Untitled 0] ooRexxTryFX")
@@ -118,11 +125,15 @@ syntax:
   primaryStage~setHeight(.my.app~preferences["height"])
   primaryStage~setWidth(.my.app~preferences["width"])
 
+  /* set the divider position */
+  if .my.app~preferences~getProperty("fileTreePosition") <> "disabled" then do
+	divider = .my.app~ooRexxTryFX.fxml~hSplitPane~getDividers~get(0)
+	divider~setPosition(.my.app~preferences["hSplitPaneDiverPosition"])
+  end
   /* add event listeners to save user preferences on-the-fly */
-  divider = .my.app~ooRexxTryFX.fxml~hSplitPane~getDividers~get(0)
-  divider~setPosition(.my.app~preferences["hSplitPaneDiverPosition"])
   jChangeListener = bsfCreateRexxProxy(.ChangeListener~new,,"javafx.beans.value.ChangeListener")
-  divider~positionProperty      ~addListener(jChangeListener)
+  if divider~isA(.bsf) then
+	divider~positionProperty      ~addListener(jChangeListener)
   primaryStage~heightProperty   ~addListener(jChangeListener)
   primaryStage~widthProperty    ~addListener(jChangeListener)
   primaryStage~maximizedProperty~addListener(jChangeListener)
@@ -146,7 +157,7 @@ syntax:
       "*-----------------------------------------------------------------------------*" .endOfLine -
 
   /* load filetree status */
-  if .my.app~preferences["expandedFileTreePaths"]~length > 2 then do           -- the integer 2 is random: there is no filepath with 0 or 1 chars to be expanded and it eliminates all zero-meaning properties like [] or 0
+  if .my.app~preferences["expandedFileTreePaths"]~length > 2 & .my.app~preferences["fileTreePosition"] <> "disabled" then do           -- the integer 2 is random: there is no filepath with 0 or 1 chars to be expanded and it eliminates all zero-meaning properties like [] or 0
      .environment~StatusBarManager~setMessage("Loading File Tree ...")
      .Platform~runLater(bsfCreateRexxProxy(.FileTreeOpener~new,,.java.lang.Runnable))
      /*.java.lang.Thread~new(bsfCreateRexxProxy(.FileTreeOpener~new,,"javafx.concurrent.Task")) -
@@ -174,10 +185,8 @@ syntax:
 	  .OpenFile~new(file~getPath)~~handle
   end
 
-::method stop
-  .Executor~shutdown
-
-
+  
+  
 ::class FileOpener
 ::method run
   .openFile~new( arg(1)~userData~argument )~~handle         -- use the slotDir argument to retrieve the file to be opened
@@ -197,6 +206,7 @@ syntax:
 
 ::class closeAppHandler
 ::method handle
+  .Executor~shutdown
   call closeApp             -- located in the controller file
 
 
@@ -236,3 +246,38 @@ syntax:
          desiredDividerPosition = 0.4               -- hardcode a bare minimum of 40% of the screen for the coding area
       .vDivider~setPosition(desiredDividerPosition)
     end
+	
+	
+/**
+ * Inserts the Java archives from the "java" directory to the classpath and restarts this application
+ * to make the classes of those libraries accessible
+ *
+ * @param javaDir - The absolute filepath to the directory which holds the required Java archives
+ */
+::routine addJarsFromDirToClasspath
+  use strict arg javaDir
+  if \SysFileExists(javaDir) then
+    raise syntax 40.900 array("The supplied argument" javaDir "is not a valid directory!")
+  pathExtension = ""
+  /* use a Built-In Function (BIF) to retrieve all jars from the java directory */
+  call SysFileTree javaDir, "jars", "F"   -- search for files in java/ and save as a .stem in `jars`
+  loop i = 1 to jars.0              -- the 0th entry of a stem holds the number of items
+    parse var jars.i . . . . jar    -- remove the first 4 bits of information (date, time, size, access control)
+    extension = filespec("extension", jar)      -- fetch the extension of the file
+    if extension = "jar" then do
+      pathExtension ||= jar~strip
+      pathExtension ||= .file~pathSeparator       -- the pathseperator of the File class holds ";" or ":" depending on the OS
+    end
+  end
+  /* get the current value of the CLASSPATH environment variable */
+  classpath = value("CLASSPATH",,"ENVIRONMENT")
+  /* look for our jar files in the classpath */
+  if classpath~pos(pathExtension) = 0 then do
+    newClasspath = classpath || .file~pathSeparator || pathExtension    -- append our paths to be looked up last
+    call value "CLASSPATH", newClasspath, "ENVIRONMENT"   -- change the classpath
+    /* run the Application again making use of the new classpath */
+    "rexxj ooRexxTryFX.rxj"			-- this statement will be sent directly to the terminal/console, which will invoke "rexxj"
+    /* change PATH back to original and return "true" to exit the application */
+    call value "CLASSPATH", classpath, "ENVIRONMENT"
+    return .true
+  end

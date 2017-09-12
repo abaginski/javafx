@@ -48,14 +48,8 @@
 .code-area .over,
 .code-area .call
 {
-  -fx-fill: #2060a0;
+  -fx-fill: #3480f9;
 }
-
-/*
-.code-area .posix {
-  -fx-fill: white;
-}
-*/
 
 .code-area .bif {
     -fx-font-weight: bold;
@@ -89,19 +83,24 @@
 .code-area .use,
 .code-area .strict,
 .code-area .arg,
-.code-area .routine,
-.code-area .method,
-.code-area .class,
-.code-area .attribute,
 .code-area .requires,
 .code-area .expose,
 .code-area .public,
 .code-area .self,
-.code-area .parse
+.code-area .parse,
+.code-area .routine,
+.code-area .method,
+.code-area .class,
+.code-area .attribute
 {
   -fx-fill: #00a000;
 }
 
+.code-area .eol_comment,
+.code-area .block_comment,
+.code-area .doc_comment {
+  -fx-fill: #333;
+}
 
 .statusBar {
   -fx-border-style:solid hidden hidden hidden;

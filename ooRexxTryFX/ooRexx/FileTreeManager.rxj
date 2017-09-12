@@ -1,10 +1,20 @@
 ::class FileTreeManager public
 ::method init
-  expose filetree root
+  expose filetree root disabled
   /* first decide if the user even wants to display a file tree */
-  if \.my.app~preferences~getProperty("displayFileTree") then
-    .my.app~ooRexxTryFX.fxml~FileTreePane~~setPrefWidth(0)~~setVisible(.false)
-  else do
+  fileTreePosition = .my.app~preferences~getProperty("fileTreePosition")
+  if fileTreePosition = "disabled" then do
+	disabled = .true
+	FileTreePane = .my.app~ooRexxTryFX.fxml~hSplitPane~getItems~get(1)
+	.my.app~ooRexxTryFX.fxml~hSplitPane~getItems~remove(FileTreePane)
+  end
+  else if fileTreePosition = "left" then do
+    /* append the first item of the split pane at the end of the splitpane, therefore switching positions of first and second element */
+    firstItem = .my.app~ooRexxTryFX.fxml~hSplitPane~getItems~get(0)
+	.my.app~ooRexxTryFX.fxml~hSplitPane~getItems~~remove(firstItem) -
+	                                            ~~add(firstItem)
+  end
+  if disabled <> .true then do
     /* build the tree infrastructure */
     filetree = .my.app~ooRexxTryFX.fxml~FileTree
     rp = bsfCreateRexxProxy(.RexxEventHandler~new,,"javafx.event.EventHandler")
@@ -142,7 +152,8 @@
   .my.app~preloaderStage~close       -- close the preloader screen
 
 ::method savePaths
-  expose root
+  expose root disabled
+  if disabled = .true then return		-- nothing to save because there is no file tree 
   itemsToSave = .array~new
   parent = findExpandedChildren(root)
   loopAgain:

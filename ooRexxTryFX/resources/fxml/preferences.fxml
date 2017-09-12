@@ -79,7 +79,7 @@
             <HBox layoutX="10.0" layoutY="74.0">
                <children>
                   <Pane maxHeight="30.0" HBox.hgrow="ALWAYS" />
-                  <Label fx:id="detailsLabel111" text="display file tree :" textAlignment="LEFT" wrapText="true">
+                  <Label text="display file tree :" textAlignment="LEFT" wrapText="true">
                      <font>
                         <Font size="12.0" />
                      </font>
@@ -95,11 +95,34 @@
                   </CheckBox>
                </children>
             </HBox>
+			<HBox layoutX="10.0" layoutY="42.0">
+               <children>
+                  <Pane HBox.hgrow="ALWAYS" />
+                  <Label text="file tree position :" textAlignment="LEFT" wrapText="true">
+                     <font>
+                        <Font size="12.0" />
+                     </font>
+                     <HBox.margin>
+                        <Insets right="20.0" top="3.0" />
+                     </HBox.margin>
+                  </Label>
+                  <Pane HBox.hgrow="ALWAYS" />
+                  <ChoiceBox fx:id="fileTreePosition" prefWidth="175.0">
+						<items>
+								<FXCollections fx:factory="observableArrayList">
+										<String fx:value="left" />
+										<String fx:value="right" />
+										<String fx:value="disabled" />
+								</FXCollections>
+						</items>
+					</ChoiceBox>
+               </children>
+            </HBox>
             <Separator prefWidth="200.0" />
             <HBox layoutX="10.0" layoutY="98.0">
                <children>
                   <Pane maxHeight="30.0" HBox.hgrow="ALWAYS" />
-                  <Label fx:id="detailsLabel1111" text="convert tabs to spaces :" textAlignment="LEFT" wrapText="true">
+                  <Label text="convert tabs to spaces :" textAlignment="LEFT" wrapText="true">
                      <font>
                         <Font size="12.0" />
                      </font>

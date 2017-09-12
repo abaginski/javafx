@@ -33,3 +33,7 @@
 .searchField:failed {
   -fx-background-color: lightcoral;
 }
+
+.secondIcon {
+	-fx-padding: 15 0 0 0;
+}

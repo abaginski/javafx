@@ -38,14 +38,15 @@
        fxRexxEngine = .FXRexxEngine~new(tgtInput, tgtOutput, tgtOutput, tgtInput, tgtOutput)
        .local~fx.RexxEngine = fxRexxEngine     -- diese soll die Default-RexxEngine sein (.fx.RexxEngine)
     end
-    say "going to start program"
     et = .ExecuteThread~new(fxRexxEngine~rexxEngine, Code, args)
-    .Executor~execute(bsfCreateRexxProxy(et,,.javafx.concurrent.Task)) --~~bsf.dispatch("start")              -- Run code in separate thread
+    task = bsfCreateRexxProxy(et,,.javafx.concurrent.Task)
+    .Executor~execute(task) --~~bsf.dispatch("start")              -- Run code in separate thread
     say "Rexx program started," .dateTime~new", et~busy="pp(et~busy) "et~done="pp(et~done)
     say "Rexx program may have ended already," .dateTime~new", et~busy="pp(et~busy) "et~done="pp(et~done)
     say "---"
   --guard on when et~done
   redo:
+  say et~done
   if et~done then do
     timeEnd = .dateTime~new
     elapsed = timeStart - timeEnd
@@ -265,7 +266,7 @@
 	stage~setScene(.bsf~new("javafx.scene.Scene", preferencesFXML))
 	stage~setTitle("Preferences")
 	bsf4oorexxImage = .bsf~new("javafx.scene.image.Image","resources/images/bsf4oorexx_032.png")
-  stage~getIcons~add(bsf4oorexxImage)         -- set application icon
+    stage~getIcons~add(bsf4oorexxImage)         -- set application icon
 	/* now, load default values to the input fields inside the preferences stage */
 	loop with index inputName item inputField over .my.app~preferences.fxml
 		correspondingPropertyValue = .my.app~preferences[inputName]

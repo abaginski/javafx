@@ -100,8 +100,9 @@
                 </graphic>
             </MenuItem>
             <SeparatorMenuItem />
-            <MenuItem mnemonicParsing="false" text="Select All" />
+        <!--    <MenuItem mnemonicParsing="false" text="Select All" />
             <MenuItem mnemonicParsing="false" text="Unselect All" />
+            -->
             <!--
               <SeparatorMenuItem />
                 <MenuItem mnemonicParsing="false" text="Edit current stylesheet" onAction="call openThemeCSS arg(arg())" />
@@ -125,12 +126,12 @@
         </Menu>
             <Menu mnemonicParsing="false" text="Application">
                <items>
-                  <MenuItem accelerator="Shortcut+Enter" mnemonicParsing="false" onAction="call runApp arg(arg());" text="Run Application">
+                  <MenuItem accelerator="Shortcut+Enter" mnemonicParsing="false" onAction="call runApp arg(arg());" text="Run Application" fx:id="runAppMenuItem">
                           <graphic>
                               <FontIcon iconLiteral="oi-media-play" iconSize="15" />
                           </graphic>
                   </MenuItem>
-                  <MenuItem mnemonicParsing="false" text="Run with Arguments" onAction="slotDir = arg(arg());
+                  <MenuItem mnemonicParsing="false" text="Run with Arguments" fx:id="runAppWithArgsMenuItem" onAction="slotDir = arg(arg());
                   slotDir~runWithArgs = .true;
                   call runApp slotDir">
                       <graphic>
@@ -160,7 +161,7 @@
                            <FontIcon iconLiteral="oct-search" iconSize="15" />
                        </graphic>
                   </MenuItem>
-                  <MenuItem accelerator="Shortcut+H" mnemonicParsing="false" text="Search and replace" onAction="call showReplaceBar" />
+                 <!-- <MenuItem accelerator="Shortcut+H" mnemonicParsing="false" text="Search and replace" onAction="call showReplaceBar" />-->
                </items>
             </Menu>
         <Menu mnemonicParsing="false" text="Help">

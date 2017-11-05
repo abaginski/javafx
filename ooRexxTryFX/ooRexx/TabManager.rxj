@@ -57,7 +57,7 @@
 	*/
   end
   -- for testing:
-  codeArea~replaceText("trace i".endOfLine"do i=1 to 10 by 2".endOfLine"say i".endOfLine"end".endOfLine"1/0")
+  -- codeArea~replaceText("trace i".endOfLine"do i=1 to 10 by 2".endOfLine"say i".endOfLine"end".endOfLine"1/0")
   codeArea~getUndoManager~forgetHistory
 
   codeArea~~setOnKeyTyped(bsfCreateRexxProxy(self,,.javafx.event.EventHandler)) -

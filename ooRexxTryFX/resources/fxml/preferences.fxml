@@ -76,6 +76,7 @@
                   </CheckBox>
                </children>
             </HBox>
+          <!--
             <HBox layoutX="10.0" layoutY="74.0">
                <children>
                   <Pane maxHeight="30.0" HBox.hgrow="ALWAYS" />
@@ -95,6 +96,7 @@
                   </CheckBox>
                </children>
             </HBox>
+          -->
 			<HBox layoutX="10.0" layoutY="42.0">
                <children>
                   <Pane HBox.hgrow="ALWAYS" />

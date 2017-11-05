@@ -3,6 +3,7 @@
 ::routine runApp public
     use arg slotDir
     args = .nil
+    .appRunning~set(.true)      -- disable "run App" menu items
     /* first of all, save the code in a backup file */
     scriptContext = slotDir~scriptContext         -- todo: necessary?
     Code = .TabManager~getInputArea~getText
@@ -30,23 +31,20 @@
     end
     .StatusBarManager~setMessage("Running ...", "LOADING")
     timeStart = .dateTime~new
-
 -- rgf: hier k?nnte in Zukunft entschieden werden, welche RexxEngine zur Ausf?hrung benutzt werden soll
-    fxRexxEngine = .FXRexxEngine~latestFXRexxEngine   -- if a RexxEngine is available it can be retrieved
+    /*fxRexxEngine = .FXRexxEngine~latestFXRexxEngine   -- if a RexxEngine is available it can be retrieved
+    say "fxRexxEngine" fxRexxEngine
     if fxRexxEngine = .nil then do     -- no RexxEngine created so far, create one
-         -- usage                  (input,output,error,debugInput,traceOutput)
+         -- usage                  (input,output,error,debugInput,traceOutput)*/
        fxRexxEngine = .FXRexxEngine~new(tgtInput, tgtOutput, tgtOutput, tgtInput, tgtOutput)
-       .local~fx.RexxEngine = fxRexxEngine     -- diese soll die Default-RexxEngine sein (.fx.RexxEngine)
+    /*   .local~fx.RexxEngine = fxRexxEngine     -- diese soll die Default-RexxEngine sein (.fx.RexxEngine)
     end
+    */
     et = .ExecuteThread~new(fxRexxEngine~rexxEngine, Code, args)
-    task = bsfCreateRexxProxy(et,,.javafx.concurrent.Task)
-    .Executor~execute(task) --~~bsf.dispatch("start")              -- Run code in separate thread
-    say "Rexx program started," .dateTime~new", et~busy="pp(et~busy) "et~done="pp(et~done)
-    say "Rexx program may have ended already," .dateTime~new", et~busy="pp(et~busy) "et~done="pp(et~done)
-    say "---"
+    task = bsfCreateRexxProxy(et,,"javafx.concurrent.Task")
+    .java.lang.Thread~new(task)~bsf.dispatch("start")              -- Run code in separate thread
   --guard on when et~done
   redo:
-  say et~done
   if et~done then do
     timeEnd = .dateTime~new
     elapsed = timeStart - timeEnd
@@ -62,6 +60,7 @@
     call sysSleep .3      -- wait 1/3 of a second before checking for completion again
     call redo
   end
+  .appRunning~set(.false)
   call SysFileDelete tmpFilepath
 
 /* --------------------------------------------------------------------------------------------------- */
@@ -82,6 +81,7 @@
 
 ::method call
    expose rexxEngine Code args res busy done error
+   say "execution started"
    busy = .true                 -- indicate Rexx program is running
    signal on syntax
    /* create args vector */
@@ -106,8 +106,8 @@
            errorMsg ||= line .endOfLine
        end
        error = .true
-       .Platform~runLater(bsfCreateRexxProxy(.errorPrinter~new(errorMsg),,.java.lang.Runnable))
-       exit -1
+       .Platform~runLater(bsfCreateRexxProxy(.errorPrinter~new(errorMsg),,"java.lang.Runnable"))
+       --exit -1
 
 
 ::class errorPrinter
@@ -297,7 +297,7 @@
   System = bsf.import("java.lang.System")
   content ||= "Java Version:" System~getProperty("java.version") || "," System~getProperty("sun.arch.data.model") || "-bit" .endOfLine
   content ||= "Syntax Highlighting Version:" .my.app~preferences["syntaxHighlightingVersion"] .endOfLine
-  content ||= "Date of creation: July 2017" .endOfLine
+  content ||= "Date of creation: November 2017" .endOfLine
   content ||= "Author: Adrian Baginski <abaginski@live.de>"
   alert~setContentText(content)
   alert~showAndWait

@@ -113,6 +113,10 @@ syntax:
   .my.app~mainScene~setOnDragDropped(bsfCreateRexxProxy(self,,.javafx.event.EventHandler))
   -- .my.app~ooRexxTryFX.fxml~Input~~setVisible(.false) ~~setManaged(.false)                     -- hide the input area, which is used for "pull" operations
   -- .my.app~ooRexxTryFX.fxml~Output~setEditable(.false)                   -- do not allow to change the output area
+  /* bind the execution buttons to an observable value */
+  .environment~appRunning = .bsf~new("javafx.beans.property.SimpleBooleanProperty", .false)
+  .my.app~ooRexxTryFX.fxml~runAppWithArgsMenuItem~disableProperty ~~unbind ~~bind(.appRunning)
+  .my.app~ooRexxTryFX.fxml~runAppMenuItem~disableProperty         ~~unbind ~~bind(.appRunning)
   .my.app~ooRexxTryFX.fxml~Output~setStyle("-fx-font-size:" .my.app~preferences["outputAreaFontSize"] || "pt")
   EventStream = .my.app~ooRexxTryFX.fxml~Output~totalHeightEstimateProperty~changes
   EventStream~subscribe(bsfCreateRexxProxy(.Subscriber~new,,"java.util.function.Consumer"))
